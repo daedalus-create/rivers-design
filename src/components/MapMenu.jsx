@@ -115,6 +115,7 @@ export default function MapMenu({ open, onClose }) {
             )}
 
             <div className="map__scene" ref={sceneRef}>
+              <div className="map__backdrop" aria-hidden="true" />
               <svg
                 className="map__trails"
                 viewBox="0 0 1000 600"

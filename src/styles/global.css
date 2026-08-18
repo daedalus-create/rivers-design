@@ -257,19 +257,15 @@ body::after {
 .menu-btn.open .bars span:nth-child(2) { opacity: 0; }
 .menu-btn.open .bars span:nth-child(3) { top: 8.5px; transform: rotate(-45deg); }
 
-/* Full-screen menu overlay — a minimap of the site */
+/* Full-screen menu overlay — a minimap of the site. The topo texture
+   itself lives inside .map__scene (see .map__backdrop) so it zooms
+   together with the trails/waypoints instead of staying fixed behind
+   them; this is just the plain sheet color around the map box. */
 .menu-overlay {
   position: fixed;
   inset: 0;
   z-index: 300;
-  /* the whole page becomes the map sheet: topo height-map + graticule */
   background-color: var(--bg-sheet);
-  background-image:
-    url('/assets/contours.svg'),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, .025) 0 1px, transparent 1px 90px),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, .025) 0 1px, transparent 1px 90px);
-  background-size: cover, auto, auto;
-  background-position: center;
   opacity: 0;
   visibility: hidden;
   overflow-y: auto;
@@ -337,6 +333,20 @@ body.menu-open { overflow: hidden; }
   inset: 0;
   transform-origin: 0 0;
   transition: transform 700ms var(--ease-out);
+}
+/* Topo texture lives INSIDE the scene (behind the trails/waypoints)
+   so zooming into a section zooms the terrain under it too, instead
+   of the backdrop staying put while only the dots/lines move. */
+.map__backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: var(--bg-sheet);
+  background-image:
+    url('/assets/contours.svg'),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .025) 0 1px, transparent 1px 90px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .025) 0 1px, transparent 1px 90px);
+  background-size: cover, auto, auto;
+  background-position: center;
 }
 .map__trails {
   position: absolute;
