@@ -88,7 +88,7 @@
   --section-y: clamp(96px, 14vh, 192px);
   --max-width: 1680px;
   --max-text: 720px;
-  --header-h: clamp(96px, 11.5vw, 170px);
+  --header-h: clamp(112px, 13.2vw, 196px);
 
   /* The column projected down from the date badge — big display
      text left-aligns to it, exactly as in the Figma comp */
@@ -196,7 +196,7 @@ body::after {
   gap: var(--space-8);
 }
 
-/* RD logo — the Figma corner mark — fixed at the top-left, moving
+/* Lightbulb mark in a circular ring — fixed at the top-left, moving
    with the viewport the same way the hamburger does on the right.
    The date badge, by contrast, stays put in the header and scrolls
    away with the page. */
@@ -207,11 +207,18 @@ body::after {
   left: var(--page-margin);
   transform: translateY(-50%);
   z-index: 310;
-  height: clamp(52px, 5.5vw, 76px);
   transition: opacity var(--t-hover);
 }
 .logo:hover { opacity: .8; }
-.logo img { height: 100%; width: auto; }
+.logo__ring {
+  display: grid;
+  place-items: center;
+  width: clamp(64px, 6.6vw, 92px);
+  height: clamp(64px, 6.6vw, 92px);
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+}
+.logo__ring img { height: 56%; width: auto; }
 
 /* Hamburger button — styled like the badges (white ring, dark fill) */
 .menu-btn {
@@ -533,35 +540,39 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   padding-bottom: clamp(48px, 5vw, 72px);
 }
 
-/* Lightbulb + slogan + alert mark — static, scrolling away with the
-   page (the RD logo is the one that's fixed now, see .logo above).
-   Sits in the same band as the fixed logo, just to its right, so the
-   whole line reads above the date badge instead of colliding with it. */
+/* "Dream to Build" — fixed, same band as the lightbulb/hamburger,
+   centered between them. */
 .site-header__tagline {
-  position: absolute;
-  left: calc(var(--page-margin) + 100px);
-  top: calc(var(--header-h) / 2);
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  position: fixed;
+  left: 50%;
+  top: calc(var(--header-h) / 2 - 10px);
+  transform: translate(-50%, -50%);
+  z-index: 310;
   font-family: var(--font-display);
-  font-size: clamp(15px, 1.7vw, 24px);
-  color: var(--ink-a45);
+  font-size: clamp(28px, 3.4vw, 54px);
+  color: var(--ink);
   white-space: nowrap;
-}
-.site-header__tagline-icon {
-  height: 1.3em;
-  width: auto;
-  opacity: .8;
+  pointer-events: none;
 }
 
-/* Date badge — stays in normal flow, straddling the header rule like
-   the Figma comp; it scrolls away with the page (unlike the fixed
-   logo/hamburger). */
+/* Alert mark — fixed, mirrors the lightbulb on the opposite side,
+   just inboard of the hamburger. */
+.site-header__alert {
+  position: fixed;
+  top: calc(var(--header-h) / 2);
+  right: calc(var(--page-margin) + 96px);
+  transform: translateY(-50%);
+  z-index: 310;
+  height: clamp(56px, 5.8vw, 80px);
+  width: auto;
+}
+
+/* Date badge — single yellow ring, stays in normal flow straddling
+   the header rule; it scrolls away with the page (unlike the fixed
+   logo/tagline/hamburger). */
 .pill.pill--date {
   position: absolute;
-  left: calc(var(--page-margin) + var(--indent));
+  left: var(--page-margin);
   top: var(--header-h);
   transform: translateY(-50%);
 }
@@ -593,6 +604,16 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
 .pill__inner .slash { color: var(--accent); }
 a.pill { text-decoration: none; }
 a.pill:hover .pill__inner { color: var(--accent); }
+
+/* Date badge specifically drops the outer white ring — just the
+   single yellow border, matching the reference. */
+.pill.pill--date {
+  background: none;
+  border: none;
+}
+.pill--date .pill__inner {
+  border-radius: clamp(15px, 1.6vw, 22px);
+}
 
 /* ---------- Sections ---------- */
 .section { padding-top: var(--section-y); padding-bottom: var(--section-y); }
@@ -861,7 +882,8 @@ a.pill:hover .pill__inner { color: var(--accent); }
   .divider__row { flex-wrap: wrap; justify-content: center; row-gap: var(--space-4); }
   .project__sub { margin-left: 0; }
   .site-header__bar { gap: var(--space-4); }
-  /* not enough room next to the fixed logo + hamburger for the
-     slogan on narrow screens — hide it rather than wrap/collide */
-  .site-header__tagline { display: none; }
+  /* not enough room for the centered slogan + alert mark next to the
+     fixed logo/hamburger on narrow screens — hide rather than collide */
+  .site-header__tagline,
+  .site-header__alert { display: none; }
 }
