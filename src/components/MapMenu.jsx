@@ -82,87 +82,77 @@ export default function MapMenu({ open, onClose }) {
 
   return (
     <div className={`menu-overlay${open ? " open" : ""}`} id="site-menu">
-      <div className="menu-overlay__inner wrap">
-        <div className="menu-overlay__brand">
-          <img className="brand-logo" src="/assets/logo-full.svg" alt="Rivers Design" />
-        </div>
+      <nav className="menu-map-wrap" aria-label="Site map">
+        <div className="map" ref={mapRef} data-zoom={zoom || undefined} onClick={handleMapBackgroundClick}>
+          <button className="map__back" type="button" onClick={() => applyZoom(null)}>
+            &larr; Map
+          </button>
 
-        <nav className="menu-map-wrap" aria-label="Site map">
-          <div className="map" ref={mapRef} data-zoom={zoom || undefined} onClick={handleMapBackgroundClick}>
-            <button
-              className="map__back"
-              type="button"
-              onClick={() => applyZoom(null)}
-            >
-              &larr; Map
-            </button>
-
-            {zoom && (
-              <div className="map__jump" aria-label="Jump to another section">
-                <span className="map__jump-label">Jump to</span>
-                {otherHubs.map((hub) => (
-                  <button
-                    key={hub.node}
-                    type="button"
-                    className="map__jump-btn"
-                    onClick={() => applyZoom(hub.node)}
-                  >
-                    {hub.icon && <img src={hub.icon} alt="" aria-hidden="true" />}
-                    {hub.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="map__scene" ref={sceneRef}>
-              <div className="map__backdrop" aria-hidden="true" />
-              <svg
-                className="map__trails"
-                viewBox="0 0 1000 600"
-                preserveAspectRatio="none"
-                aria-hidden="true"
-                fill="none"
-              >
-                {mapTrails.map((t, i) => (
-                  <path
-                    key={i}
-                    d={t.d}
-                    data-cluster={t.cluster}
-                    stroke={t.stroke}
-                    strokeWidth={t.strokeWidth}
-                    strokeDasharray={t.dash}
-                    strokeLinecap="round"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                ))}
-              </svg>
-
-              {mapWaypoints.map((wp) => {
-                const isCurrent = location.pathname === wp.href;
-                return (
-                  <Link
-                    key={wp.node}
-                    className="wp"
-                    style={{ "--x": `${wp.x}%`, "--y": `${wp.y}%` }}
-                    to={wp.href}
-                    data-node={wp.node}
-                    data-cluster={wp.cluster}
-                    aria-current={isCurrent ? "page" : undefined}
-                    onClick={(e) => {
-                      if (wp.cluster === "hub") handleHubClick(e, wp);
-                      if (!e.defaultPrevented) handleLinkClick();
-                    }}
-                  >
-                    {wp.icon && <img className="wp__icon" src={wp.icon} alt="" aria-hidden="true" />}
-                    <span className="wp__dot" aria-hidden="true" />
-                    <span className="wp__label">{wp.label}</span>
-                  </Link>
-                );
-              })}
+          {zoom && (
+            <div className="map__jump" aria-label="Jump to another section">
+              <span className="map__jump-label">Jump to</span>
+              {otherHubs.map((hub) => (
+                <button
+                  key={hub.node}
+                  type="button"
+                  className="map__jump-btn"
+                  onClick={() => applyZoom(hub.node)}
+                >
+                  {hub.icon && <img src={hub.icon} alt="" aria-hidden="true" />}
+                  {hub.label}
+                </button>
+              ))}
             </div>
+          )}
+
+          <div className="map__scene" ref={sceneRef}>
+            <div className="map__backdrop" aria-hidden="true" />
+            <svg
+              className="map__trails"
+              viewBox="0 0 1000 600"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+              fill="none"
+            >
+              {mapTrails.map((t, i) => (
+                <path
+                  key={i}
+                  d={t.d}
+                  data-cluster={t.cluster}
+                  stroke={t.stroke}
+                  strokeWidth={t.strokeWidth}
+                  strokeDasharray={t.dash}
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+              ))}
+            </svg>
+
+            {mapWaypoints.map((wp) => {
+              const isCurrent = location.pathname === wp.href;
+              return (
+                <Link
+                  key={wp.node}
+                  className="wp"
+                  style={{ "--x": `${wp.x}%`, "--y": `${wp.y}%` }}
+                  to={wp.href}
+                  data-node={wp.node}
+                  data-cluster={wp.cluster}
+                  aria-current={isCurrent ? "page" : undefined}
+                  onClick={(e) => {
+                    if (wp.cluster === "hub") handleHubClick(e, wp);
+                    if (!e.defaultPrevented) handleLinkClick();
+                  }}
+                >
+                  {wp.icon && <img className="wp__icon" src={wp.icon} alt="" aria-hidden="true" />}
+                  <span className="wp__dot" aria-hidden="true" />
+                  <span className="wp__label">{wp.label}</span>
+                </Link>
+              );
+            })}
           </div>
-        </nav>
-      </div>
+        </div>
+      </nav>
     </div>
   );
 }

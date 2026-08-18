@@ -257,10 +257,11 @@ body::after {
 .menu-btn.open .bars span:nth-child(2) { opacity: 0; }
 .menu-btn.open .bars span:nth-child(3) { top: 8.5px; transform: rotate(-45deg); }
 
-/* Full-screen menu overlay — a minimap of the site. The topo texture
-   itself lives inside .map__scene (see .map__backdrop) so it zooms
-   together with the trails/waypoints instead of staying fixed behind
-   them; this is just the plain sheet color around the map box. */
+/* Full-screen menu overlay — the map itself IS the overlay, edge to
+   edge (see .menu-map-wrap/.map below). The topo texture lives inside
+   .map__scene (see .map__backdrop) so it zooms together with the
+   trails/waypoints instead of staying fixed behind them; this is just
+   the plain sheet color as a fallback base. */
 .menu-overlay {
   position: fixed;
   inset: 0;
@@ -268,7 +269,7 @@ body::after {
   background-color: var(--bg-sheet);
   opacity: 0;
   visibility: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   transition:
     opacity var(--dur-3) var(--ease-out),
     visibility 0s linear var(--dur-3);
@@ -279,24 +280,10 @@ body::after {
   transition: opacity var(--dur-3) var(--ease-out);
 }
 body.menu-open { overflow: hidden; }
-.menu-overlay__inner {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  padding-top: calc(var(--header-h) + var(--space-5));
-  padding-bottom: var(--space-5);
-}
-.menu-overlay__brand {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-}
 
 /* Standalone "Rivers Design" wordmark — the full logo lockup, used
-   everywhere the brand stands alone (menu brand row, footer). The
-   page-break dividers keep the original icon + two-line wordmark
+   everywhere the brand stands alone (footer, previously here too).
+   The page-break dividers keep the original icon + two-line wordmark
    treatment instead, so they are NOT touched here. */
 .brand-logo {
   height: clamp(30px, 3.6vw, 46px);
@@ -311,22 +298,17 @@ body.menu-open { overflow: hidden; }
    waypoints (Home / Experience / Projects / About) show at first —
    clicking a hub zooms the .map__scene into its territory and
    reveals that cluster's own waypoints (see MapMenu.jsx). The map
-   fills essentially all leftover vertical space in the overlay so a
-   zoomed-in cluster has room to breathe without clipping. */
+   fills the entire overlay edge to edge — the fixed logo/hamburger
+   float on top of it (higher z-index), no separate brand row needed. */
 .menu-map-wrap {
-  flex: 1 1 auto;
-  display: flex;
-  min-height: 0;
-  overflow-x: auto;
+  position: absolute;
+  inset: 0;
 }
 .map {
   position: relative;
-  flex: 1 1 auto;
   width: 100%;
-  min-height: min(72vh, 660px);
-  min-width: 760px;
+  height: 100%;
   overflow: hidden;
-  border-radius: var(--radius-lg);
 }
 .map__scene {
   position: absolute;
