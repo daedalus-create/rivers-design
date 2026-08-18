@@ -21,9 +21,6 @@ export default function Header() {
   return (
     <header className="site-header wrap">
       <div className="site-header__bar">
-        <Link className="logo" to="/" aria-label="Rivers Design — home">
-          <img src="/assets/logo-lightbulb.svg" alt="Rivers Design" />
-        </Link>
         <button
           className={`menu-btn${open ? " open" : ""}`}
           type="button"
@@ -40,7 +37,12 @@ export default function Header() {
         </button>
       </div>
 
+      <Link className="logo" to="/" aria-label="Rivers Design — home">
+        <img src="/assets/logo.svg" alt="Rivers Design" />
+      </Link>
+
       <p className="site-header__tagline">
+        <img className="site-header__tagline-icon" src="/assets/logo-lightbulb.svg" alt="" aria-hidden="true" />
         Engineer for function, design for form.
         <img className="site-header__tagline-icon" src="/assets/logo-alert.svg" alt="" aria-hidden="true" />
       </p>

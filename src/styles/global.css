@@ -196,8 +196,7 @@ body::after {
   gap: var(--space-8);
 }
 
-/* Lightbulb mark (one of the three pieces the full RD logo is built
-   from) stands in for the logo in the fixed top-left corner, moving
+/* RD logo — the Figma corner mark — fixed at the top-left, moving
    with the viewport the same way the hamburger does on the right.
    The date badge, by contrast, stays put in the header and scrolls
    away with the page. */
@@ -208,7 +207,7 @@ body::after {
   left: var(--page-margin);
   transform: translateY(-50%);
   z-index: 310;
-  height: clamp(40px, 4.4vw, 60px);
+  height: clamp(52px, 5.5vw, 76px);
   transition: opacity var(--t-hover);
 }
 .logo:hover { opacity: .8; }
@@ -539,30 +538,25 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   background: var(--line-strong);
 }
 .site-header {
-  padding-bottom: clamp(48px, 5vw, 72px);
+  padding-bottom: clamp(84px, 9vw, 122px);
 }
 
-/* Tagline fills the space the date badge used to straddle, now that
-   the badge floats fixed at the far left instead (see below) */
-/* Sits in the header bar's own band (same height as the now-fixed
-   logo/hamburger), clear of the rule below it — not straddling that
-   line, which is what made it look crossed-out before. */
-/* Sits right beside the lightbulb (fixed, moves with it) — nowhere
-   near the date badge's column, so nothing ever stacks above it. The
-   alert mark caps the other end of the line. */
+/* Lightbulb + slogan + alert mark — static, scrolling away with the
+   page (the RD logo is the one that's fixed now, see .logo above).
+   Sits below both the rule and the date badge, in the header's own
+   (enlarged) padding-bottom band, clear of the fixed logo above it. */
 .site-header__tagline {
-  position: fixed;
-  left: calc(var(--page-margin) + 78px);
-  top: calc(var(--header-h) / 2);
+  position: absolute;
+  left: var(--page-margin);
+  top: calc(var(--header-h) + clamp(64px, 6.8vw, 96px));
   transform: translateY(-50%);
-  z-index: 310;
+  display: flex;
+  align-items: center;
+  gap: 14px;
   font-family: var(--font-display);
   font-size: clamp(15px, 1.7vw, 24px);
   color: var(--ink-a45);
   white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 14px;
 }
 .site-header__tagline-icon {
   height: 1.3em;
