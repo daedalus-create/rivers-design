@@ -76,6 +76,10 @@ export default function MapMenu({ open, onClose }) {
 
   const handleLinkClick = () => onClose();
 
+  const otherHubs = mapWaypoints.filter(
+    (wp) => wp.cluster === "hub" && wp.node !== "home" && wp.node !== zoom
+  );
+
   return (
     <div className={`menu-overlay${open ? " open" : ""}`} id="site-menu">
       <div className="menu-overlay__inner wrap">
@@ -92,6 +96,24 @@ export default function MapMenu({ open, onClose }) {
             >
               &larr; Map
             </button>
+
+            {zoom && (
+              <div className="map__jump" aria-label="Jump to another section">
+                <span className="map__jump-label">Jump to</span>
+                {otherHubs.map((hub) => (
+                  <button
+                    key={hub.node}
+                    type="button"
+                    className="map__jump-btn"
+                    onClick={() => applyZoom(hub.node)}
+                  >
+                    {hub.icon && <img src={hub.icon} alt="" aria-hidden="true" />}
+                    {hub.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="map__scene" ref={sceneRef}>
               <svg
                 className="map__trails"
@@ -130,6 +152,7 @@ export default function MapMenu({ open, onClose }) {
                       if (!e.defaultPrevented) handleLinkClick();
                     }}
                   >
+                    {wp.icon && <img className="wp__icon" src={wp.icon} alt="" aria-hidden="true" />}
                     <span className="wp__dot" aria-hidden="true" />
                     <span className="wp__label">{wp.label}</span>
                   </Link>

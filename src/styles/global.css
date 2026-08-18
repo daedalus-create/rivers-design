@@ -196,10 +196,17 @@ body::after {
   gap: var(--space-8);
 }
 
-/* RD logo — exported straight from the Figma as one SVG */
+/* RD logo — exported straight from the Figma as one SVG. Fixed at
+   the top-left, moving with the viewport the same way the hamburger
+   does on the right (the date badge, by contrast, stays put in the
+   header and scrolls away with the page). */
 .logo {
   display: block;
-  flex-shrink: 0;
+  position: fixed;
+  top: calc(var(--header-h) / 2);
+  left: var(--page-margin);
+  transform: translateY(-50%);
+  z-index: 310;
   height: clamp(52px, 5.5vw, 76px);
   transition: opacity var(--t-hover);
 }
@@ -337,6 +344,18 @@ body.menu-open { overflow: hidden; }
   width: 100%;
   height: 100%;
 }
+/* dashes flow outward along each trail — from where you are toward
+   where you can go, since every path is drawn from its parent/hub
+   waypoint out to its child */
+.map__trails path {
+  animation: trail-flow 1.6s linear infinite;
+}
+@keyframes trail-flow {
+  to { stroke-dashoffset: -120; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map__trails path { animation: none; }
+}
 
 .wp[data-cluster]:not([data-cluster="hub"]),
 path[data-cluster]:not([data-cluster="hub"]) {
@@ -403,6 +422,43 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
 .map__back:hover { border-color: var(--accent); color: var(--accent); }
 .map[data-zoom] .map__back { display: flex; }
 
+/* quick-switch between sections while zoomed, no trip back to the
+   overview required */
+.map__jump {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 4;
+  display: none;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.map[data-zoom] .map__jump { display: flex; }
+.map__jump-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--ink-a45);
+}
+.map__jump-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg);
+  border: 2px solid var(--line-strong);
+  border-radius: 10px;
+  padding: 6px 14px;
+  font-family: var(--font-display);
+  font-size: clamp(12px, 1.1vw, 15px);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color var(--t-hover), color var(--t-hover);
+}
+.map__jump-btn:hover { border-color: var(--accent); color: var(--accent); }
+.map__jump-btn img { width: 16px; height: 16px; }
+
 /* waypoints — every dot is the same size/color; only the current
    page's dot stands out (pulsing yellow), via [aria-current] below */
 .wp {
@@ -413,15 +469,22 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   text-decoration: none;
   z-index: 2;
   cursor: pointer;
 }
 .wp--up { flex-direction: column-reverse; }
+.wp__icon {
+  width: clamp(22px, 2.4vw, 34px);
+  height: clamp(22px, 2.4vw, 34px);
+  opacity: .85;
+  transition: opacity var(--t-hover), transform var(--t-hover);
+}
+.wp:hover .wp__icon { opacity: 1; transform: scale(1.1); }
 .wp__dot {
-  width: 14px;
-  height: 14px;
+  width: 19px;
+  height: 19px;
   border-radius: 50%;
   background: var(--ink);
   box-shadow: 0 0 0 5px var(--bg-sheet), 0 0 0 7px var(--ink-a45);
@@ -437,7 +500,7 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
 }
 .wp__label {
   font-family: var(--font-display);
-  font-size: clamp(13px, 1.3vw, 19px);
+  font-size: clamp(16px, 1.6vw, 23px);
   line-height: 1.2;
   color: var(--ink);
   text-align: center;
@@ -480,10 +543,13 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
 
 /* Tagline fills the space the date badge used to straddle, now that
    the badge floats fixed at the far left instead (see below) */
+/* Sits in the header bar's own band (same height as the now-fixed
+   logo/hamburger), clear of the rule below it — not straddling that
+   line, which is what made it look crossed-out before. */
 .site-header__tagline {
   position: absolute;
   left: calc(var(--page-margin) + var(--indent));
-  top: var(--header-h);
+  top: calc(var(--header-h) / 2);
   transform: translateY(-50%);
   font-family: var(--font-display);
   font-size: clamp(15px, 1.7vw, 24px);
@@ -491,20 +557,14 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   white-space: nowrap;
 }
 
-/* Date badge — fixed at the far left, moving with the viewport the
-   same way the hamburger does on the right. A soft shadow + faint
-   frosted fill gives it a background so it reads clearly over
-   whatever scrolls underneath it. */
+/* Date badge — stays in normal flow, straddling the header rule like
+   the Figma comp; it scrolls away with the page (unlike the fixed
+   logo/hamburger). */
 .pill.pill--date {
-  position: fixed;
-  left: var(--page-margin);
-  top: calc(var(--header-h) / 2);
+  position: absolute;
+  left: calc(var(--page-margin) + var(--indent));
+  top: var(--header-h);
   transform: translateY(-50%);
-  z-index: 310;
-  background: rgba(30, 30, 30, .82);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, .45);
 }
 
 /* Double-ring badge — Figma's white outer / yellow inner rounded

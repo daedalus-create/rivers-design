@@ -17,8 +17,8 @@ SEED = 7
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
 W, H = 1000, 600
-GW, GH = 110, 66      # coarser grid + smoothing below = softer, organic lines
-LEVELS = 15
+GW, GH = 140, 84      # finer grid than before — more, denser contour lines
+LEVELS = 26            # real topo sheets read as dense; index line every 5th
 
 random.seed(SEED)
 
@@ -165,9 +165,11 @@ def chain(segs):
 parts = []
 for li in range(1, LEVELS + 1):
     iso = li / (LEVELS + 1)
-    index_line = (li % 4 == 0)
-    stroke = "#2a2a2a" if index_line else "#252525"
-    width = "1.4" if index_line else "1"
+    # real topo sheets bold every 5th contour as an "index line" and
+    # keep the rest faint — more contrast between the two than before
+    index_line = (li % 5 == 0)
+    stroke = "#333333" if index_line else "#242424"
+    width = "1.6" if index_line else "0.9"
     ds = []
     for line, closed in chain(segments_for(iso)):
         if len(line) < 4:
@@ -229,8 +231,8 @@ trails = []
 for a, b, kind, cluster in LINKS:
     d = catmull_path(trail_points(N[a], N[b]))
     style = (
-        {"stroke": "#5a5a5a", "strokeWidth": 2, "dash": "2 9"} if kind == "p"
-        else {"stroke": "#454545", "strokeWidth": 1.5, "dash": "1 8"}
+        {"stroke": "#6b6b6b", "strokeWidth": 3, "dash": "3 12"} if kind == "p"
+        else {"stroke": "#4f4f4f", "strokeWidth": 2.2, "dash": "2 11"}
     )
     trails.append({"d": d, "cluster": cluster, **style})
 
