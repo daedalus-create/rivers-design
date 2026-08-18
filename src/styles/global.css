@@ -1,0 +1,782 @@
+/* ============================================================
+   Rivers Design — rivers-design.com
+   Figma palette + type, sized and spaced on the
+   merttureli.com rhythm (clamped display type, wide margins,
+   tracked caps meta, hairline rules, grain, slow ease-outs).
+   ============================================================ */
+
+/* ---------- Fonts ---------- */
+@font-face {
+  font-family: 'Ideation';
+  src: url('/fonts/Ideation-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/fonts/BeVietnamPro-300.woff2') format('woff2');
+  font-weight: 300; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/fonts/BeVietnamPro-400.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/fonts/BeVietnamPro-500.woff2') format('woff2');
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/fonts/BeVietnamPro-600.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+
+/* ---------- Tokens ---------- */
+:root {
+  /* Figma palette */
+  --bg: #1e1e1e;
+  --bg-raised: #242424;
+  --bg-sheet: #212121;
+  --ink: #ffffff;
+  --accent: #ffcc40;
+
+  --ink-a80: rgba(255, 255, 255, .80);
+  --ink-a65: rgba(255, 255, 255, .65);
+  --ink-a45: rgba(255, 255, 255, .45);
+  --ink-a25: rgba(255, 255, 255, .25);
+  --ink-a14: rgba(255, 255, 255, .14);
+  --ink-a08: rgba(255, 255, 255, .08);
+  --accent-a30: rgba(255, 204, 64, .30);
+
+  --line-hair: var(--ink-a14);
+  --line-strong: var(--ink);
+
+  /* Figma fonts */
+  --font-display: 'Ideation', ui-monospace, 'Cascadia Mono', monospace;
+  --font-body: 'Be Vietnam Pro', 'Helvetica Neue', Helvetica, sans-serif;
+
+  /* Type scale — merttureli sizing */
+  --fs-display-1: clamp(56px, 9.5vw, 150px);
+  --fs-display-2: clamp(40px, 6vw, 96px);
+  --fs-title-1: clamp(30px, 3.6vw, 60px);
+  --fs-title-2: clamp(22px, 2.4vw, 34px);
+  --fs-body-lg: clamp(17px, 1.35vw, 21px);
+  --fs-body: 16px;
+  --fs-body-sm: 14px;
+  --fs-meta: 12px;
+  --fs-meta-sm: 10px;
+
+  --lh-display: 0.96;
+  --lh-title: 1.08;
+  --lh-body: 1.62;
+  --lh-meta: 1.4;
+
+  --ls-display: -0.01em;
+  --ls-caps: 0.18em;
+  --ls-caps-wide: 0.32em;
+  --ls-nav: 0.12em;
+
+  /* Spacing — merttureli rhythm */
+  --space-1: 4px;  --space-2: 8px;   --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px;  --space-7: 48px; --space-8: 64px;
+  --space-9: 96px; --space-10: 128px;
+
+  --page-margin: clamp(24px, 5vw, 88px);
+  --section-y: clamp(96px, 14vh, 192px);
+  --max-width: 1680px;
+  --max-text: 720px;
+  --header-h: clamp(96px, 11.5vw, 170px);
+
+  /* The column projected down from the date badge — big display
+     text left-aligns to it, exactly as in the Figma comp */
+  --indent: clamp(80px, 8.4vw, 166px);
+
+  --radius-md: 8px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-2: 240ms;
+  --dur-3: 480ms;
+  --dur-4: 780ms;
+  --t-hover: var(--dur-2) var(--ease-out);
+}
+
+/* ---------- Reset / base ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+img, svg, canvas { display: block; max-width: 100%; }
+a { color: inherit; }
+ul { list-style: none; }
+button { font: inherit; }
+
+/* Ideation has no bold cut — never let the browser fake one */
+h1, h2, h3, h4, strong, b { font-weight: 400; }
+
+::selection { background: var(--accent); color: var(--bg); }
+
+/* Grain overlay, as on the reference site */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 200;
+  opacity: .5;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+}
+
+.wrap {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding-left: var(--page-margin);
+  padding-right: var(--page-margin);
+}
+
+/* ---------- Typographic helpers ---------- */
+.display {
+  font-family: var(--font-display);
+  font-size: var(--fs-display-2);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+  font-weight: 400;
+}
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-title-1);
+  line-height: var(--lh-title);
+  font-weight: 400;
+}
+.meta {
+  font-family: var(--font-display);
+  font-size: var(--fs-meta);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  line-height: var(--lh-meta);
+  color: var(--ink-a65);
+}
+.meta--wide { letter-spacing: var(--ls-caps-wide); }
+.meta--accent { color: var(--accent); }
+
+.lede {
+  font-size: var(--fs-body-lg);
+  font-weight: 300;
+  color: var(--ink-a80);
+  max-width: var(--max-text);
+}
+
+/* ---------- Header ---------- */
+.site-header {
+  position: relative;
+  z-index: 50;
+}
+.site-header__bar {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+/* RD logo — exported straight from the Figma as one SVG */
+.logo {
+  display: block;
+  flex-shrink: 0;
+  height: clamp(52px, 5.5vw, 76px);
+  transition: opacity var(--t-hover);
+}
+.logo:hover { opacity: .8; }
+.logo img { height: 100%; width: auto; }
+
+/* Hamburger button — styled like the badges (white ring, dark fill) */
+.menu-btn {
+  position: fixed;
+  top: calc(var(--header-h) / 2);
+  right: var(--page-margin);
+  transform: translateY(-50%);
+  z-index: 310;
+  width: clamp(52px, 5vw, 68px);
+  height: clamp(52px, 5vw, 68px);
+  background: var(--bg);
+  border: 3px solid var(--line-strong);
+  border-radius: clamp(12px, 1.2vw, 16px);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  transition: border-color var(--t-hover);
+}
+.menu-btn:hover { border-color: var(--accent); }
+.menu-btn .bars {
+  position: relative;
+  display: block;
+  width: 26px;
+  height: 20px;
+}
+.menu-btn .bars span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--ink);
+  transition:
+    top var(--dur-3) var(--ease-out),
+    transform var(--dur-3) var(--ease-out),
+    opacity var(--dur-2) var(--ease-out);
+}
+.menu-btn .bars span:nth-child(1) { top: 0; }
+.menu-btn .bars span:nth-child(2) { top: 8.5px; }
+.menu-btn .bars span:nth-child(3) { top: 17px; }
+.menu-btn.open .bars span:nth-child(1) { top: 8.5px; transform: rotate(45deg); }
+.menu-btn.open .bars span:nth-child(2) { opacity: 0; }
+.menu-btn.open .bars span:nth-child(3) { top: 8.5px; transform: rotate(-45deg); }
+
+/* Full-screen menu overlay — a minimap of the site */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  /* the whole page becomes the map sheet: topo height-map + graticule */
+  background-color: var(--bg-sheet);
+  background-image:
+    url('/assets/contours.svg'),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .025) 0 1px, transparent 1px 90px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .025) 0 1px, transparent 1px 90px);
+  background-size: cover, auto, auto;
+  background-position: center;
+  opacity: 0;
+  visibility: hidden;
+  overflow-y: auto;
+  transition:
+    opacity var(--dur-3) var(--ease-out),
+    visibility 0s linear var(--dur-3);
+}
+.menu-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--dur-3) var(--ease-out);
+}
+body.menu-open { overflow: hidden; }
+.menu-overlay__inner {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: calc(var(--header-h) + var(--space-5));
+  padding-bottom: var(--space-5);
+}
+.menu-overlay__brand {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+/* Standalone "Rivers Design" wordmark — the full logo lockup, used
+   everywhere the brand stands alone (menu brand row, footer). The
+   page-break dividers keep the original icon + two-line wordmark
+   treatment instead, so they are NOT touched here. */
+.brand-logo {
+  height: clamp(30px, 3.6vw, 46px);
+  width: auto;
+}
+.brand-logo--footer {
+  height: clamp(20px, 2.2vw, 28px);
+}
+
+/* Site map as an actual trail map: contour height-map background,
+   dashed trails, waypoint dots, "you are here". Only the four hub
+   waypoints (Home / Experience / Projects / About) show at first —
+   clicking a hub zooms the .map__scene into its territory and
+   reveals that cluster's own waypoints (see MapMenu.jsx). The map
+   fills essentially all leftover vertical space in the overlay so a
+   zoomed-in cluster has room to breathe without clipping. */
+.menu-map-wrap {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+  overflow-x: auto;
+}
+.map {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: min(72vh, 660px);
+  min-width: 760px;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+}
+.map__scene {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  transition: transform 700ms var(--ease-out);
+}
+.map__trails {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.wp[data-cluster]:not([data-cluster="hub"]),
+path[data-cluster]:not([data-cluster="hub"]) {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-3) var(--ease-out);
+}
+.map[data-zoom="experience"] [data-cluster="experience"],
+.map[data-zoom="projects"] [data-cluster="projects"],
+.map[data-zoom="about"] [data-cluster="about"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
+.map[data-zoom] path[data-cluster="hub"] { opacity: .2; }
+
+/* dim the other hubs (but keep Home as a landmark) while zoomed */
+.map[data-zoom="experience"] .wp[data-cluster="hub"]:not([data-node="home"]):not([data-node="experience"]),
+.map[data-zoom="projects"] .wp[data-cluster="hub"]:not([data-node="home"]):not([data-node="projects"]),
+.map[data-zoom="about"] .wp[data-cluster="hub"]:not([data-node="home"]):not([data-node="about"]) {
+  opacity: .3;
+}
+
+/* "+" hints a hub has more to explore; swaps to an open hint once zoomed */
+.wp[data-cluster="hub"]:not([data-node="home"]) .wp__label::before {
+  content: '+ ';
+  color: var(--accent);
+  transition: opacity var(--t-hover);
+}
+.map[data-zoom] .wp[data-cluster="hub"]:not([data-node="home"]) .wp__label::before { opacity: 0; }
+.map[data-zoom="experience"] .wp[data-node="experience"]:not([aria-current]) .wp__label::after,
+.map[data-zoom="projects"] .wp[data-node="projects"]:not([aria-current]) .wp__label::after,
+.map[data-zoom="about"] .wp[data-node="about"]:not([aria-current]) .wp__label::after {
+  content: 'Click again to open →';
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* back-to-map control, shown only while zoomed */
+.map__back {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 4;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 2px solid var(--line-strong);
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-family: var(--font-display);
+  font-size: clamp(12px, 1.1vw, 15px);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color var(--t-hover), color var(--t-hover);
+}
+.map__back:hover { border-color: var(--accent); color: var(--accent); }
+.map[data-zoom] .map__back { display: flex; }
+
+/* waypoints — every dot is the same size/color; only the current
+   page's dot stands out (pulsing yellow), via [aria-current] below */
+.wp {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  z-index: 2;
+  cursor: pointer;
+}
+.wp--up { flex-direction: column-reverse; }
+.wp__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 5px var(--bg-sheet), 0 0 0 7px var(--ink-a45);
+  transition:
+    background var(--t-hover),
+    box-shadow var(--t-hover),
+    transform var(--t-hover);
+}
+.wp:hover .wp__dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 5px var(--bg-sheet), 0 0 0 7px var(--accent);
+  transform: scale(1.15);
+}
+.wp__label {
+  font-family: var(--font-display);
+  font-size: clamp(13px, 1.3vw, 19px);
+  line-height: 1.2;
+  color: var(--ink);
+  text-align: center;
+  white-space: nowrap;
+  transition: color var(--t-hover);
+}
+.wp:hover .wp__label { color: var(--accent); }
+.wp[aria-current="page"] .wp__dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 5px var(--bg-sheet), 0 0 0 7px var(--accent);
+  animation: wp-pulse 2.2s var(--ease-out) infinite;
+}
+.wp[aria-current="page"] .wp__label::after {
+  content: 'You are here';
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+@keyframes wp-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+
+/* Full-bleed rule at the bottom of the header bar; the date badge
+   straddles it, hanging half below — as in the Figma */
+.site-header::after {
+  content: '';
+  position: absolute;
+  left: calc(50% - 50vw);
+  width: 100vw;
+  top: var(--header-h);
+  height: 3px;
+  background: var(--line-strong);
+}
+.site-header {
+  padding-bottom: clamp(48px, 5vw, 72px);
+}
+.pill.pill--date {
+  position: absolute;
+  left: calc(var(--page-margin) + var(--indent));
+  top: var(--header-h);
+  transform: translateY(-50%);
+}
+
+/* Double-ring badge — Figma's white outer / yellow inner rounded
+   rectangle (600x150, r30/r25), scaled to roughly half size */
+.pill {
+  display: inline-block;
+  position: relative;
+  z-index: 1;
+  background: var(--bg);
+  border: 3px solid var(--line-strong);
+  border-radius: clamp(15px, 1.6vw, 22px);
+  padding: 0;
+}
+.pill__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--accent);
+  border-radius: clamp(12px, 1.4vw, 19px);
+  padding: clamp(12px, 1.6vw, 20px) clamp(28px, 3.5vw, 56px);
+  font-family: var(--font-display);
+  font-size: clamp(24px, 2.6vw, 42px);
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.pill__inner .slash { color: var(--accent); }
+a.pill { text-decoration: none; }
+a.pill:hover .pill__inner { color: var(--accent); }
+
+/* ---------- Sections ---------- */
+.section { padding-top: var(--section-y); padding-bottom: var(--section-y); }
+.section--tight { padding-top: var(--space-9); padding-bottom: var(--space-9); }
+
+/* Statement rows — “The Idea:” / “The Dream:” */
+.statement {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) 2fr;
+  gap: var(--space-6) var(--space-8);
+  align-items: start;
+  margin-left: var(--indent);
+}
+.statement + .statement { margin-top: clamp(var(--space-8), 9vh, var(--space-10)); }
+.statement__label {
+  font-family: var(--font-display);
+  font-size: var(--fs-title-1);
+  line-height: var(--lh-title);
+}
+.statement__label .colon { color: var(--accent); }
+.statement__text {
+  font-size: var(--fs-body-lg);
+  font-weight: 300;
+  line-height: var(--lh-body);
+  color: var(--ink-a80);
+  max-width: var(--max-text);
+  padding-top: .4em;
+}
+
+/* ---------- Divider (Figma spacer: rule + marks + wordmark + pill) ---------- */
+.divider {
+  position: relative;
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-6);
+}
+.divider::before {
+  content: '';
+  position: absolute;
+  left: calc(50% - 50vw);
+  width: 100vw;
+  top: 50%;
+  height: 3px;
+  background: var(--line-strong);
+}
+.divider__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  /* left element starts on the projected badge column, as in the Figma */
+  margin-left: var(--indent);
+}
+.divider__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--bg);
+  padding: 0 var(--space-4);
+}
+.divider__brand img { width: clamp(44px, 4.5vw, 72px); height: auto; }
+.divider__wordmark {
+  font-family: var(--font-display);
+  font-size: clamp(14px, 1.4vw, 22px);
+  line-height: 1.25;
+  color: var(--ink);
+}
+.divider--flip .divider__row { flex-direction: row-reverse; }
+
+/* ---------- Project cards ---------- */
+.project { margin-top: clamp(var(--space-9), 12vh, var(--space-10)); }
+.project:first-of-type { margin-top: 0; }
+
+.project__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  margin-left: var(--indent);
+}
+.project__num {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 3.6vw, 60px);
+  line-height: var(--lh-title);
+  color: var(--accent);
+}
+.project__num::after { content: ':'; }
+.project__title {
+  font-family: var(--font-display);
+  font-size: var(--fs-title-1);
+  line-height: var(--lh-title);
+}
+.project__title a { text-decoration: none; }
+.project__sub {
+  margin-top: var(--space-3);
+  margin-left: calc(var(--indent) + clamp(0px, 4vw, 64px));
+  font-size: var(--fs-body-lg);
+  font-weight: 300;
+  color: var(--ink-a65);
+  max-width: var(--max-text);
+}
+.project__desc {
+  margin-top: var(--space-4);
+  margin-left: calc(var(--indent) + clamp(0px, 4vw, 64px));
+  font-weight: 300;
+  color: var(--ink-a80);
+  max-width: var(--max-text);
+}
+
+/* 3D placeholder frame — the Figma bordered box, canvas inside */
+.model-frame {
+  position: relative;
+  margin-top: var(--space-6);
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  height: clamp(280px, 42vw, 520px);
+  background:
+    radial-gradient(120% 90% at 50% 110%, var(--ink-a08), transparent 60%),
+    var(--bg-raised);
+}
+.model-frame canvas {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+.model-frame canvas:active { cursor: grabbing; }
+.model-frame__tag {
+  position: absolute;
+  left: var(--space-5);
+  top: var(--space-4);
+  z-index: 2;
+  pointer-events: none;
+}
+.model-frame__hint {
+  position: absolute;
+  right: var(--space-5);
+  bottom: var(--space-4);
+  z-index: 2;
+  pointer-events: none;
+  color: var(--ink-a45);
+}
+
+/* Spec strip under a project — reference-site style rows */
+.specs {
+  margin-top: var(--space-5);
+  border-top: 1px solid var(--line-hair);
+}
+.specs li {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) 1fr;
+  gap: var(--space-5);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--line-hair);
+}
+.specs .k {
+  font-family: var(--font-display);
+  font-size: var(--fs-meta);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--ink-a45);
+  padding-top: 3px;
+}
+.specs .v {
+  font-family: var(--font-display);
+  font-size: var(--fs-meta);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--ink-a80);
+}
+
+/* Section titles inside pages (Completed:, Still Working:, Resume:) */
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3vw, 48px);
+  line-height: var(--lh-title);
+  margin-left: var(--indent);
+  margin-bottom: var(--space-7);
+}
+.section-title .colon { color: var(--accent); }
+
+/* ---------- Experience entries ---------- */
+.xp {
+  border-top: 1px solid var(--line-hair);
+  padding: var(--space-7) 0 var(--space-8);
+  display: grid;
+  grid-template-columns: minmax(200px, 320px) 1fr;
+  gap: var(--space-6) var(--space-8);
+}
+.xp:last-of-type { border-bottom: 1px solid var(--line-hair); }
+.xp__role { font-family: var(--font-display); font-size: var(--fs-title-2); line-height: var(--lh-title); }
+.xp__org { margin-top: var(--space-2); }
+.xp__body p + p { margin-top: var(--space-4); }
+.xp__body {
+  font-weight: 300;
+  font-size: var(--fs-body-lg);
+  color: var(--ink-a80);
+  max-width: 70ch;
+}
+/* 3D / media frames break out to the full article width */
+.xp > .model-frame { grid-column: 1 / -1; margin-top: 0; }
+
+/* ---------- Buttons / links ---------- */
+.link-arrow {
+  display: inline-block;
+  margin-top: var(--space-5);
+  font-family: var(--font-display);
+  font-size: var(--fs-meta);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--ink);
+  border-bottom: 1px solid var(--ink-a25);
+  padding-bottom: 4px;
+  transition: border-color var(--t-hover), color var(--t-hover);
+}
+.link-arrow:hover { border-color: var(--accent); color: var(--accent); }
+.link-arrow .arr { color: var(--accent); }
+
+/* ---------- Page hero (interior pages) ---------- */
+.page-hero {
+  padding-top: clamp(var(--space-8), 10vh, var(--space-10));
+  padding-bottom: clamp(var(--space-7), 8vh, var(--space-9));
+  padding-left: calc(var(--page-margin) + var(--indent));
+}
+.page-hero .display { margin-top: var(--space-4); }
+.page-hero .lede { margin-top: var(--space-6); }
+
+/* ---------- Footer ---------- */
+.site-footer {
+  border-top: 1px solid var(--line-hair);
+  margin-top: var(--section-y);
+  padding: var(--space-8) 0 var(--space-7);
+}
+.site-footer__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+.site-footer .meta { color: var(--ink-a45); }
+.site-footer a { text-decoration: none; }
+.site-footer a:hover { color: var(--accent); }
+
+/* ---------- Reveal on scroll ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity var(--dur-4) var(--ease-out),
+    transform var(--dur-4) var(--ease-out);
+  transition-delay: calc(var(--stagger-i, 0) * 90ms);
+}
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 860px) {
+  :root { --indent: 0px; }
+  .statement, .xp { grid-template-columns: 1fr; }
+  .statement__text { padding-top: 0; }
+  .divider__row { flex-wrap: wrap; justify-content: center; row-gap: var(--space-4); }
+  .project__sub { margin-left: 0; }
+  .site-header__bar { gap: var(--space-4); }
+  .pill--date { left: var(--page-margin); }
+}

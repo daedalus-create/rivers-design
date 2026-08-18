@@ -1,59 +1,131 @@
 # Rivers Design — rivers-design.com
 
-Portfolio site built from the Figma comp, restyled onto the sizing / spacing /
-motion system of merttureli.com. Fully static — no build step.
+Portfolio site built with **React + Vite + React Router**, styled on the
+Figma comp's palette/type and the sizing/spacing/motion system of
+merttureli.com.
+
+## Stack
+
+- **Vite** — dev server + build
+- **React 19** — components
+- **React Router 7** — client-side routing (`BrowserRouter`)
+- **three.js** — the 3D placeholder viewers, lazy-loaded per page
 
 ## Structure
 
 ```
-index.html         Home: The Idea / The Dream, Projects, Experience previews
-projects.html      Pyro MK:7, Hephaestus Forge — full entries + spec tables
-experience.html    SunThru, Dreki Systems — role entries
-about.html         Bio + The Idea / The Dream + quick-facts table
-css/style.css      Design tokens + all styling
-js/main.js         Date badge + scroll reveals
-js/models.js       Three.js 3D placeholder viewers
-fonts/             Ideation (your font) + Be Vietnam Pro (self-hosted)
-assets/            Logo + divider SVGs exported from the Figma
-vendor/            three.js + OrbitControls (vendored, no CDN)
-CNAME              For GitHub Pages custom-domain deploys
+index.html              Vite entry (mounts src/main.jsx)
+public/
+  assets/                Logo, divider icons, generated contours.svg
+  fonts/                 Ideation (your font) + Be Vietnam Pro (self-hosted)
+  CNAME                  rivers-design.com, for GitHub Pages custom domain
+src/
+  main.jsx                Router + global CSS entry
+  App.jsx                 Route table
+  styles/global.css       Design tokens + all styling
+  data/                   mapWaypoints.js, mapTrails.js (generated), projects.js, roles.js
+  hooks/useReveal.js       Scroll-reveal hook
+  components/
+    Layout.jsx             Header + <Outlet/> + Footer, scroll-to-top/hash on route change
+    Header.jsx              Logo, hamburger, date badge
+    MapMenu.jsx              Interactive site-map overlay (click-to-zoom navigation)
+    Divider.jsx              Page-break component (icon marks + wordmark + pill link)
+    Footer.jsx
+    ModelViewer.jsx          three.js placeholder viewer
+    LazyModelViewer.jsx      code-split wrapper around ModelViewer (three.js is ~500KB)
+  pages/                   One file per route (see below)
+tools/
+  generate-map.py          Regenerates public/assets/contours.svg + src/data/mapTrails.js
+legacy-static/             Pre-React version of the site, kept for reference (not built/served)
 ```
+
+## Routes
+
+Every site-map waypoint is its own real page — no more anchors inside a
+combined file:
+
+```
+/                              Home
+/about                         About
+/about/contact                 Contact
+/experience                    Experience (hub — links to the two below)
+/experience/work-excerpts      Role write-ups (SunThru, Dreki Systems)
+/experience/resume             Resume
+/projects                      Projects (hub — links to the two below)
+/projects/completed            Completed projects list
+/projects/still-working        In-progress project plans list
+/projects/:slug                Individual project page (pyro-mk7, hephaestus-forge, plan-1, plan-2)
+```
+
+Project pages are data-driven from `src/data/projects.js` — add a new
+entry there and `/projects/your-slug` exists automatically.
 
 ## Run locally
 
 ```bash
-python -m http.server 8137
+npm install
+npm run dev
 ```
 
-Then open http://localhost:8137. (A server is required — ES modules don't run
-from `file://`.)
+Opens at http://localhost:5173.
+
+## Build
+
+```bash
+npm run build
+```
+
+Outputs static files to `dist/`. The `postbuild` script automatically
+copies `dist/index.html` to `dist/404.html` — this is the standard trick
+for serving a client-routed SPA from GitHub Pages, which has no server
+to rewrite unknown paths back to `index.html` itself.
 
 ## Swapping in real 3D models
 
-Each placeholder is a `.model-frame` with a `data-model` attribute
-(`engine`, `forge`, `panel`, `drone`) that maps to a wireframe builder in
-`js/models.js`. When you have real CAD exports:
+Each placeholder is a `<ModelViewer kind="…" />` (`engine`, `forge`,
+`panel`, `drone`, `concept`) rendering a wireframe builder in
+`src/components/ModelViewer.jsx`. When you have real CAD exports:
 
-1. Export as `.glb` (from Fusion/SolidWorks via Blender, or any glTF exporter).
-2. Drop them in `assets/models/`.
-3. In `js/models.js`, import `GLTFLoader` from
-   `three/addons/loaders/GLTFLoader.js` (download it into `vendor/` the same
-   way OrbitControls is) and load the file instead of calling the builder.
+1. Export as `.glb`.
+2. Drop the file in `public/assets/models/`.
+3. Import `GLTFLoader` from `three/examples/jsm/loaders/GLTFLoader.js`
+   and load the file instead of calling the wireframe builder.
+
+## Regenerating the site-map terrain
+
+`tools/generate-map.py` builds the topographic background
+(`public/assets/contours.svg`) and the terrain-following trail paths
+(`src/data/mapTrails.js`) from one fractal-noise heightfield, so they
+always agree with each other:
+
+```bash
+npm run generate-map
+```
+
+Edit `SEED` at the top of the script to re-roll the landscape. Waypoint
+*positions* (which drive both the dots and the trail endpoints) live by
+hand in `src/data/mapWaypoints.js` — keep the `POSITIONS` dict at the
+top of `generate-map.py` in sync if you move a dot.
 
 ## Deploying to rivers-design.com (Squarespace domain)
 
-The domain is registered at Squarespace, but the site itself can be hosted
-anywhere static. Easiest path — GitHub Pages:
+The domain is registered at Squarespace, but the built site is fully
+static, so it can be hosted anywhere. Easiest path — GitHub Pages:
 
-1. Push this folder to a GitHub repo, enable **Settings → Pages** on the main
-   branch. The `CNAME` file is already in place.
-2. In Squarespace: **Settings → Domains → rivers-design.com → DNS Settings**,
-   then add:
+1. Push this repo to GitHub, enable **Settings → Pages** on the branch
+   that contains a built `dist/` (or add a GitHub Actions workflow that
+   runs `npm run build` and publishes `dist/`). The `public/CNAME` file
+   ends up in `dist/CNAME` automatically.
+2. In Squarespace: **Settings → Domains → rivers-design.com → DNS
+   Settings**, then add:
    - Four `A` records, host `@`, pointing to
      `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
    - One `CNAME` record, host `www`, pointing to `<your-github-username>.github.io`
-3. Back in GitHub Pages settings, enter `rivers-design.com` as the custom
-   domain and enable **Enforce HTTPS** once the check passes.
+3. Back in GitHub Pages settings, enter `rivers-design.com` as the
+   custom domain and enable **Enforce HTTPS** once the check passes.
 
-Netlify or Cloudflare Pages work equally well (drag-and-drop the folder, then
-point Squarespace DNS at the host they give you).
+Netlify or Cloudflare Pages work just as well — connect the repo, set
+the build command to `npm run build` and the publish directory to
+`dist`, then point Squarespace DNS at the host they give you. Both
+handle SPA routing natively, so the manual `404.html` copy step is only
+required for GitHub Pages.

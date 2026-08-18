@@ -1,22 +1,20 @@
-"""Rivers Design site-map generator.
+"""Rivers Design site-map generator (React version).
 
 One noise heightfield drives everything so it all agrees:
-  - assets/contours.svg        organic topo background (smoothed)
-  - .map__regions svg          territory boundaries per page cluster
-  - .map__trails svg           terrain-following web trails
-  - .wp waypoints              click targets, tagged with data-node /
-                                data-cluster so CSS + main.js can hide
-                                child waypoints until their hub is
-                                clicked (click-to-zoom navigation)
+  - public/assets/contours.svg   organic topo background
+  - src/data/mapTrails.js        terrain-following trail <path> data,
+                                  consumed by src/components/MapMenu.jsx
+
+Waypoint positions/labels/hrefs live by hand in
+src/data/mapWaypoints.js (small, hand-authored, tightly coupled to
+React Router paths) — this script only owns the generated geometry.
 
 Run from anywhere; edit SEED to re-roll the landscape.
 """
-import random, math, io, re, os
+import random, math, io, os
 
 SEED = 7
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-PAGES = {"index.html": "home", "about.html": "about",
-         "projects.html": "projects", "experience.html": "experience"}
 
 W, H = 1000, 600
 GW, GH = 110, 66      # coarser grid + smoothing below = softer, organic lines
@@ -174,9 +172,6 @@ for li in range(1, LEVELS + 1):
     for line, closed in chain(segments_for(iso)):
         if len(line) < 4:
             continue
-        # downsample then smooth twice: removes the marching-squares
-        # zigzag so the line reads as a hand-drawn contour, not a
-        # polygon — this is the "organic, not sharp" pass
         thin = line[::2] if len(line) > 12 else line
         smooth = laplacian_smooth(thin, closed, iterations=3, factor=0.6)
         ds.append(catmull_path(smooth, closed=closed))
@@ -186,50 +181,36 @@ for li in range(1, LEVELS + 1):
 contours_svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
                 f'fill="none" stroke-linejoin="round" stroke-linecap="round">\n'
                 + "\n".join(parts) + "\n</svg>\n")
-with io.open(os.path.join(ROOT, "assets", "contours.svg"), "w", encoding="utf-8") as f:
+with io.open(os.path.join(ROOT, "public", "assets", "contours.svg"), "w", encoding="utf-8") as f:
     f.write(contours_svg)
 print("contours.svg:", len(contours_svg) // 1024, "KB")
 
-# ---------------- clusters ----------------
-# key -> (href, x%, y%, cluster, extra-class, label)
-# cluster "hub" = always visible; other clusters hidden until their
-# hub waypoint is clicked (see main.js zoom logic + CSS below)
-WAYPOINTS = [
-    ("home",       "index.html",              50, 16, "hub",        "wp--home", "Home"),
-    ("experience", "experience.html",         22, 40, "hub",        "wp--page", "Experience"),
-    ("work",       "experience.html#work",    12, 66, "experience", "",         "Work Excerpts"),
-    ("resume",     "experience.html#resume",  31, 74, "experience", "",         "Resume"),
-    ("projects",   "projects.html",           52, 50, "hub",        "wp--page", "Projects"),
-    ("completed",  "projects.html#completed", 43, 72, "projects",   "",         "Completed"),
-    ("pages",      "projects.html#pyro",      38, 90, "projects",   "wp--up",   "Project Pages"),
-    ("working",    "projects.html#plans",     63, 73, "projects",   "",         "Still Working"),
-    ("plans",      "projects.html#plans",     68, 90, "projects",   "wp--up",   "Project Plans"),
-    ("about",      "about.html",              82, 38, "hub",        "wp--page", "About Me"),
-    ("contact",    "about.html#contact",      87, 66, "about",      "",         "Contact"),
-]
-N = {k: (x / 100 * W, y / 100 * H) for k, _, x, y, *_ in WAYPOINTS}
-
-# Zoom-target centers per cluster, as a fraction of container width/height
-# (0..1). These used to also be territory-ellipse centers when the map
-# drew dashed "circle" boundaries around each cluster; those boundaries
-# were removed, but the centers still anchor where main.js zooms the
-# .map__scene when a hub waypoint is clicked.
-ZOOM_TARGETS = {
-    "experience": (0.215, 0.60, 1.4),
-    "projects": (0.528, 0.725, 1.4),
-    "about": (0.845, 0.52, 1.65),
+# ---------------- waypoint positions (must match src/data/mapWaypoints.js) ----------------
+# key -> (x%, y%)  — kept in sync by hand with mapWaypoints.js
+POSITIONS = {
+    "home": (50, 16),
+    "experience": (22, 42),
+    "work": (14, 68),
+    "resume": (32, 76),
+    "projects": (56, 46),
+    "completed": (44, 74),
+    "working": (68, 74),
+    "about": (82, 40),
+    "contact": (87, 68),
 }
+N = {k: (x / 100 * W, y / 100 * H) for k, (x, y) in POSITIONS.items()}
 
 # (from, to, kind, cluster) — cluster "hub" always visible; others only
-# visible while their cluster is the active zoom
+# visible while their cluster is the active zoom. "pages"/"plans" leaf
+# nodes were dropped now that Completed / Still Working link straight
+# to real list pages (see App.jsx routes) instead of anchors.
 LINKS = [
     ("home", "experience", "p", "hub"), ("home", "projects", "p", "hub"), ("home", "about", "p", "hub"),
     ("experience", "work", "p", "experience"), ("experience", "resume", "p", "experience"),
-    ("projects", "completed", "p", "projects"), ("completed", "pages", "p", "projects"),
-    ("projects", "working", "p", "projects"), ("working", "plans", "p", "projects"),
+    ("projects", "completed", "p", "projects"), ("projects", "working", "p", "projects"),
     ("about", "contact", "p", "about"),
     ("experience", "projects", "s", "hub"), ("projects", "about", "s", "hub"),
-    ("work", "resume", "s", "experience"), ("pages", "plans", "s", "projects"),
+    ("work", "resume", "s", "experience"), ("completed", "working", "s", "projects"),
 ]
 
 def trail_points(p0, p1, k=120, n=16):
@@ -244,60 +225,31 @@ def trail_points(p0, p1, k=120, n=16):
         pts.append((x + px * off, y + py * off))
     return pts
 
-trail_paths = []
+trails = []
 for a, b, kind, cluster in LINKS:
     d = catmull_path(trail_points(N[a], N[b]))
-    if kind == "p":
-        style = 'stroke="#5a5a5a" stroke-width="2" stroke-dasharray="2 9"'
-    else:
-        style = 'stroke="#454545" stroke-width="1.5" stroke-dasharray="1 8"'
-    trail_paths.append(f'<path d="{d}" {style} stroke-linecap="round" '
-                        f'data-cluster="{cluster}" vector-effect="non-scaling-stroke"/>')
+    style = (
+        {"stroke": "#5a5a5a", "strokeWidth": 2, "dash": "2 9"} if kind == "p"
+        else {"stroke": "#454545", "strokeWidth": 1.5, "dash": "1 8"}
+    )
+    trails.append({"d": d, "cluster": cluster, **style})
 
-trails_svg = ('<svg class="map__trails" viewBox="0 0 1000 600" preserveAspectRatio="none" '
-              'aria-hidden="true" fill="none">\n              '
-              + "\n              ".join(trail_paths) + "\n            </svg>")
+js_lines = [
+    "// Auto-generated by tools/generate-map.py — do not hand-edit.",
+    "// Trail paths for the interactive site map, computed from a",
+    "// fractal-noise heightfield so they bend with the terrain",
+    "// (see MapMenu.jsx for how these render + zoom).",
+    "export const mapTrails = [",
+]
+for t in trails:
+    js_lines.append(
+        f'  {{ d: "{t["d"]}", cluster: "{t["cluster"]}", '
+        f'stroke: "{t["stroke"]}", strokeWidth: {t["strokeWidth"]}, dash: "{t["dash"]}" }},'
+    )
+js_lines.append("];")
 
-def waypoints_html(current_page_key):
-    out = []
-    for key_, href, x, y, cluster, extra, label in WAYPOINTS:
-        classes = ("wp " + extra).strip()
-        cur = ' aria-current="page"' if key_ == current_page_key else ""
-        out.append(
-            f'<a class="{classes}" style="--x:{x}%;--y:{y}%" href="{href}" '
-            f'data-node="{key_}" data-cluster="{cluster}"{cur}>'
-            f'<span class="wp__dot" aria-hidden="true"></span>'
-            f'<span class="wp__label">{label}</span></a>'
-        )
-    return "\n            ".join(out)
-
-def build_nav(current_page_key):
-    return f'''<nav class="menu-map-wrap" aria-label="Site map">
-          <div class="map">
-            <button class="map__back" type="button">&larr; Map</button>
-            <div class="map__scene">
-              {trails_svg}
-              {waypoints_html(current_page_key)}
-            </div>
-            <div class="map__legend" aria-hidden="true">
-              <span><i class="dot--page"></i>Page</span>
-              <span><i></i>Section</span>
-              <span><i class="dot--here"></i>You are here</span>
-            </div>
-          </div>
-        </nav>'''
-
-pat_nav = re.compile(r'<nav class="menu-map-wrap".*?</nav>', re.S)
-pat_ver = re.compile(r'css/style\.css\?v=\d+')
-pat_js_ver = re.compile(r'js/main\.js\?v=\d+')
-
-for fname, cur in PAGES.items():
-    path = os.path.join(ROOT, fname)
-    with io.open(path, encoding="utf-8") as f:
-        html = f.read()
-    html, n = pat_nav.subn(build_nav(cur), html)
-    html = pat_ver.sub("css/style.css?v=13", html)
-    html = pat_js_ver.sub("js/main.js?v=4", html)
-    with io.open(path, "w", encoding="utf-8", newline="\n") as f:
-        f.write(html)
-    print(fname, "nav replaced:", n)
+out_path = os.path.join(ROOT, "src", "data", "mapTrails.js")
+os.makedirs(os.path.dirname(out_path), exist_ok=True)
+with io.open(out_path, "w", encoding="utf-8", newline="\n") as f:
+    f.write("\n".join(js_lines) + "\n")
+print("mapTrails.js:", len(trails), "trails")
