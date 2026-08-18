@@ -38,14 +38,14 @@ export default function Header() {
       </div>
 
       <Link className="logo" to="/" aria-label="Rivers Design — home">
-        <span className="logo__ring">
-          <img src="/assets/logo-lightbulb.svg" alt="Rivers Design" />
-        </span>
+        <img src="/assets/logo.svg" alt="Rivers Design" />
       </Link>
 
-      <p className="site-header__tagline">Dream to Build</p>
-
-      <img className="site-header__alert" src="/assets/logo-alert.svg" alt="" aria-hidden="true" />
+      <p className="site-header__tagline">
+        <img className="site-header__tagline-icon" src="/assets/logo-lightbulb.svg" alt="" aria-hidden="true" />
+        Engineer for function, design for form.
+        <img className="site-header__tagline-icon" src="/assets/logo-alert.svg" alt="" aria-hidden="true" />
+      </p>
 
       <div className="pill pill--date">
         <span className="pill__inner">
