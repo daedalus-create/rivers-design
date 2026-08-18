@@ -351,13 +351,15 @@ path[data-cluster]:not([data-cluster="hub"]) {
   pointer-events: auto;
 }
 path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
-.map[data-zoom] path[data-cluster="hub"] { opacity: .2; }
+.map[data-zoom] path[data-cluster="hub"] { opacity: 0; }
 
-/* dim the other hubs (but keep Home as a landmark) while zoomed */
+/* hide the other sections entirely while zoomed (Home stays as the
+   one landmark back out) */
 .map[data-zoom="experience"] .wp[data-cluster="hub"]:not([data-node="home"]):not([data-node="experience"]),
 .map[data-zoom="projects"] .wp[data-cluster="hub"]:not([data-node="home"]):not([data-node="projects"]),
 .map[data-zoom="about"] .wp[data-cluster="hub"]:not([data-node="home"]):not([data-node="about"]) {
-  opacity: .3;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* "+" hints a hub has more to explore; swaps to an open hint once zoomed */
@@ -462,8 +464,7 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   50% { transform: scale(1.25); }
 }
 
-/* Full-bleed rule at the bottom of the header bar; the date badge
-   straddles it, hanging half below — as in the Figma */
+/* Full-bleed rule at the bottom of the header bar */
 .site-header::after {
   content: '';
   position: absolute;
@@ -476,11 +477,34 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
 .site-header {
   padding-bottom: clamp(48px, 5vw, 72px);
 }
-.pill.pill--date {
+
+/* Tagline fills the space the date badge used to straddle, now that
+   the badge floats fixed at the far left instead (see below) */
+.site-header__tagline {
   position: absolute;
   left: calc(var(--page-margin) + var(--indent));
   top: var(--header-h);
   transform: translateY(-50%);
+  font-family: var(--font-display);
+  font-size: clamp(15px, 1.7vw, 24px);
+  color: var(--ink-a45);
+  white-space: nowrap;
+}
+
+/* Date badge — fixed at the far left, moving with the viewport the
+   same way the hamburger does on the right. A soft shadow + faint
+   frosted fill gives it a background so it reads clearly over
+   whatever scrolls underneath it. */
+.pill.pill--date {
+  position: fixed;
+  left: var(--page-margin);
+  top: calc(var(--header-h) / 2);
+  transform: translateY(-50%);
+  z-index: 310;
+  background: rgba(30, 30, 30, .82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .45);
 }
 
 /* Double-ring badge — Figma's white outer / yellow inner rounded
@@ -778,5 +802,8 @@ a.pill:hover .pill__inner { color: var(--accent); }
   .divider__row { flex-wrap: wrap; justify-content: center; row-gap: var(--space-4); }
   .project__sub { margin-left: 0; }
   .site-header__bar { gap: var(--space-4); }
-  .pill--date { left: var(--page-margin); }
+  .site-header__tagline {
+    white-space: normal;
+    max-width: calc(100vw - var(--page-margin) * 2 - 80px);
+  }
 }

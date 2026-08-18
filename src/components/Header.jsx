@@ -40,6 +40,8 @@ export default function Header() {
         </button>
       </div>
 
+      <p className="site-header__tagline">Engineer for function, design for form.</p>
+
       <div className="pill pill--date">
         <span className="pill__inner">
           {mm}
