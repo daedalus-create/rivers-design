@@ -23,6 +23,12 @@ LEVELS = 26            # real topo sheets read as dense; index line every 5th
 random.seed(SEED)
 
 # ---------------- heightfield ----------------
+# Real topo sheets aren't uniform noise — they're a handful of actual
+# peaks (contours packed tight on the flanks) sitting in mostly flat,
+# sparse valleys. Model that directly: sum of localized Gaussian
+# "peaks" at random points/sizes/heights, so line DENSITY communicates
+# elevation change the way it does on a real map, plus a faint broad
+# undulation underneath so valleys aren't a dead flat zero.
 def make_lattice(n, m):
     return [[random.random() for _ in range(m)] for _ in range(n)]
 
@@ -38,17 +44,33 @@ def sample(lat, x, y):
     b = lat[x0][y1] * (1 - tx) + lat[x1][y1] * tx
     return a * (1 - ty) + b * ty
 
-octaves = [(make_lattice(6, 5), 1.0), (make_lattice(12, 9), 0.55),
-           (make_lattice(24, 17), 0.28), (make_lattice(48, 33), 0.12)]
+NUM_PEAKS = 22
+peaks = []
+for _ in range(NUM_PEAKS):
+    cx = random.uniform(-60, W + 60)
+    cy = random.uniform(-60, H + 60)
+    r = random.uniform(65, 230)
+    h = random.uniform(0.4, 1.0)
+    peaks.append((cx, cy, r, h))
+
+base_octaves = [(make_lattice(5, 4), 1.0), (make_lattice(10, 8), 0.5)]
 
 field = [[0.0] * (GH + 1) for _ in range(GW + 1)]
 lo, hi = 1e9, -1e9
 for i in range(GW + 1):
     for j in range(GH + 1):
-        v = 0.0
-        for lat, amp in octaves:
+        x, y = i / GW * W, j / GH * H
+        peak_v = 0.0
+        for cx, cy, r, h in peaks:
+            dx, dy = x - cx, y - cy
+            d2 = (dx * dx + dy * dy) / (r * r)
+            if d2 < 9:  # skip negligible tails
+                peak_v += h * math.exp(-3.2 * d2)
+        base_v = 0.0
+        for lat, amp in base_octaves:
             n, m = len(lat), len(lat[0])
-            v += amp * sample(lat, i / (GW + 1) * (n - 1) * 1.6, j / (GH + 1) * (m - 1) * 1.6)
+            base_v += amp * sample(lat, i / (GW + 1) * (n - 1) * 1.3, j / (GH + 1) * (m - 1) * 1.3)
+        v = peak_v * 0.88 + base_v * 0.3
         field[i][j] = v
         lo, hi = min(lo, v), max(hi, v)
 for i in range(GW + 1):

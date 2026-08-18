@@ -196,10 +196,11 @@ body::after {
   gap: var(--space-8);
 }
 
-/* RD logo — exported straight from the Figma as one SVG. Fixed at
-   the top-left, moving with the viewport the same way the hamburger
-   does on the right (the date badge, by contrast, stays put in the
-   header and scrolls away with the page). */
+/* Lightbulb mark (one of the three pieces the full RD logo is built
+   from) stands in for the logo in the fixed top-left corner, moving
+   with the viewport the same way the hamburger does on the right.
+   The date badge, by contrast, stays put in the header and scrolls
+   away with the page. */
 .logo {
   display: block;
   position: fixed;
@@ -207,7 +208,7 @@ body::after {
   left: var(--page-margin);
   transform: translateY(-50%);
   z-index: 310;
-  height: clamp(52px, 5.5vw, 76px);
+  height: clamp(40px, 4.4vw, 60px);
   transition: opacity var(--t-hover);
 }
 .logo:hover { opacity: .8; }
@@ -546,15 +547,27 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
 /* Sits in the header bar's own band (same height as the now-fixed
    logo/hamburger), clear of the rule below it — not straddling that
    line, which is what made it look crossed-out before. */
+/* Sits right beside the lightbulb (fixed, moves with it) — nowhere
+   near the date badge's column, so nothing ever stacks above it. The
+   alert mark caps the other end of the line. */
 .site-header__tagline {
-  position: absolute;
-  left: calc(var(--page-margin) + var(--indent));
+  position: fixed;
+  left: calc(var(--page-margin) + 78px);
   top: calc(var(--header-h) / 2);
   transform: translateY(-50%);
+  z-index: 310;
   font-family: var(--font-display);
   font-size: clamp(15px, 1.7vw, 24px);
   color: var(--ink-a45);
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.site-header__tagline-icon {
+  height: 1.3em;
+  width: auto;
+  opacity: .8;
 }
 
 /* Date badge — stays in normal flow, straddling the header rule like
@@ -862,8 +875,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
   .divider__row { flex-wrap: wrap; justify-content: center; row-gap: var(--space-4); }
   .project__sub { margin-left: 0; }
   .site-header__bar { gap: var(--space-4); }
-  .site-header__tagline {
-    white-space: normal;
-    max-width: calc(100vw - var(--page-margin) * 2 - 80px);
-  }
+  /* not enough room next to the fixed logo + hamburger for the
+     slogan on narrow screens — hide it rather than wrap/collide */
+  .site-header__tagline { display: none; }
 }
