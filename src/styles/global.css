@@ -534,26 +534,26 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
 }
 
 /* Lightbulb + slogan + alert mark — static, scrolling away with the
-   page (the RD logo is the one that's fixed now, see .logo above).
-   Sits in the same band as the fixed logo, just to its right, so the
-   whole line reads above the date badge instead of colliding with it. */
+   page (the RD logo is the one that's fixed, see .logo above). Left
+   edge matches the date badge's own column exactly (page-margin +
+   indent) — same spacing the badge uses — sitting in the band above
+   it so the two read as one aligned stack, not a collision. */
 .site-header__tagline {
   position: absolute;
-  left: calc(var(--page-margin) + 100px);
+  left: calc(var(--page-margin) + var(--indent));
   top: calc(var(--header-h) / 2);
   transform: translateY(-50%);
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--space-4);
   font-family: var(--font-display);
-  font-size: clamp(15px, 1.7vw, 24px);
-  color: var(--ink-a45);
+  font-size: clamp(20px, 2.4vw, 36px);
+  color: var(--ink);
   white-space: nowrap;
 }
 .site-header__tagline-icon {
-  height: 1.3em;
+  height: 1.4em;
   width: auto;
-  opacity: .8;
 }
 
 /* Date badge — stays in normal flow, straddling the header rule like

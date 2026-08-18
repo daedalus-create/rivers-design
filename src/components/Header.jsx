@@ -43,7 +43,7 @@ export default function Header() {
 
       <p className="site-header__tagline">
         <img className="site-header__tagline-icon" src="/assets/logo-lightbulb.svg" alt="" aria-hidden="true" />
-        Engineer for function, design for form.
+        Dream to Build
         <img className="site-header__tagline-icon" src="/assets/logo-alert.svg" alt="" aria-hidden="true" />
       </p>
 
