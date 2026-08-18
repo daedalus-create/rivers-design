@@ -538,17 +538,17 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   background: var(--line-strong);
 }
 .site-header {
-  padding-bottom: clamp(84px, 9vw, 122px);
+  padding-bottom: clamp(48px, 5vw, 72px);
 }
 
 /* Lightbulb + slogan + alert mark — static, scrolling away with the
    page (the RD logo is the one that's fixed now, see .logo above).
-   Sits below both the rule and the date badge, in the header's own
-   (enlarged) padding-bottom band, clear of the fixed logo above it. */
+   Sits in the same band as the fixed logo, just to its right, so the
+   whole line reads above the date badge instead of colliding with it. */
 .site-header__tagline {
   position: absolute;
-  left: var(--page-margin);
-  top: calc(var(--header-h) + clamp(64px, 6.8vw, 96px));
+  left: calc(var(--page-margin) + 100px);
+  top: calc(var(--header-h) / 2);
   transform: translateY(-50%);
   display: flex;
   align-items: center;
