@@ -210,8 +210,11 @@ with io.open(os.path.join(ROOT, "public", "assets", "contours.svg"), "w", encodi
 print("contours.svg:", len(contours_svg) // 1024, "KB")
 
 # ---------------- waypoint positions (must match src/data/mapWaypoints.js) ----------------
-# key -> (x%, y%)  — kept in sync by hand with mapWaypoints.js
-POSITIONS = {
+# key -> (x%, y%) — rough layout intent, hand-tuned for spacing and
+# label clearance. Snapped below onto real terrain features (hubs to
+# the nearest peak summit, sub-pages to the nearest valley floor) so
+# dots land on actual high/low points instead of floating on a slope.
+POSITIONS_INTENT = {
     "home": (50, 16),
     "experience": (22, 42),
     "work": (14, 68),
@@ -222,6 +225,54 @@ POSITIONS = {
     "about": (82, 40),
     "contact": (87, 68),
 }
+HUB_KEYS = {"home", "experience", "projects", "about"}
+SNAP_RADIUS = 95  # canvas units — keeps the snap close to the intended spot
+
+def nearest_peak_center(x0, y0):
+    best, best_d2 = (x0, y0), 1e18
+    for cx, cy, r, h in peaks:
+        d2 = (cx - x0) ** 2 + (cy - y0) ** 2
+        if d2 < best_d2:
+            best_d2, best = d2, (cx, cy)
+    return best
+
+def local_extremum(x0, y0, radius, seek_max):
+    gx0, gy0 = x0 / W * GW, y0 / H * GH
+    gr_x, gr_y = radius / W * GW, radius / H * GH
+    i0, i1 = max(0, int(gx0 - gr_x)), min(GW, int(gx0 + gr_x))
+    j0, j1 = max(0, int(gy0 - gr_y)), min(GH, int(gy0 + gr_y))
+    best_v = -1e18 if seek_max else 1e18
+    best_xy = (x0, y0)
+    for i in range(i0, i1 + 1):
+        for j in range(j0, j1 + 1):
+            v = field[i][j]
+            if (v > best_v) if seek_max else (v < best_v):
+                best_v, best_xy = v, (i / GW * W, j / GH * H)
+    return best_xy
+
+def nearest_valley(x0, y0, radius):
+    return local_extremum(x0, y0, radius, seek_max=False)
+
+POSITIONS = {}
+print("Snapped waypoint positions (elevation / displacement from intent):")
+for key, (x, y) in POSITIONS_INTENT.items():
+    x0, y0 = x / 100 * W, y / 100 * H
+    if key in HUB_KEYS:
+        sx, sy = nearest_peak_center(x0, y0)
+        # a hub can end up far from a sparse peak — don't wander past
+        # the search radius, just settle for the steepest nearby spot
+        if math.hypot(sx - x0, sy - y0) > SNAP_RADIUS * 1.6:
+            sx, sy = local_extremum(x0, y0, SNAP_RADIUS * 1.6, seek_max=True)
+    else:
+        sx, sy = nearest_valley(x0, y0, SNAP_RADIUS)
+    sx = min(max(sx, 15), W - 15)
+    sy = min(max(sy, 15), H - 15)
+    dist = round(math.hypot(sx - x0, sy - y0))
+    POSITIONS[key] = (round(sx / W * 100, 1), round(sy / H * 100, 1))
+    kind = "peak" if key in HUB_KEYS else "valley"
+    print(f"  {key:12s} ({kind:6s}) -> x={POSITIONS[key][0]:5.1f}%  y={POSITIONS[key][1]:5.1f}%  "
+          f"elev={fval(sx, sy):.2f}  moved={dist}u")
+
 N = {k: (x / 100 * W, y / 100 * H) for k, (x, y) in POSITIONS.items()}
 
 # (from, to, kind, cluster) — cluster "hub" always visible; others only
