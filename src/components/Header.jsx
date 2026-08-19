@@ -20,7 +20,12 @@ export default function Header() {
 
   return (
     <header className="site-header wrap">
-      <div className="site-header__bar">
+      {/* Moving group — fixed to the viewport, stays put while the page scrolls beneath it */}
+      <div className="site-header__fixed">
+        <Link className="logo" to="/" aria-label="Rivers Design — home">
+          <img src="/assets/logo.svg" alt="Rivers Design" />
+        </Link>
+
         <button
           className={`menu-btn${open ? " open" : ""}`}
           type="button"
@@ -37,24 +42,23 @@ export default function Header() {
         </button>
       </div>
 
-      <Link className="logo" to="/" aria-label="Rivers Design — home">
-        <img src="/assets/logo.svg" alt="Rivers Design" />
-      </Link>
+      {/* Static group — lives in the header's normal flow, scrolls away with the page */}
+      <div className="site-header__static">
+        <p className="site-header__tagline">
+          <img className="site-header__tagline-icon site-header__tagline-icon--bulb" src="/assets/logo-lightbulb.svg" alt="" aria-hidden="true" />
+          <span className="site-header__tagline-text">Dream to Build</span>
+          <img className="site-header__tagline-icon site-header__tagline-icon--alert" src="/assets/logo-alert.svg" alt="" aria-hidden="true" />
+        </p>
 
-      <p className="site-header__tagline">
-        <img className="site-header__tagline-icon" src="/assets/logo-lightbulb.svg" alt="" aria-hidden="true" />
-        Dream to Build
-        <img className="site-header__tagline-icon" src="/assets/logo-alert.svg" alt="" aria-hidden="true" />
-      </p>
-
-      <div className="pill pill--date">
-        <span className="pill__inner">
-          {mm}
-          <span className="slash">/</span>
-          {dd}
-          <span className="slash">/</span>
-          {yyyy}
-        </span>
+        <div className="pill pill--date">
+          <span className="pill__inner">
+            {mm}
+            <span className="slash">/</span>
+            {dd}
+            <span className="slash">/</span>
+            {yyyy}
+          </span>
+        </div>
       </div>
 
       <MapMenu open={open} onClose={() => setOpen(false)} />

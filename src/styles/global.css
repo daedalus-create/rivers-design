@@ -88,7 +88,7 @@
   --section-y: clamp(96px, 14vh, 192px);
   --max-width: 1680px;
   --max-text: 720px;
-  --header-h: clamp(96px, 11.5vw, 170px);
+  --header-h: clamp(176px, 17.1vw, 340px);
 
   /* The column projected down from the date badge — big display
      text left-aligns to it, exactly as in the Figma comp */
@@ -188,18 +188,12 @@ body::after {
   position: relative;
   z-index: 50;
 }
-.site-header__bar {
+/* Moving group — the RD corner logo and hamburger, both fixed to the
+   viewport so they stay on screen while the page scrolls beneath them. */
+.site-header__fixed {
   height: var(--header-h);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-8);
 }
 
-/* RD logo — the Figma corner mark — fixed at the top-left, moving
-   with the viewport the same way the hamburger does on the right.
-   The date badge, by contrast, stays put in the header and scrolls
-   away with the page. */
 .logo {
   display: block;
   position: fixed;
@@ -526,66 +520,85 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   left: calc(50% - 50vw);
   width: 100vw;
   top: var(--header-h);
-  height: 3px;
+  height: 5px;
   background: var(--line-strong);
 }
 .site-header {
-  padding-bottom: clamp(48px, 5vw, 72px);
+  padding-bottom: clamp(56px, 5.5vw, 100px);
 }
 
-/* Lightbulb + slogan + alert mark — static, scrolling away with the
-   page (the RD logo is the one that's fixed, see .logo above). Left
-   edge matches the date badge's own column exactly (page-margin +
-   indent) — same spacing the badge uses — sitting in the band above
-   it so the two read as one aligned stack, not a collision. */
+/* Static group — slogan/icons and the date badge, both left in the
+   header's normal flow (see .site-header__fixed above for the group
+   that stays put in the viewport instead). Left unpositioned on
+   purpose: its children are absolutely positioned against
+   .site-header itself, not this wrapper. */
+
+/* Lightbulb + centered slogan + alert mark, sized and spaced from the
+   Figma header spec (node 1:93, 1980px-wide reference frame — the
+   same reference the rest of the header's clamp()s are calibrated
+   against). Bare icons, no ring (the frame doesn't have one).
+   1fr/auto/1fr keeps "Dream to Build" mathematically centered
+   regardless of how wide either icon is, since the two outer columns
+   are always equal width. The date badge is positioned clear of the
+   lightbulb (see .pill.pill--date below) rather than stacked under
+   it, matching the Figma layout, so these can run at full scale. */
 .site-header__tagline {
   position: absolute;
   left: calc(var(--page-margin) + var(--indent));
+  right: calc(var(--page-margin) + var(--indent));
   top: calc(var(--header-h) / 2);
   transform: translateY(-50%);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: var(--space-4);
+  padding: 0 clamp(20px, 2.02vw, 40px);
   font-family: var(--font-display);
-  font-size: clamp(20px, 2.4vw, 36px);
   color: var(--ink);
   white-space: nowrap;
 }
 .site-header__tagline-icon {
-  height: 1.4em;
+  height: clamp(81px, 8.18vw, 162px);
   width: auto;
+}
+.site-header__tagline-icon--bulb { justify-self: start; }
+.site-header__tagline-icon--alert { justify-self: end; }
+.site-header__tagline-text {
+  justify-self: center;
+  font-size: clamp(41px, 4.1vw, 81px);
 }
 
 /* Date badge — stays in normal flow, straddling the header rule like
    the Figma comp; it scrolls away with the page (unlike the fixed
-   logo/hamburger). */
+   logo/hamburger). Offset past the lightbulb by the same proportion
+   the Figma frame uses (185px of its 1980px width) so the two never
+   share a column and the badge can run at full Figma scale. */
 .pill.pill--date {
   position: absolute;
-  left: calc(var(--page-margin) + var(--indent));
+  left: calc(var(--page-margin) + var(--indent) + clamp(92px, 9.34vw, 185px));
   top: var(--header-h);
   transform: translateY(-50%);
 }
 
 /* Double-ring badge — Figma's white outer / yellow inner rounded
-   rectangle (600x150, r30/r25), scaled to roughly half size */
+   rectangle (600x150, r30/r25, 5px borders) */
 .pill {
   display: inline-block;
   position: relative;
   z-index: 1;
   background: var(--bg);
-  border: 3px solid var(--line-strong);
-  border-radius: clamp(15px, 1.6vw, 22px);
+  border: 5px solid var(--line-strong);
+  border-radius: clamp(20px, 1.52vw, 30px);
   padding: 0;
 }
 .pill__inner {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 3px solid var(--accent);
-  border-radius: clamp(12px, 1.4vw, 19px);
-  padding: clamp(12px, 1.6vw, 20px) clamp(28px, 3.5vw, 56px);
+  border: 5px solid var(--accent);
+  border-radius: clamp(16px, 1.26vw, 25px);
+  padding: clamp(18px, 1.67vw, 33px) clamp(47px, 4.71vw, 93px);
   font-family: var(--font-display);
-  font-size: clamp(24px, 2.6vw, 42px);
+  font-size: clamp(35px, 3.54vw, 70px);
   line-height: 1;
   white-space: nowrap;
   color: var(--ink);
@@ -860,7 +873,6 @@ a.pill:hover .pill__inner { color: var(--accent); }
   .statement__text { padding-top: 0; }
   .divider__row { flex-wrap: wrap; justify-content: center; row-gap: var(--space-4); }
   .project__sub { margin-left: 0; }
-  .site-header__bar { gap: var(--space-4); }
   /* not enough room next to the fixed logo + hamburger for the
      slogan on narrow screens — hide it rather than wrap/collide */
   .site-header__tagline { display: none; }
