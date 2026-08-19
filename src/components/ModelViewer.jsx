@@ -138,6 +138,7 @@ export default function ModelViewer({ kind = "engine", tag = "3D Placeholder / M
   const frameRef = useRef(null);
 
   useEffect(() => {
+    if (kind === "forge") return undefined;
     const frame = frameRef.current;
     if (!frame) return undefined;
 
@@ -210,6 +211,20 @@ export default function ModelViewer({ kind = "engine", tag = "3D Placeholder / M
       if (renderer.domElement.parentNode === frame) frame.removeChild(renderer.domElement);
     };
   }, [kind]);
+
+  if (kind === "forge") {
+    return (
+      <div className="model-frame" style={height ? { height } : undefined}>
+        <span className="model-frame__tag meta meta--accent">Assembly animation</span>
+        <span className="model-frame__hint meta">Drag to orbit</span>
+        <iframe
+          src="/assets/hephaestus-forge-animation.html"
+          title="Hephaestus Forge — assembly animation"
+          loading="lazy"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="model-frame" style={height ? { height } : undefined}>

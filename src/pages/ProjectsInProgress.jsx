@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
 import ModelViewer from "../components/LazyModelViewer";
-import { plannedProjects } from "../data/projects";
+import { inProgressProjects } from "../data/projects";
 
-export default function ProjectsStillWorking() {
+export default function ProjectsInProgress() {
   return (
     <>
       <section className="page-hero wrap">
@@ -11,12 +11,12 @@ export default function ProjectsStillWorking() {
           Rivers Design / Projects
         </Reveal>
         <Reveal as="h1" className="display" stagger={1}>
-          Still Working
+          Work in Progress
         </Reveal>
       </section>
 
       <section className="section--tight wrap">
-        {plannedProjects.map((p) => (
+        {inProgressProjects.map((p) => (
           <Reveal as="article" className="project" key={p.slug}>
             <div className="project__head">
               <span className="project__num">{p.num}</span>
@@ -25,7 +25,7 @@ export default function ProjectsStillWorking() {
               </h2>
             </div>
             <p className="project__sub">{p.sub}</p>
-            <ModelViewer kind={p.model} tag="3D Placeholder / Concept" />
+            <ModelViewer kind={p.model} tag="3D Placeholder / In progress" />
             <ul className="specs">
               {p.specs.map((s) => (
                 <li key={s.k}>

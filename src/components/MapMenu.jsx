@@ -4,9 +4,14 @@ import { mapWaypoints, zoomTargets } from "../data/mapWaypoints";
 import { mapTrails } from "../data/mapTrails";
 
 // Interactive site map: only the four hub waypoints (Home, Experience,
-// Projects, About Me) show at first. Clicking a hub zooms .map__scene
-// into that territory and reveals its child waypoints — click the
-// same hub a second time (or its own dot) to actually navigate there.
+// Projects, About Me) show at first. Clicking a node with children
+// zooms .map__scene into that territory and reveals them — click the
+// same node a second time (or its own dot) to actually navigate there.
+// This nests two levels deep: a hub (e.g. Projects) zooms to reveal
+// its sub-pages (Completed/Work in Progress/Planned), and those themselves zoom
+// once more to reveal individual project/role pages.
+const isZoomable = (wp) => wp.node === "home" || mapWaypoints.some((w) => w.cluster === wp.node);
+
 export default function MapMenu({ open, onClose }) {
   const location = useLocation();
   const mapRef = useRef(null);
@@ -25,8 +30,17 @@ export default function MapMenu({ open, onClose }) {
     const { fx, fy, scale } = target;
     const w = mapEl.clientWidth;
     const h = mapEl.clientHeight;
-    const tx = w / 2 - scale * w * fx;
-    const ty = h / 2 - scale * h * fy;
+    // Clamp the zoom center so the scaled scene always fully covers the
+    // viewport — a target near the map's edge (e.g. "about", "work")
+    // would otherwise translate the scene past its own boundary and
+    // expose blank space beyond it. Margin is derived from scale: at
+    // scale S, the closest a center can sit to 0 or 1 without exposing
+    // an edge is 0.5/S.
+    const margin = 0.5 / scale;
+    const cfx = Math.min(Math.max(fx, margin), 1 - margin);
+    const cfy = Math.min(Math.max(fy, margin), 1 - margin);
+    const tx = w / 2 - scale * w * cfx;
+    const ty = h / 2 - scale * h * cfy;
     if (sceneRef.current) {
       sceneRef.current.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
     }
@@ -76,8 +90,9 @@ export default function MapMenu({ open, onClose }) {
 
   const handleLinkClick = () => onClose();
 
+  const currentWp = mapWaypoints.find((wp) => wp.node === zoom);
   const otherHubs = mapWaypoints.filter(
-    (wp) => wp.cluster === "hub" && wp.node !== "home" && wp.node !== zoom
+    (wp) => wp.cluster === currentWp?.cluster && wp.node !== "home" && wp.node !== zoom && isZoomable(wp)
   );
 
   return (
@@ -140,7 +155,7 @@ export default function MapMenu({ open, onClose }) {
                   data-cluster={wp.cluster}
                   aria-current={isCurrent ? "page" : undefined}
                   onClick={(e) => {
-                    if (wp.cluster === "hub") handleHubClick(e, wp);
+                    if (isZoomable(wp)) handleHubClick(e, wp);
                     if (!e.defaultPrevented) handleLinkClick();
                   }}
                 >

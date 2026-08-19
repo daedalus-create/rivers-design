@@ -19,12 +19,13 @@ export default function Projects() {
 
       <Divider to="/projects/completed" label="Completed" />
       <Divider
-        to="/projects/still-working"
-        label="Still Working"
+        to="/projects/in-progress"
+        label="Work in Progress"
         iconLeft="/assets/divider-icon-3.svg"
         iconRight="/assets/divider-icon-2.svg"
         flip
       />
+      <Divider to="/projects/planned" label="Planned" />
     </>
   );
 }

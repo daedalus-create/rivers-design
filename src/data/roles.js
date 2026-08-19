@@ -1,5 +1,6 @@
-// Work-excerpt role write-ups, shown on /experience/work-excerpts
-// and previewed (briefly) on the home page.
+// Work-excerpt role write-ups. Summarized on /experience/work-excerpts
+// and the home page, with each role getting its own page at
+// /experience/:slug (see RoleDetail.jsx).
 
 export const roles = [
   {
@@ -41,3 +42,5 @@ export const roles = [
     ],
   },
 ];
+
+export const getRole = (slug) => roles.find((r) => r.slug === slug);

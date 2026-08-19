@@ -88,7 +88,7 @@
   --section-y: clamp(96px, 14vh, 192px);
   --max-width: 1680px;
   --max-text: 720px;
-  --header-h: clamp(176px, 17.1vw, 340px);
+  --header-h: clamp(164px, 16.5vw, 330px);
 
   /* The column projected down from the date badge — big display
      text left-aligns to it, exactly as in the Figma comp */
@@ -351,7 +351,15 @@ path[data-cluster]:not([data-cluster="hub"]) {
 }
 .map[data-zoom="experience"] [data-cluster="experience"],
 .map[data-zoom="projects"] [data-cluster="projects"],
-.map[data-zoom="about"] [data-cluster="about"] {
+.map[data-zoom="about"] [data-cluster="about"],
+.map[data-zoom="completed"] [data-cluster="completed"],
+.map[data-zoom="completed"] [data-node="completed"],
+.map[data-zoom="in-progress"] [data-cluster="in-progress"],
+.map[data-zoom="in-progress"] [data-node="in-progress"],
+.map[data-zoom="planned"] [data-cluster="planned"],
+.map[data-zoom="planned"] [data-node="planned"],
+.map[data-zoom="work"] [data-cluster="work"],
+.map[data-zoom="work"] [data-node="work"] {
   opacity: 1;
   pointer-events: auto;
 }
@@ -367,23 +375,60 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   pointer-events: none;
 }
 
-/* "+" hints a hub has more to explore; swaps to an open hint once zoomed */
-.wp[data-cluster="hub"]:not([data-node="home"]) .wp__label::before {
+/* one level deeper still (Completed/Work in Progress/Planned/Work
+   Excerpts -> their individual pages) — hide every hub dot and the
+   siblings at the level above (e.g. "Work in Progress"/"Planned"
+   while zoomed to "Completed") */
+.map[data-zoom="completed"] .wp[data-cluster="hub"]:not([data-node="home"]),
+.map[data-zoom="in-progress"] .wp[data-cluster="hub"]:not([data-node="home"]),
+.map[data-zoom="planned"] .wp[data-cluster="hub"]:not([data-node="home"]),
+.map[data-zoom="work"] .wp[data-cluster="hub"]:not([data-node="home"]) {
+  opacity: 0;
+  pointer-events: none;
+}
+.map[data-zoom="completed"] .wp[data-cluster="projects"]:not([data-node="completed"]),
+.map[data-zoom="in-progress"] .wp[data-cluster="projects"]:not([data-node="in-progress"]),
+.map[data-zoom="planned"] .wp[data-cluster="projects"]:not([data-node="planned"]),
+.map[data-zoom="work"] .wp[data-cluster="experience"]:not([data-node="work"]) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* "+" hints a node has more to explore; swaps to an open hint once
+   zoomed — dark gold reads on the label's cream pill background,
+   unlike the site's bright yellow accent which washes out on light */
+.wp[data-node="experience"] .wp__label::before,
+.wp[data-node="projects"] .wp__label::before,
+.wp[data-node="about"] .wp__label::before,
+.wp[data-node="completed"] .wp__label::before,
+.wp[data-node="in-progress"] .wp__label::before,
+.wp[data-node="planned"] .wp__label::before,
+.wp[data-node="work"] .wp__label::before {
   content: '+ ';
-  color: var(--accent);
+  color: #a67c1f;
   transition: opacity var(--t-hover);
 }
-.map[data-zoom] .wp[data-cluster="hub"]:not([data-node="home"]) .wp__label::before { opacity: 0; }
+.map[data-zoom] .wp[data-cluster="hub"]:not([data-node="home"]) .wp__label::before,
+.map[data-zoom="completed"] .wp[data-node="completed"] .wp__label::before,
+.map[data-zoom="in-progress"] .wp[data-node="in-progress"] .wp__label::before,
+.map[data-zoom="planned"] .wp[data-node="planned"] .wp__label::before,
+.map[data-zoom="work"] .wp[data-node="work"] .wp__label::before {
+  opacity: 0;
+}
 .map[data-zoom="experience"] .wp[data-node="experience"]:not([aria-current]) .wp__label::after,
 .map[data-zoom="projects"] .wp[data-node="projects"]:not([aria-current]) .wp__label::after,
-.map[data-zoom="about"] .wp[data-node="about"]:not([aria-current]) .wp__label::after {
+.map[data-zoom="about"] .wp[data-node="about"]:not([aria-current]) .wp__label::after,
+.map[data-zoom="completed"] .wp[data-node="completed"]:not([aria-current]) .wp__label::after,
+.map[data-zoom="in-progress"] .wp[data-node="in-progress"]:not([aria-current]) .wp__label::after,
+.map[data-zoom="planned"] .wp[data-node="planned"]:not([aria-current]) .wp__label::after,
+.map[data-zoom="work"] .wp[data-node="work"]:not([aria-current]) .wp__label::after {
   content: 'Click again to open →';
   display: block;
   margin-top: 3px;
   font-size: 10px;
   letter-spacing: var(--ls-caps);
   text-transform: uppercase;
-  color: var(--accent);
+  color: #a67c1f;
 }
 
 /* back-to-map control, shown only while zoomed */
@@ -445,8 +490,10 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
 .map__jump-btn:hover { border-color: var(--accent); color: var(--accent); }
 .map__jump-btn img { width: 16px; height: 16px; }
 
-/* waypoints — every dot is the same size/color; only the current
-   page's dot stands out (pulsing yellow), via [aria-current] below */
+/* waypoints — yellow pin dots with a white pill label, like a
+   printed topo sheet's named-landmark markers; only the current
+   page's dot stands out further (pulsing + ringed), via
+   [aria-current] below */
 .wp {
   position: absolute;
   left: var(--x);
@@ -472,41 +519,45 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   width: 19px;
   height: 19px;
   border-radius: 50%;
-  background: var(--ink);
-  box-shadow: 0 0 0 5px var(--bg-sheet), 0 0 0 7px var(--ink-a45);
+  background: var(--accent);
+  box-shadow: 0 0 0 3px #1a1a1a, 0 0 0 5px rgba(255, 204, 64, .45);
   transition:
     background var(--t-hover),
     box-shadow var(--t-hover),
     transform var(--t-hover);
 }
 .wp:hover .wp__dot {
-  background: var(--accent);
-  box-shadow: 0 0 0 5px var(--bg-sheet), 0 0 0 7px var(--accent);
+  box-shadow: 0 0 0 3px #1a1a1a, 0 0 0 6px var(--ink);
   transform: scale(1.15);
 }
 .wp__label {
   font-family: var(--font-display);
-  font-size: clamp(16px, 1.6vw, 23px);
+  font-size: clamp(13px, 1.3vw, 18px);
   line-height: 1.2;
-  color: var(--ink);
+  color: #201a10;
   text-align: center;
   white-space: nowrap;
-  transition: color var(--t-hover);
+  background: #f4efe4;
+  border: 1.5px solid #1a1a1a;
+  border-radius: 6px;
+  padding: 4px 10px;
+  transition: border-color var(--t-hover), transform var(--t-hover);
 }
-.wp:hover .wp__label { color: var(--accent); }
+.wp:hover .wp__label { border-color: var(--accent); transform: translateY(-1px); }
 .wp[aria-current="page"] .wp__dot {
   background: var(--accent);
-  box-shadow: 0 0 0 5px var(--bg-sheet), 0 0 0 7px var(--accent);
+  box-shadow: 0 0 0 3px #1a1a1a, 0 0 0 6px var(--accent);
   animation: wp-pulse 2.2s var(--ease-out) infinite;
 }
+.wp[aria-current="page"] .wp__label { border-color: var(--accent); border-width: 2px; }
 .wp[aria-current="page"] .wp__label::after {
   content: 'You are here';
   display: block;
-  margin-top: 3px;
-  font-size: 10px;
+  margin-top: 2px;
+  font-size: 9px;
   letter-spacing: var(--ls-caps);
   text-transform: uppercase;
-  color: var(--accent);
+  color: #8a6a20;
 }
 @keyframes wp-pulse {
   0%, 100% { transform: scale(1); }
@@ -524,7 +575,7 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   background: var(--line-strong);
 }
 .site-header {
-  padding-bottom: clamp(56px, 5.5vw, 100px);
+  padding-bottom: clamp(52px, 4.9vw, 88px);
 }
 
 /* Static group — slogan/icons and the date badge, both left in the
@@ -533,15 +584,15 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
    purpose: its children are absolutely positioned against
    .site-header itself, not this wrapper. */
 
-/* Lightbulb + centered slogan + alert mark, sized and spaced from the
-   Figma header spec (node 1:93, 1980px-wide reference frame — the
-   same reference the rest of the header's clamp()s are calibrated
-   against). Bare icons, no ring (the frame doesn't have one).
-   1fr/auto/1fr keeps "Dream to Build" mathematically centered
-   regardless of how wide either icon is, since the two outer columns
-   are always equal width. The date badge is positioned clear of the
-   lightbulb (see .pill.pill--date below) rather than stacked under
-   it, matching the Figma layout, so these can run at full scale. */
+/* Lightbulb + centered slogan + alert mark. Spans the same safe zone
+   the rest of the page uses (page-margin + indent) to stay clear of
+   the fixed corner logo/hamburger — Figma's own frame has no separate
+   corner logo, so its 40px edge margins would otherwise collide with
+   ours. 1fr/auto/1fr keeps "Dream to Build" centered between the
+   icons regardless of their rendered width, which matters here since
+   the icons are sized to match the fixed corner logo rather than
+   Figma's own (much larger) icon size — a fixed pixel position for
+   the text would only be correct at one icon size. */
 .site-header__tagline {
   position: absolute;
   left: calc(var(--page-margin) + var(--indent));
@@ -551,13 +602,12 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  padding: 0 clamp(20px, 2.02vw, 40px);
   font-family: var(--font-display);
   color: var(--ink);
   white-space: nowrap;
 }
 .site-header__tagline-icon {
-  height: clamp(81px, 8.18vw, 162px);
+  height: clamp(52px, 5.5vw, 76px);
   width: auto;
 }
 .site-header__tagline-icon--bulb { justify-self: start; }
@@ -567,14 +617,14 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   font-size: clamp(41px, 4.1vw, 81px);
 }
 
-/* Date badge — stays in normal flow, straddling the header rule like
-   the Figma comp; it scrolls away with the page (unlike the fixed
-   logo/hamburger). Offset past the lightbulb by the same proportion
-   the Figma frame uses (185px of its 1980px width) so the two never
-   share a column and the badge can run at full Figma scale. */
+/* Date badge — stays in normal flow, scrolls away with the page
+   (unlike the fixed logo/hamburger). Left-aligned in the same column
+   as the lightbulb (matching the Figma layout, where the badge sits
+   under/left of the slogan, not centered with it), straddling the
+   header rule below the icon/text row. */
 .pill.pill--date {
   position: absolute;
-  left: calc(var(--page-margin) + var(--indent) + clamp(92px, 9.34vw, 185px));
+  left: calc(var(--page-margin) + var(--indent));
   top: var(--header-h);
   transform: translateY(-50%);
 }
@@ -596,7 +646,7 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   justify-content: center;
   border: 5px solid var(--accent);
   border-radius: clamp(16px, 1.26vw, 25px);
-  padding: clamp(18px, 1.67vw, 33px) clamp(47px, 4.71vw, 93px);
+  padding: clamp(15px, 1.52vw, 30px) clamp(17px, 1.72vw, 34px);
   font-family: var(--font-display);
   font-size: clamp(35px, 3.54vw, 70px);
   line-height: 1;
@@ -733,6 +783,12 @@ a.pill:hover .pill__inner { color: var(--accent); }
   cursor: grab;
 }
 .model-frame canvas:active { cursor: grabbing; }
+.model-frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
 .model-frame__tag {
   position: absolute;
   left: var(--space-5);
@@ -777,7 +833,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
   color: var(--ink-a80);
 }
 
-/* Section titles inside pages (Completed:, Still Working:, Resume:) */
+/* Section titles inside pages (Completed:, Planned:, Resume:) */
 .section-title {
   font-family: var(--font-display);
   font-size: clamp(26px, 3vw, 48px);
@@ -788,16 +844,8 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .section-title .colon { color: var(--accent); }
 
 /* ---------- Experience entries ---------- */
-.xp {
-  border-top: 1px solid var(--line-hair);
-  padding: var(--space-7) 0 var(--space-8);
-  display: grid;
-  grid-template-columns: minmax(200px, 320px) 1fr;
-  gap: var(--space-6) var(--space-8);
-}
-.xp:last-of-type { border-bottom: 1px solid var(--line-hair); }
-.xp__role { font-family: var(--font-display); font-size: var(--fs-title-2); line-height: var(--lh-title); }
-.xp__org { margin-top: var(--space-2); }
+/* Role write-up body copy on RoleDetail — the list/card view (Home,
+   WorkExcerpts) reuses .project instead. */
 .xp__body p + p { margin-top: var(--space-4); }
 .xp__body {
   font-weight: 300;
@@ -805,8 +853,6 @@ a.pill:hover .pill__inner { color: var(--accent); }
   color: var(--ink-a80);
   max-width: 70ch;
 }
-/* 3D / media frames break out to the full article width */
-.xp > .model-frame { grid-column: 1 / -1; margin-top: 0; }
 
 /* ---------- Buttons / links ---------- */
 .link-arrow {
@@ -869,7 +915,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
 /* ---------- Responsive ---------- */
 @media (max-width: 860px) {
   :root { --indent: 0px; }
-  .statement, .xp { grid-template-columns: 1fr; }
+  .statement { grid-template-columns: 1fr; }
   .statement__text { padding-top: 0; }
   .divider__row { flex-wrap: wrap; justify-content: center; row-gap: var(--space-4); }
   .project__sub { margin-left: 0; }

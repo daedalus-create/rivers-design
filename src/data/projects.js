@@ -31,6 +31,19 @@ export const projects = [
     ],
   },
   {
+    slug: "wip-1",
+    status: "in-progress",
+    num: "01",
+    title: "Project Build — TBD",
+    sub: "Placeholder — name the build currently on the bench",
+    model: "concept",
+    specs: [
+      { k: "Stage", v: "In fabrication / testing" },
+      { k: "Next", v: "First powered test" },
+      { k: "Notes", v: "Placeholder — build log, BOM, test data" },
+    ],
+  },
+  {
     slug: "plan-1",
     status: "planned",
     num: "01",
@@ -59,5 +72,6 @@ export const projects = [
 ];
 
 export const completedProjects = projects.filter((p) => p.status === "completed");
+export const inProgressProjects = projects.filter((p) => p.status === "in-progress");
 export const plannedProjects = projects.filter((p) => p.status === "planned");
 export const getProject = (slug) => projects.find((p) => p.slug === slug);

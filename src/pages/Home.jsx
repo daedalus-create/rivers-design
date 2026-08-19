@@ -68,7 +68,7 @@ export default function Home() {
             <div className="project__head">
               <span className="project__num">{r.num}</span>
               <h3 className="project__title">
-                <Link to={`/experience/work-excerpts#${r.slug}`}>{r.org}</Link>
+                <Link to={`/experience/${r.slug}`}>{r.org}</Link>
               </h3>
             </div>
             <p className="project__sub">{r.sub}</p>
@@ -82,7 +82,7 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            <Link className="link-arrow" to={`/experience/work-excerpts#${r.slug}`}>
+            <Link className="link-arrow" to={`/experience/${r.slug}`}>
               Full role details <span className="arr">&rarr;</span>
             </Link>
           </Reveal>

@@ -10,8 +10,12 @@ export default function ProjectDetail() {
 
   if (!project) return <NotFound />;
 
-  const backHref = project.status === "completed" ? "/projects/completed" : "/projects/still-working";
-  const backLabel = project.status === "completed" ? "Completed" : "Still Working";
+  const STATUS_PAGES = {
+    completed: { href: "/projects/completed", label: "Completed" },
+    "in-progress": { href: "/projects/in-progress", label: "Work in Progress" },
+    planned: { href: "/projects/planned", label: "Planned" },
+  };
+  const { href: backHref, label: backLabel } = STATUS_PAGES[project.status];
 
   return (
     <>
@@ -34,7 +38,13 @@ export default function ProjectDetail() {
         <Reveal>
           <ModelViewer
             kind={project.model}
-            tag={project.status === "completed" ? "3D Placeholder / Model pending" : "3D Placeholder / Concept"}
+            tag={
+              project.status === "completed"
+                ? "3D Placeholder / Model pending"
+                : project.status === "in-progress"
+                  ? "3D Placeholder / In progress"
+                  : "3D Placeholder / Concept"
+            }
             height="clamp(320px, 48vw, 600px)"
           />
         </Reveal>
