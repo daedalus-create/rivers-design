@@ -55,21 +55,31 @@ export default function MapMenu({ open, onClose }) {
     applyZoom(null);
   }, [location.pathname]);
 
-  // Escape zooms back out first; a second Escape closes the whole menu
+  const currentWp = mapWaypoints.find((wp) => wp.node === zoom);
+  // From a level-2 zoom (e.g. "completed"), the parent's own node
+  // ("projects") is what a step back should land on; from a level-1
+  // zoom (parent cluster is "hub"), there's no intermediate to step
+  // to — back means all the way out.
+  const parentWp =
+    currentWp && currentWp.cluster !== "hub" ? mapWaypoints.find((wp) => wp.node === currentWp.cluster) : null;
+  const stepBack = () => applyZoom(parentWp ? parentWp.node : null);
+
+  // Escape steps back one level at a time; from the top level (or
+  // once fully zoomed out) it closes the whole menu instead
   useEffect(() => {
     if (!open) return undefined;
     const onKeyDown = (e) => {
       if (e.key !== "Escape") return;
       if (zoom) {
         e.stopPropagation();
-        applyZoom(null);
+        stepBack();
       } else {
         onClose();
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, zoom, onClose]);
+  }, [open, zoom, parentWp, onClose]);
 
   const handleHubClick = (e, wp) => {
     if (wp.node === "home") {
@@ -85,12 +95,11 @@ export default function MapMenu({ open, onClose }) {
   };
 
   const handleMapBackgroundClick = (e) => {
-    if (e.target === mapRef.current || e.target === sceneRef.current) applyZoom(null);
+    if (e.target === mapRef.current || e.target === sceneRef.current) stepBack();
   };
 
   const handleLinkClick = () => onClose();
 
-  const currentWp = mapWaypoints.find((wp) => wp.node === zoom);
   const otherHubs = mapWaypoints.filter(
     (wp) => wp.cluster === currentWp?.cluster && wp.node !== "home" && wp.node !== zoom && isZoomable(wp)
   );
@@ -99,8 +108,8 @@ export default function MapMenu({ open, onClose }) {
     <div className={`menu-overlay${open ? " open" : ""}`} id="site-menu">
       <nav className="menu-map-wrap" aria-label="Site map">
         <div className="map" ref={mapRef} data-zoom={zoom || undefined} onClick={handleMapBackgroundClick}>
-          <button className="map__back" type="button" onClick={() => applyZoom(null)}>
-            &larr; Map
+          <button className="map__back" type="button" onClick={stepBack}>
+            &larr; {parentWp ? parentWp.label : "Map"}
           </button>
 
           {zoom && (

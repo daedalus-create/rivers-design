@@ -38,16 +38,17 @@ export const mapWaypoints = [
 ];
 
 // Zoom-target center (fraction of container 0..1) + fill scale per
-// zoomable node, recomputed from the snapped positions' bounding box
-// above (constrained by whichever axis span is larger and clamped so
-// the scaled scene always covers the viewport — see MapMenu and
-// zoom_target_for() in tools/generate-map.py, which prints these).
+// zoomable node, computed by zoom_target_for() in
+// tools/generate-map.py (which prints these) so that at the given
+// scale BOTH the scaled scene fully covers the viewport (no exposed
+// edge) AND every member waypoint lands inside the visible viewport
+// (not just off in the padded, possibly-off-canvas framing margin).
 export const zoomTargets = {
-  experience: { fx: 0.268, fy: 0.833, scale: 3.2 },
-  projects: { fx: 0.55, fy: 0.66, scale: 1.47 },
-  about: { fx: 0.829, fy: 0.571, scale: 3.2 },
-  completed: { fx: 0.378, fy: 0.726, scale: 1.96 },
-  "in-progress": { fx: 0.579, fy: 0.844, scale: 3.2 },
-  planned: { fx: 0.764, fy: 0.637, scale: 2.12 },
-  work: { fx: 0.209, fy: 0.75, scale: 2.39 },
+  experience: { fx: 0.271, fy: 0.76, scale: 3.2 },
+  projects: { fx: 0.55, fy: 0.636, scale: 1.47 },
+  about: { fx: 0.758, fy: 0.571, scale: 3.2 },
+  completed: { fx: 0.378, fy: 0.609, scale: 1.96 },
+  "in-progress": { fx: 0.579, fy: 0.778, scale: 3.2 },
+  planned: { fx: 0.778, fy: 0.637, scale: 2.33 },
+  work: { fx: 0.252, fy: 0.726, scale: 2.39 },
 };

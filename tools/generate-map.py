@@ -1,7 +1,8 @@
 """Rivers Design site-map generator (React version).
 
 One noise heightfield drives everything so it all agrees:
-  - public/assets/contours.svg   organic topo background + rivers
+  - public/assets/contours.svg   organic topo background (rivers
+                                  parked for now, see ENABLE_RIVERS)
   - src/data/mapTrails.js        terrain-following trail <path> data,
                                   computed by A* over the heightfield
                                   so they curve around peaks and hug
@@ -20,6 +21,10 @@ import random, math, io, os, heapq
 
 SEED = 7
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+# Rivers are parked for now (traced-but-not-quite-right) — flip this
+# back on to bring the tracing/rendering in trace_river() and its call
+# site back; the trail A* still runs fine with river_cells empty.
+ENABLE_RIVERS = False
 
 W, H = 1000, 600
 GW, GH = 140, 84      # finer grid than before — more, denser contour lines
@@ -382,11 +387,16 @@ N = {k: (x / 100 * W, y / 100 * H) for k, (x, y) in POSITIONS.items()}
 # Prints {fx, fy, scale} for each zoomable node's children, hand-copied
 # into mapWaypoints.js's `zoomTargets` (fx/fy are 0..1 fractions of the
 # container, scale capped so a tight cluster doesn't zoom absurdly far).
-def zoom_target_for(member_keys, pad=0.09, max_scale=3.2):
+def zoom_target_for(member_keys, pad=0.09, max_scale=3.2, min_scale=1.15):
     xs = [POSITIONS[k][0] / 100 for k in member_keys]
     ys = [POSITIONS[k][1] / 100 for k in member_keys]
-    minx, maxx = min(xs) - pad, max(xs) + pad
-    miny, maxy = min(ys) - pad, max(ys) + pad
+    raw_minx, raw_maxx = min(xs), max(xs)
+    raw_miny, raw_maxy = min(ys), max(ys)
+    # padded box drives the initial "nicely framed" scale guess only —
+    # clip it to the canvas, since padding past the edge would demand
+    # showing background that doesn't exist out there
+    minx, maxx = max(0.0, raw_minx - pad), min(1.0, raw_maxx + pad)
+    miny, maxy = max(0.0, raw_miny - pad), min(1.0, raw_maxy + pad)
     # scale is a single scalar applied to both axes (see MapMenu.jsx
     # applyZoom) — constrain by whichever span is LARGER, not smaller.
     # Members that happen to share a near-identical x or y (e.g. two
@@ -394,14 +404,41 @@ def zoom_target_for(member_keys, pad=0.09, max_scale=3.2):
     # span to ~0 and force an absurd zoom just from that coincidence.
     span = max(maxx - minx, maxy - miny, 0.01)
     scale = min(1 / span, max_scale)
-    fx, fy = (minx + maxx) / 2, (miny + maxy) / 2
-    # Clamp so the scaled scene always fully covers the viewport — a
-    # center too close to 0 or 1 would translate the scene past its own
-    # edge and expose blank space beyond it (see the matching clamp in
-    # MapMenu.jsx's applyZoom, which also enforces this at runtime).
+
+    # Two constraints have to hold at once for a given scale, and
+    # naively centering on the members then clamping toward the
+    # viewport (the old approach) can satisfy one at the other's
+    # expense: (a) the scaled scene must fully cover the viewport —
+    # a center too close to 0/1 exposes blank space past its edge —
+    # and (b) every member must land INSIDE the visible viewport, not
+    # just the background. Solve both together: at a given scale, the
+    # viewport can be centered anywhere in [members-visible range] AND
+    # [background-safe range] — if those overlap, pick the middle of
+    # the overlap; if not, this scale is too tight to satisfy both, so
+    # back off and try again. Visibility uses the RAW (unpadded) member
+    # extent — that's the actual content that must be on screen; the
+    # padding is just breathing room, not a hard requirement.
+    def overlap(raw_lo, raw_hi, s):
+        margin = 0.5 / s
+        vis_lo, vis_hi = raw_hi - margin, raw_lo + margin
+        safe_lo, safe_hi = margin, 1 - margin
+        ov_lo, ov_hi = max(vis_lo, safe_lo), min(vis_hi, safe_hi)
+        return (ov_lo, ov_hi) if ov_lo <= ov_hi else None
+
+    while scale > min_scale:
+        ox, oy = overlap(raw_minx, raw_maxx, scale), overlap(raw_miny, raw_maxy, scale)
+        if ox and oy:
+            fx, fy = (ox[0] + ox[1]) / 2, (oy[0] + oy[1]) / 2
+            return {"fx": round(fx, 3), "fy": round(fy, 3), "scale": round(scale, 2)}
+        scale *= 0.92
+    # backed all the way off to min_scale without finding a scale that
+    # satisfies both constraints (members span more than the viewport
+    # even at min_scale) — center on the raw member extent and let the
+    # background-safe clamp win, same as MapMenu.jsx's runtime clamp
+    scale = max(scale, min_scale)
     margin = 0.5 / scale
-    fx = min(max(fx, margin), 1 - margin)
-    fy = min(max(fy, margin), 1 - margin)
+    fx = min(max((raw_minx + raw_maxx) / 2, margin), 1 - margin)
+    fy = min(max((raw_miny + raw_maxy) / 2, margin), 1 - margin)
     return {"fx": round(fx, 3), "fy": round(fy, 3), "scale": round(scale, 2)}
 
 print("\nZoom targets (fx, fy, scale) — hand-copy into mapWaypoints.js zoomTargets:")
@@ -535,44 +572,45 @@ def select_river_starts(pool_size=9, min_sep=200.0, hub_avoid=60.0):
 def path_length(pts):
     return sum(math.hypot(pts[k + 1][0] - pts[k][0], pts[k + 1][1] - pts[k][1]) for k in range(len(pts) - 1))
 
-_river_starts = select_river_starts()
-print(f"river start candidates: {len(_river_starts)}")
-_traced = []
-for sx, sy in _river_starts:
-    pts = trace_river((sx, sy), max_dist=math.hypot(W, H) * 1.3)
-    ex, ey = pts[-1]
-    reached_edge = ex <= 0.5 or ex >= W - 0.5 or ey <= 0.5 or ey >= H - 0.5
-    length = path_length(pts)
-    print(f"  start=({sx:.0f},{sy:.0f}) elev={fval(sx,sy):.2f} traced {len(pts)} points, "
-          f"length={length:.0f}u ({'reached edge' if reached_edge else 'did not reach edge'})")
-    if reached_edge and len(pts) >= 6:
-        _traced.append((length, (sx, sy), pts))
-
-# keep the two that actually cover the most ground, well separated
-_traced.sort(key=lambda t: t[0], reverse=True)
-rivers_raw = []
-chosen_starts = []
-for length, start, pts in _traced:
-    if any(math.hypot(start[0] - sx, start[1] - sy) < 200 for sx, sy in chosen_starts):
-        continue
-    rivers_raw.append(pts)
-    chosen_starts.append(start)
-    if len(rivers_raw) >= 2:
-        break
-
 rivers_xy = []
-for pts in rivers_raw:
-    thin = pts[::3] if len(pts) > 24 else pts
-    smooth = laplacian_smooth(thin, closed=False, iterations=3, factor=0.6)
-    rivers_xy.append(smooth)
-    d = catmull_path(smooth)
-    # solid blue line, like a real topo sheet's river — a thin darker
-    # underlay plus a brighter core reads as water without needing an
-    # actual gradient
-    parts.append(f'<path d="{d}" stroke="#3d6f9e" stroke-width="4.2" fill="none"/>')
-    parts.append(f'<path d="{d}" stroke="#5b9bd5" stroke-width="2.4" fill="none"/>')
+if ENABLE_RIVERS:
+    _river_starts = select_river_starts()
+    print(f"river start candidates: {len(_river_starts)}")
+    _traced = []
+    for sx, sy in _river_starts:
+        pts = trace_river((sx, sy), max_dist=math.hypot(W, H) * 1.3)
+        ex, ey = pts[-1]
+        reached_edge = ex <= 0.5 or ex >= W - 0.5 or ey <= 0.5 or ey >= H - 0.5
+        length = path_length(pts)
+        print(f"  start=({sx:.0f},{sy:.0f}) elev={fval(sx,sy):.2f} traced {len(pts)} points, "
+              f"length={length:.0f}u ({'reached edge' if reached_edge else 'did not reach edge'})")
+        if reached_edge and len(pts) >= 6:
+            _traced.append((length, (sx, sy), pts))
 
-print(f"\nrivers: {len(rivers_xy)} traced")
+    # keep the two that actually cover the most ground, well separated
+    _traced.sort(key=lambda t: t[0], reverse=True)
+    rivers_raw = []
+    chosen_starts = []
+    for length, start, pts in _traced:
+        if any(math.hypot(start[0] - sx, start[1] - sy) < 200 for sx, sy in chosen_starts):
+            continue
+        rivers_raw.append(pts)
+        chosen_starts.append(start)
+        if len(rivers_raw) >= 2:
+            break
+
+    for pts in rivers_raw:
+        thin = pts[::3] if len(pts) > 24 else pts
+        smooth = laplacian_smooth(thin, closed=False, iterations=3, factor=0.6)
+        rivers_xy.append(smooth)
+        d = catmull_path(smooth)
+        # solid blue line, like a real topo sheet's river — a thin
+        # darker underlay plus a brighter core reads as water without
+        # needing an actual gradient
+        parts.append(f'<path d="{d}" stroke="#3d6f9e" stroke-width="4.2" fill="none"/>')
+        parts.append(f'<path d="{d}" stroke="#5b9bd5" stroke-width="2.4" fill="none"/>')
+
+print(f"\nrivers: {len(rivers_xy)} traced" + ("" if ENABLE_RIVERS else " (disabled — set ENABLE_RIVERS=True to bring them back)"))
 
 # write contours.svg now that rivers are appended to `parts`
 contours_svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '

@@ -431,10 +431,15 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   color: #a67c1f;
 }
 
-/* back-to-map control, shown only while zoomed */
+/* back-to-map control, shown only while zoomed. Sits below the whole
+   header complex — both the fixed corner logo/hamburger (which float
+   above the menu overlay at z-index 310, so a top:space-4 position
+   here would sit right underneath/behind them) and the static
+   tagline/date-badge row — using the same header-h + content-offset
+   math every other page uses to clear the header. */
 .map__back {
   position: absolute;
-  top: var(--space-4);
+  top: calc(var(--header-h) + clamp(52px, 4.9vw, 88px) + var(--space-4));
   right: var(--space-4);
   z-index: 4;
   display: none;
@@ -454,10 +459,10 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
 .map[data-zoom] .map__back { display: flex; }
 
 /* quick-switch between sections while zoomed, no trip back to the
-   overview required */
+   overview required — same below-the-header offset as .map__back */
 .map__jump {
   position: absolute;
-  top: var(--space-4);
+  top: calc(var(--header-h) + clamp(52px, 4.9vw, 88px) + var(--space-4));
   left: var(--space-4);
   z-index: 4;
   display: none;
