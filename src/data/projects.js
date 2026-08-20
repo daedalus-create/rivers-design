@@ -10,9 +10,9 @@ export const projects = [
     sub: "A jet engine designed for additive manufacturing",
     model: "engine",
     specs: [
-      { k: "Status", v: "Placeholder — write-up in progress" },
-      { k: "Process", v: "Designed for additive manufacturing" },
-      { k: "Focus", v: "Part consolidation / DFM" },
+      { k: "Status", v: "Design concept — CAD complete" },
+      { k: "Process", v: "Designed to be manufactured purely with additive techniques" },
+      { k: "Focus", v: "Uses gas expansion of incoming fuel to aid airflow through the engine" },
       { k: "Model", v: "CAD export coming soon" },
     ],
   },
@@ -28,6 +28,19 @@ export const projects = [
       { k: "Scope", v: "Automation / material handling" },
       { k: "Focus", v: "Lights-out additive production" },
       { k: "Model", v: "CAD export coming soon" },
+    ],
+  },
+  {
+    slug: "orbital-maneuver-solver",
+    status: "completed",
+    num: "03",
+    title: "Orbital Maneuver Solver",
+    sub: "A Python tool for exploring orbital-maneuver dynamics",
+    model: "concept",
+    specs: [
+      { k: "Language", v: "Python" },
+      { k: "Focus", v: "Orbital dynamics / maneuver formulas" },
+      { k: "Goal", v: "Demonstrate the usability of key orbital-mechanics formulas" },
     ],
   },
   {

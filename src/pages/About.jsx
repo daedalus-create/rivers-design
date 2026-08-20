@@ -12,13 +12,25 @@ export default function About() {
           About
         </Reveal>
         <Reveal as="p" className="lede" stagger={2}>
-          Placeholder bio — who you are, what you study or practice, and what you&rsquo;re building toward. Two
-          or three sentences, written plainly.
+          Deon Rivers — a Mechanical Dual Aerospace Engineering student at Rensselaer Polytechnic Institute,
+          building toward a career in design, DFM, and additive manufacturing.
         </Reveal>
       </section>
 
       <section className="section--tight wrap">
         <Reveal className="statement">
+          <h2 className="statement__label">
+            Who I Am<span className="colon">:</span>
+          </h2>
+          <p className="statement__text">
+            Mechanical / Aerospace engineering student at RPI, expected to graduate May 2026. Hands-on experience
+            spans CAD design, machining, and rapid-prototyping work at Dreki Systems, alongside side projects like
+            an additively-manufactured jet engine and a Python orbital-maneuver solver. Room Manager at RPI&rsquo;s
+            student makerspace, The Forge, since 2022 — helping other students prototype and design for
+            manufacturability.
+          </p>
+        </Reveal>
+        <Reveal className="statement" stagger={1}>
           <h2 className="statement__label">
             The Idea<span className="colon">:</span>
           </h2>
@@ -30,7 +42,7 @@ export default function About() {
             but always leave room for soul.
           </p>
         </Reveal>
-        <Reveal className="statement" stagger={1}>
+        <Reveal className="statement" stagger={2}>
           <h2 className="statement__label">
             The Dream<span className="colon">:</span>
           </h2>
@@ -52,11 +64,11 @@ export default function About() {
           </li>
           <li>
             <span className="k">Tools</span>
-            <span className="v">Placeholder — CAD, slicers, shop tools</span>
+            <span className="v">Siemens NX / Fusion 360 / Autodesk Inventor / Mastercam / MATLAB</span>
           </li>
           <li>
             <span className="k">Now</span>
-            <span className="v">Placeholder — current role or study</span>
+            <span className="v">Mechanical / Aerospace Engineering, RPI — Class of 2026</span>
           </li>
         </Reveal>
       </section>

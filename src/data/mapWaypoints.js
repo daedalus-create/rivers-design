@@ -23,11 +23,14 @@ export const mapWaypoints = [
   { node: "work", href: "/experience/work-excerpts", x: 22.9, y: 83.3, cluster: "experience", label: "Work Excerpts" },
   { node: "sunthru", href: "/experience/sunthru", x: 8.6, y: 86.9, cluster: "work", label: "SunThru" },
   { node: "dreki", href: "/experience/dreki", x: 30.7, y: 63.1, cluster: "work", label: "Dreki Systems" },
+  { node: "work-study", href: "/experience/work-study", x: 11.4, y: 67.9, cluster: "work", label: "Work Study" },
   { node: "resume", href: "/experience/resume", x: 30.7, y: 83.3, cluster: "experience", label: "Resume" },
+  { node: "education", href: "/experience/education", x: 29.3, y: 88.1, cluster: "experience", label: "Education" },
   { node: "projects", href: "/projects", x: 58.9, y: 44.7, cluster: "hub", label: "Projects" },
-  { node: "completed", href: "/projects/completed", x: 30.0, y: 88.1, cluster: "projects", label: "Completed" },
+  { node: "completed", href: "/projects/completed", x: 32.1, y: 88.1, cluster: "projects", label: "Completed" },
   { node: "pyro-mk7", href: "/projects/pyro-mk7", x: 21.4, y: 72.6, cluster: "completed", label: "Pyro MK:7" },
   { node: "hephaestus-forge", href: "/projects/hephaestus-forge", x: 54.3, y: 72.6, cluster: "completed", label: "Hephaestus Forge" },
+  { node: "orbital-maneuver-solver", href: "/projects/orbital-maneuver-solver", x: 35.0, y: 60.7, cluster: "completed", label: "Orbital Maneuver Solver" },
   { node: "in-progress", href: "/projects/in-progress", x: 50.0, y: 95.2, cluster: "projects", label: "Work in Progress" },
   { node: "wip-1", href: "/projects/wip-1", x: 57.9, y: 86.9, cluster: "in-progress", label: "Build 1" },
   { node: "planned", href: "/projects/planned", x: 80.0, y: 57.1, cluster: "projects", label: "Planned" },
@@ -44,8 +47,8 @@ export const mapWaypoints = [
 // edge) AND every member waypoint lands inside the visible viewport
 // (not just off in the padded, possibly-off-canvas framing margin).
 export const zoomTargets = {
-  experience: { fx: 0.271, fy: 0.76, scale: 3.2 },
-  projects: { fx: 0.55, fy: 0.636, scale: 1.47 },
+  experience: { fx: 0.271, fy: 0.784, scale: 3.2 },
+  projects: { fx: 0.56, fy: 0.647, scale: 1.52 },
   about: { fx: 0.758, fy: 0.571, scale: 3.2 },
   completed: { fx: 0.378, fy: 0.609, scale: 1.96 },
   "in-progress": { fx: 0.579, fy: 0.778, scale: 3.2 },

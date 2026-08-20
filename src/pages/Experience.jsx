@@ -25,6 +25,7 @@ export default function Experience() {
         iconRight="/assets/divider-icon-2.svg"
         flip
       />
+      <Divider to="/experience/education" label="Education" />
     </>
   );
 }

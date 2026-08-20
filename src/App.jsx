@@ -7,6 +7,7 @@ import Experience from "./pages/Experience";
 import WorkExcerpts from "./pages/WorkExcerpts";
 import RoleDetail from "./pages/RoleDetail";
 import Resume from "./pages/Resume";
+import Education from "./pages/Education";
 import Projects from "./pages/Projects";
 import ProjectsCompleted from "./pages/ProjectsCompleted";
 import ProjectsInProgress from "./pages/ProjectsInProgress";
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/experience" element={<Experience />} />
         <Route path="/experience/work-excerpts" element={<WorkExcerpts />} />
         <Route path="/experience/resume" element={<Resume />} />
+        <Route path="/experience/education" element={<Education />} />
         <Route path="/experience/:slug" element={<RoleDetail />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/projects/completed" element={<ProjectsCompleted />} />

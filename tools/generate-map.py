@@ -257,11 +257,14 @@ POSITIONS_INTENT = {
     "work": (14, 68),
     "sunthru": (5, 81),
     "dreki": (27, 57),
+    "work-study": (16, 62),
     "resume": (32, 76),
+    "education": (24, 92),
     "projects": (56, 46),
     "completed": (40, 76),
     "pyro-mk7": (18, 66),
     "hephaestus-forge": (52, 66),
+    "orbital-maneuver-solver": (35, 55),
     "in-progress": (60, 80),
     "wip-1": (62, 94),
     "planned": (78, 72),
@@ -279,13 +282,16 @@ SNAP_RADIUS = 95  # canvas units — keeps the snap close to the intended spot
 # POSITIONS_INTENT deltas above keep them well clear of the parent
 # itself (see the parent-distance check below — cramped nav points
 # are hard to tell apart or click accurately).
-LEAF_KEYS = {"pyro-mk7", "hephaestus-forge", "wip-1", "plan-1", "plan-2", "sunthru", "dreki"}
+LEAF_KEYS = {
+    "pyro-mk7", "hephaestus-forge", "orbital-maneuver-solver",
+    "wip-1", "plan-1", "plan-2", "sunthru", "dreki", "work-study",
+}
 LEAF_SNAP_RADIUS = 40
 PARENT_OF = {
-    "pyro-mk7": "completed", "hephaestus-forge": "completed",
+    "pyro-mk7": "completed", "hephaestus-forge": "completed", "orbital-maneuver-solver": "completed",
     "wip-1": "in-progress",
     "plan-1": "planned", "plan-2": "planned",
-    "sunthru": "work", "dreki": "work",
+    "sunthru": "work", "dreki": "work", "work-study": "work",
 }
 
 def nearest_peak_center(x0, y0):
@@ -361,7 +367,10 @@ for pkey, (x, y) in POSITIONS_INTENT.items():
 # flag any two leaf siblings that landed suspiciously close together
 # (same valley cell) so POSITIONS_INTENT can be nudged and re-run
 SIBLING_GROUPS = [
-    ("pyro-mk7", "hephaestus-forge"), ("plan-1", "plan-2"), ("sunthru", "dreki"),
+    ("pyro-mk7", "hephaestus-forge"), ("pyro-mk7", "orbital-maneuver-solver"),
+    ("hephaestus-forge", "orbital-maneuver-solver"),
+    ("plan-1", "plan-2"),
+    ("sunthru", "dreki"), ("sunthru", "work-study"), ("dreki", "work-study"),
 ]
 # in-progress only has the one placeholder page so far — nothing to
 # check it against yet, add its sibling pair here once a 2nd exists
@@ -443,13 +452,13 @@ def zoom_target_for(member_keys, pad=0.09, max_scale=3.2, min_scale=1.15):
 
 print("\nZoom targets (fx, fy, scale) — hand-copy into mapWaypoints.js zoomTargets:")
 ZOOM_GROUPS = {
-    "experience": ["work", "resume"],
+    "experience": ["work", "resume", "education"],
     "projects": ["completed", "in-progress", "planned"],
     "about": ["contact"],
-    "completed": ["pyro-mk7", "hephaestus-forge"],
+    "completed": ["pyro-mk7", "hephaestus-forge", "orbital-maneuver-solver"],
     "in-progress": ["wip-1"],
     "planned": ["plan-1", "plan-2"],
-    "work": ["sunthru", "dreki"],
+    "work": ["sunthru", "dreki", "work-study"],
 }
 for node, members in ZOOM_GROUPS.items():
     print(f"  {node:10s}: {zoom_target_for(members)}")
@@ -461,19 +470,22 @@ for node, members in ZOOM_GROUPS.items():
 LINKS = [
     ("home", "experience", "p", "hub"), ("home", "projects", "p", "hub"), ("home", "about", "p", "hub"),
     ("experience", "work", "p", "experience"), ("experience", "resume", "p", "experience"),
+    ("experience", "education", "p", "experience"),
     ("projects", "completed", "p", "projects"), ("projects", "in-progress", "p", "projects"),
     ("projects", "planned", "p", "projects"),
     ("about", "contact", "p", "about"),
     ("experience", "projects", "s", "hub"), ("projects", "about", "s", "hub"),
-    ("work", "resume", "s", "experience"),
+    ("work", "resume", "s", "experience"), ("resume", "education", "s", "experience"),
     ("completed", "in-progress", "s", "projects"), ("in-progress", "planned", "s", "projects"),
     ("completed", "pyro-mk7", "p", "completed"), ("completed", "hephaestus-forge", "p", "completed"),
+    ("completed", "orbital-maneuver-solver", "p", "completed"),
     ("in-progress", "wip-1", "p", "in-progress"),
     ("planned", "plan-1", "p", "planned"), ("planned", "plan-2", "p", "planned"),
-    ("work", "sunthru", "p", "work"), ("work", "dreki", "p", "work"),
+    ("work", "sunthru", "p", "work"), ("work", "dreki", "p", "work"), ("work", "work-study", "p", "work"),
     ("pyro-mk7", "hephaestus-forge", "s", "completed"),
+    ("hephaestus-forge", "orbital-maneuver-solver", "s", "completed"),
     ("plan-1", "plan-2", "s", "planned"),
-    ("sunthru", "dreki", "s", "work"),
+    ("sunthru", "dreki", "s", "work"), ("dreki", "work-study", "s", "work"),
 ]
 
 # ---------------- rivers (steepest-descent flow trace) ----------------

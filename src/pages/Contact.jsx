@@ -17,8 +17,16 @@ export default function Contact() {
           <li>
             <span className="k">Email</span>
             <span className="v">
-              <a href="mailto:hello@rivers-design.com" style={{ color: "inherit" }}>
-                hello@rivers-design.com
+              <a href="mailto:KangNamu@icloud.com" style={{ color: "inherit" }}>
+                KangNamu@icloud.com
+              </a>
+            </span>
+          </li>
+          <li>
+            <span className="k">Phone</span>
+            <span className="v">
+              <a href="tel:+12073038314" style={{ color: "inherit" }}>
+                (207) 303-8314
               </a>
             </span>
           </li>

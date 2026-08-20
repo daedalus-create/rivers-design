@@ -11,8 +11,8 @@ export default function Resume() {
           Resume
         </Reveal>
         <Reveal as="p" className="lede" stagger={2}>
-          Placeholder — a one-paragraph summary of the resume: degree or training, core skills, and what kind of
-          role you&rsquo;re after.
+          Mechanical / Aerospace engineering student at RPI with hands-on manufacturing and CAD experience —
+          looking for engineering roles in design, DFM, and additive manufacturing.
         </Reveal>
       </section>
 
@@ -20,15 +20,19 @@ export default function Resume() {
         <Reveal as="ul" className="specs">
           <li>
             <span className="k">Education</span>
-            <span className="v">Placeholder — school / program / year</span>
+            <span className="v">B.S. Mechanical Dual Aerospace Engineering — RPI, expected May 2026</span>
           </li>
           <li>
             <span className="k">Skills</span>
-            <span className="v">Placeholder — CAD / DFM / fabrication</span>
+            <span className="v">CAD Modeling / Project Management / Rapid Prototyping / Additive Manufacturing</span>
+          </li>
+          <li>
+            <span className="k">Software</span>
+            <span className="v">Siemens NX / Fusion 360 / Autodesk Inventor / Mastercam / MATLAB</span>
           </li>
           <li>
             <span className="k">Download</span>
-            <span className="v">PDF coming soon — add resume.pdf and link it here</span>
+            <span className="v">Available on request — see Contact for email</span>
           </li>
         </Reveal>
       </section>
