@@ -956,7 +956,8 @@ for _smooth in rivers_xy:
 contours_svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
                 f'fill="none" stroke-linejoin="round" stroke-linecap="round">\n'
                 + "\n".join(parts) + "\n</svg>\n")
-with io.open(os.path.join(ROOT, "public", "assets", "contours.svg"), "w", encoding="utf-8") as f:
+with io.open(os.path.join(ROOT, "public", "assets", "contours.svg"), "w",
+              encoding="utf-8", newline="\n") as f:
     f.write(contours_svg)
 
 trail_lines = [
