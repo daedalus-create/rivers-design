@@ -1,38 +1,83 @@
 """Rivers Design site-map generator (React version).
 
-One noise heightfield drives everything so it all agrees:
-  - public/assets/contours.svg   organic topo background (rivers
-                                  parked for now, see ENABLE_RIVERS)
-  - src/data/mapTrails.js        terrain-following trail <path> data,
-                                  computed by A* over the heightfield
-                                  so they curve around peaks and hug
-                                  gentler terrain instead of cutting
-                                  straight through — consumed by
-                                  src/components/MapMenu.jsx
+One noise heightfield drives everything so it all agrees. The script is
+a strict COMPUTE-then-RENDER pipeline: nothing is drawn until every
+position, river, and route is final.
 
-Waypoint positions/labels/hrefs live by hand in
-src/data/mapWaypoints.js (small, hand-authored, tightly coupled to
-React Router paths) — this script only owns the generated geometry,
-printing snapped positions + zoom targets for hand-copy.
+    Phase 1  terrain      heightfield + derived slope grid
+    Phase 2  summits      hub waypoints land on real peaks
+    Phase 3  hydrology    rivers traced downhill from high ground
+    Phase 4  waypoints    remaining points placed by "hiking sense"
+    Phase 5  framing      per-cluster zoom targets
+    Phase 6  routes       terrain-following trails (A* over the field)
+    Phase 7  render       SVG + JS emitted, all geometry already known
+
+Phase order is load-bearing. Rivers avoid the hub summits, so hubs come
+first (they only need peaks). Waypoint placement avoids the rivers, so
+hydrology comes before it. Trails avoid rivers AND connect final
+waypoints, so they come last before render.
+
+Outputs:
+  - public/assets/contours.svg   organic topo background, incl. rivers
+  - src/data/mapTrails.js        trail <path> data
+  - src/data/mapGeometry.js      snapped positions + zoom targets
+
+Positions/zoom targets used to be PRINTED for hand-copying into
+src/data/mapWaypoints.js, which meant the trails (bent to this script's
+coordinates) and the dots (rendered at the hand-copied ones) could
+silently drift apart. They're written to mapGeometry.js now and
+mapWaypoints.js imports them, so drift is impossible by construction.
+mapWaypoints.js stays hand-authored for what humans own — node, href,
+cluster, label — and this script READS it to learn each label (needed
+for collision math) and cluster (for zoom scale).
 
 Run from anywhere; edit SEED to re-roll the landscape.
 """
-import random, math, io, os, heapq
+import random, math, io, os, re, heapq
+from collections import deque
 
 SEED = 7
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-# Rivers are parked for now (traced-but-not-quite-right) — flip this
-# back on to bring the tracing/rendering in trace_river() and its call
-# site back; the trail A* still runs fine with river_cells empty.
-ENABLE_RIVERS = False
 
 W, H = 1000, 600
 GW, GH = 140, 84      # finer grid than before — more, denser contour lines
 LEVELS = 26            # real topo sheets read as dense; index line every 5th
 
+# ---------------- palette (grey / white / yellow) ----------------
+# Monochrome sheet: grey valley floors climbing to white summits, so
+# elevation reads by value alone. Yellow is reserved exclusively for the
+# NAVIGATION layer (trails, and the waypoint dots already yellow in
+# global.css) — the one saturated hue on the map always means "you can
+# click this", never decoration. Rivers are the darkest ink on the sheet
+# so they stay legible as water against every grey band.
+FILL_LEVELS = [0.15, 0.3, 0.45, 0.6, 0.75, 0.9]
+FILL_COLORS = ["#8c8c8c", "#9a9a9a", "#a9a9a9", "#bababa", "#cfcfcf", "#e7e7e7", "#fcfcfc"]
+CONTOUR_MINOR = ("#7c7c7c", "0.7", "0.45")   # (stroke, width, opacity)
+CONTOUR_INDEX = ("#585858", "1.4", "0.75")
+RIVER_UNDER, RIVER_CORE = "#2f2f2f", "#525252"
+RIVER_W_UNDER, RIVER_W_CORE = 5.0, 2.8
+TRAIL_PRIMARY = {"stroke": "#ffcc40", "strokeWidth": 4, "dash": "4 6"}
+TRAIL_SECONDARY = {"stroke": "#c99a1f", "strokeWidth": 2.6, "dash": "3 9"}
+
+# ---------------- label collision metrics ----------------
+# Waypoint labels are real DOM pills inside the zoomed scene, so their
+# on-screen size is (text width) x (zoom scale). Two dots far enough
+# apart in canvas units can still collide once their labels are drawn —
+# exactly the failure a point-distance check cannot see.
+#
+# Measured from the live page at a 1280x720 viewport (font-size resolves
+# to 16.6px there): widths ran 137px for a 7-character label up to 322px
+# for a 23-character one. A linear fit misses by up to 85px because the
+# fixed padding dominates short labels, so these constants deliberately
+# OVER-estimate every one of the 33 measured labels — over-reserving
+# space is safe, under-reserving puts overlapping pills on the page.
+REF_VIEWPORT_W, REF_VIEWPORT_H = 1280, 720
+LABEL_CHAR_W, LABEL_BASE_W = 13.5, 48.0
+LABEL_H_PX = 46.0     # pill height, plus headroom for the "You are here" line
+
 random.seed(SEED)
 
-# ---------------- heightfield ----------------
+# ---------------- Phase 1: terrain ----------------
 # Real topo sheets aren't uniform noise — they're a handful of actual
 # peaks (contours packed tight on the flanks) sitting in mostly flat,
 # sparse valleys. Model that directly: sum of localized Gaussian
@@ -95,6 +140,29 @@ def fval(x, y):
     a = field[i][j] * (1 - tx) + field[i + 1][j] * tx
     b = field[i][j + 1] * (1 - tx) + field[i + 1][j + 1] * tx
     return a * (1 - ty) + b * ty
+
+CELL_DX, CELL_DY = W / GW, H / GH
+
+def grid_neighbors8(i, j):
+    for di in (-1, 0, 1):
+        for dj in (-1, 0, 1):
+            if di == 0 and dj == 0:
+                continue
+            ni, nj = i + di, j + dj
+            if 0 <= ni <= GW and 0 <= nj <= GH:
+                yield ni, nj
+
+# Steepest local grade per cell, in elevation-per-canvas-unit. Placement
+# uses this to find genuinely level ground: a hiker pitches camp on the
+# flat, and the lowest cell in a basin is often still on a slope.
+slope_grid = [[0.0] * (GH + 1) for _ in range(GW + 1)]
+for i in range(GW + 1):
+    for j in range(GH + 1):
+        worst = 0.0
+        for ni, nj in grid_neighbors8(i, j):
+            d = math.hypot((ni - i) * CELL_DX, (nj - j) * CELL_DY)
+            worst = max(worst, abs(field[ni][nj] - field[i][j]) / d)
+        slope_grid[i][j] = worst
 
 # ---------------- smoothing helpers ----------------
 def laplacian_smooth(pts, closed, iterations=3, factor=0.55):
@@ -194,63 +262,10 @@ def chain(segs):
         lines.append((line, True))
     return lines
 
-# ---------------- hypsometric fill bands (colored elevation tint) ----------------
-# Real topo sheets tint by elevation — green valley floors through tan
-# high ground to pale gray/white peaks — not a flat dark backdrop.
-# Painter's algorithm: start with a full-canvas rect in the lowest
-# band's color, then for each threshold (ascending) fill just the
-# CLOSED marching-squares loops (peaks/basins that don't touch the
-# canvas edge — open, edge-crossing loops are skipped since closing
-# them correctly means following the canvas boundary, not worth the
-# complexity here) with the next band's color. Since each successive
-# threshold's closed regions nest inside the previous one, layering
-# low-to-high naturally produces correct-looking bands without ever
-# computing an isoband polygon directly.
-FILL_LEVELS = [0.15, 0.3, 0.45, 0.6, 0.75, 0.9]
-FILL_COLORS = ["#8fae63", "#9dbb70", "#aec97f", "#c3c085", "#cdb079", "#c4a06e", "#ddd6c4"]
-
-parts = [f'<rect x="0" y="0" width="{W}" height="{H}" fill="{FILL_COLORS[0]}"/>']
-for lvl_i, iso in enumerate(FILL_LEVELS):
-    color = FILL_COLORS[lvl_i + 1]
-    ds = []
-    for line, closed in chain(segments_for(iso)):
-        if not closed or len(line) < 4:
-            continue
-        thin = line[::2] if len(line) > 12 else line
-        smooth = laplacian_smooth(thin, closed=True, iterations=3, factor=0.6)
-        ds.append(catmull_path(smooth, closed=True))
-    if ds:
-        parts.append(f'<path d="{"".join(ds)}" fill="{color}" fill-rule="evenodd"/>')
-
-for li in range(1, LEVELS + 1):
-    iso = li / (LEVELS + 1)
-    # real topo sheets bold every 5th contour as an "index line" and
-    # keep the rest faint — more contrast between the two than before
-    index_line = (li % 5 == 0)
-    # brown contour lines over the color-tinted terrain, not the flat
-    # gray that worked on a plain dark backdrop
-    stroke = "#6b4a2b" if index_line else "#8a6a45"
-    width = "1.4" if index_line else "0.7"
-    opacity = "0.75" if index_line else "0.45"
-    ds = []
-    for line, closed in chain(segments_for(iso)):
-        if len(line) < 4:
-            continue
-        thin = line[::2] if len(line) > 12 else line
-        smooth = laplacian_smooth(thin, closed, iterations=3, factor=0.6)
-        ds.append(catmull_path(smooth, closed=closed))
-    if ds:
-        parts.append(f'<path d="{"".join(ds)}" stroke="{stroke}" stroke-width="{width}" opacity="{opacity}"/>')
-
-# contours.svg isn't written yet — rivers (below) get appended to
-# `parts` first so they render in the same background image, and the
-# file write happens once at the very end of the script.
-
-# ---------------- waypoint positions (must match src/data/mapWaypoints.js) ----------------
-# key -> (x%, y%) — rough layout intent, hand-tuned for spacing and
-# label clearance. Snapped below onto real terrain features (hubs to
-# the nearest peak summit, sub-pages to the nearest valley floor) so
-# dots land on actual high/low points instead of floating on a slope.
+# ---------------- nav graph ----------------
+# key -> (x%, y%) — rough layout intent. Placement treats these as a
+# WISH, not a coordinate: each is snapped to whatever nearby ground
+# actually makes sense to stand on (see Phase 4).
 POSITIONS_INTENT = {
     "home": (50, 16),
     "experience": (22, 42),
@@ -269,207 +284,53 @@ POSITIONS_INTENT = {
     "hephaestus-forge": (52, 66),
     "orbital-maneuver-solver": (35, 55),
     "in-progress": (60, 80),
-    "wip-1": (62, 94),
+    "integrated-toolhead": (56, 92),
+    "blended-body-aircraft": (68, 90),
+    "cm5-cluster": (40, 84),
     "planned": (78, 72),
-    "plan-1": (66, 84),
-    "plan-2": (97, 45),
+    "high-speed-motor": (94, 32),
+    "electric-thruster": (96, 72),
+    "precision-linear-stage": (68, 72),
+    "omnidirectional-base": (95, 92),
+    "high-temperature-bearing": (80, 78),
+    "large-diameter-air-bearing": (78, 92),
+    "unpowered-magnetic-bearing": (66, 60),
+    "plant-exoskeleton": (76, 38),
+    "envisage": (92, 46),
+    "land-trust-city": (66, 46),
     "about": (82, 40),
     "contact": (87, 68),
 }
 HUB_KEYS = {"home", "experience", "projects", "about"}
-SNAP_RADIUS = 95  # canvas units — keeps the snap close to the intended spot
-# Leaf pages (individual project/role pages) sit near their parent —
-# a full-size search radius lets two siblings' windows overlap so much
-# they can snap onto the exact same valley cell. Shrink it just for
-# these so each settles on its own nearby low point, while the
-# POSITIONS_INTENT deltas above keep them well clear of the parent
-# itself (see the parent-distance check below — cramped nav points
-# are hard to tell apart or click accurately).
-LEAF_KEYS = {
-    "pyro-mk7", "hephaestus-forge", "orbital-maneuver-solver",
-    "wip-1", "plan-1", "plan-2", "sunthru", "dreki", "work-study", "piasecki-steel",
-    "rpi", "classes",
-}
-LEAF_SNAP_RADIUS = 40
 PARENT_OF = {
     "pyro-mk7": "completed", "hephaestus-forge": "completed", "orbital-maneuver-solver": "completed",
-    "wip-1": "in-progress",
-    "plan-1": "planned", "plan-2": "planned",
+    "integrated-toolhead": "in-progress", "blended-body-aircraft": "in-progress",
+    "cm5-cluster": "in-progress",
+    "high-speed-motor": "planned", "electric-thruster": "planned",
+    "precision-linear-stage": "planned", "omnidirectional-base": "planned",
+    "high-temperature-bearing": "planned", "large-diameter-air-bearing": "planned",
+    "unpowered-magnetic-bearing": "planned", "plant-exoskeleton": "planned",
+    "envisage": "planned", "land-trust-city": "planned",
     "sunthru": "work", "dreki": "work", "work-study": "work", "piasecki-steel": "work",
     "rpi": "education", "classes": "education",
 }
+LEAF_KEYS = set(PARENT_OF)
 
-def nearest_peak_center(x0, y0):
-    best, best_d2 = (x0, y0), 1e18
-    for cx, cy, r, h in peaks:
-        d2 = (cx - x0) ** 2 + (cy - y0) ** 2
-        if d2 < best_d2:
-            best_d2, best = d2, (cx, cy)
-    return best
-
-# A handful of grid cells often form the single deepest basin in the
-# whole map — several different intents' search windows can overlap
-# it and every one of them "snaps" to that exact same point. Track
-# which cells are already spoken for and exclude them from later
-# searches, so each new point settles on its OWN nearby low spot
-# instead of piling onto whichever valley happens to be lowest overall.
-claimed_cells = set()
-
-def local_extremum(x0, y0, radius, seek_max, avoid_claimed=False):
-    gx0, gy0 = x0 / W * GW, y0 / H * GH
-    gr_x, gr_y = radius / W * GW, radius / H * GH
-    i0, i1 = max(0, int(gx0 - gr_x)), min(GW, int(gx0 + gr_x))
-    j0, j1 = max(0, int(gy0 - gr_y)), min(GH, int(gy0 + gr_y))
-    best_v = -1e18 if seek_max else 1e18
-    best_xy = None
-    for i in range(i0, i1 + 1):
-        for j in range(j0, j1 + 1):
-            if avoid_claimed and (i, j) in claimed_cells:
-                continue
-            v = field[i][j]
-            if (v > best_v) if seek_max else (v < best_v):
-                best_v, best_xy = v, (i / GW * W, j / GH * H)
-    if best_xy is None:
-        # whole window already claimed (very tight search radius,
-        # heavily contested area) — fall back to allowing it anyway
-        return local_extremum(x0, y0, radius, seek_max, avoid_claimed=False)
-    return best_xy
-
-def nearest_valley(x0, y0, radius):
-    return local_extremum(x0, y0, radius, seek_max=False, avoid_claimed=True)
-
-def claim(sx, sy, radius=25):
-    gx0, gy0 = sx / W * GW, sy / H * GH
-    gr_x, gr_y = radius / W * GW, radius / H * GH
-    i0, i1 = max(0, int(gx0 - gr_x)), min(GW, int(gx0 + gr_x))
-    j0, j1 = max(0, int(gy0 - gr_y)), min(GH, int(gy0 + gr_y))
-    for i in range(i0, i1 + 1):
-        for j in range(j0, j1 + 1):
-            claimed_cells.add((i, j))
-
-POSITIONS = {}
-print("Snapped waypoint positions (elevation / displacement from intent):")
-for pkey, (x, y) in POSITIONS_INTENT.items():
-    x0, y0 = x / 100 * W, y / 100 * H
-    if pkey in HUB_KEYS:
-        sx, sy = nearest_peak_center(x0, y0)
-        # a hub can end up far from a sparse peak — don't wander past
-        # the search radius, just settle for the steepest nearby spot
-        if math.hypot(sx - x0, sy - y0) > SNAP_RADIUS * 1.6:
-            sx, sy = local_extremum(x0, y0, SNAP_RADIUS * 1.6, seek_max=True)
-    else:
-        radius = LEAF_SNAP_RADIUS if pkey in LEAF_KEYS else SNAP_RADIUS
-        sx, sy = nearest_valley(x0, y0, radius)
-    sx = min(max(sx, 15), W - 15)
-    sy = min(max(sy, 15), H - 15)
-    claim(sx, sy)
-    dist = round(math.hypot(sx - x0, sy - y0))
-    POSITIONS[pkey] = (round(sx / W * 100, 1), round(sy / H * 100, 1))
-    kind = "peak" if pkey in HUB_KEYS else "valley"
-    print(f"  {pkey:18s} ({kind:6s}) -> x={POSITIONS[pkey][0]:5.1f}%  y={POSITIONS[pkey][1]:5.1f}%  "
-          f"elev={fval(sx, sy):.2f}  moved={dist}u")
-
-# flag any two leaf siblings that landed suspiciously close together
-# (same valley cell) so POSITIONS_INTENT can be nudged and re-run
-SIBLING_GROUPS = [
-    ("pyro-mk7", "hephaestus-forge"), ("pyro-mk7", "orbital-maneuver-solver"),
-    ("hephaestus-forge", "orbital-maneuver-solver"),
-    ("plan-1", "plan-2"),
-    ("sunthru", "dreki"), ("sunthru", "work-study"), ("dreki", "work-study"),
-    ("sunthru", "piasecki-steel"), ("dreki", "piasecki-steel"), ("work-study", "piasecki-steel"),
-    ("rpi", "classes"),
-]
-# in-progress only has the one placeholder page so far — nothing to
-# check it against yet, add its sibling pair here once a 2nd exists
-for a, b in SIBLING_GROUPS:
-    ax, ay = POSITIONS[a][0] / 100 * W, POSITIONS[a][1] / 100 * H
-    bx, by = POSITIONS[b][0] / 100 * W, POSITIONS[b][1] / 100 * H
-    sep = math.hypot(ax - bx, ay - by)
-    if sep < 12:
-        print(f"  !! {a} and {b} snapped only {sep:.1f}u apart — nudge POSITIONS_INTENT and re-run")
-
-# flag any leaf that landed too close to the larger point it zooms
-# from — cramped nav points are hard to tell apart or click precisely
-for child, parent in PARENT_OF.items():
-    cx, cy = POSITIONS[child][0] / 100 * W, POSITIONS[child][1] / 100 * H
-    px, py = POSITIONS[parent][0] / 100 * W, POSITIONS[parent][1] / 100 * H
-    sep = math.hypot(cx - px, cy - py)
-    flag = " !! too close to parent, nudge POSITIONS_INTENT" if sep < 60 else ""
-    print(f"  {child:18s} <-> {parent:10s} parent distance = {sep:.0f}u{flag}")
-
-N = {k: (x / 100 * W, y / 100 * H) for k, (x, y) in POSITIONS.items()}
-
-# ---------------- zoom targets for the map's two zoom levels ----------------
-# Prints {fx, fy, scale} for each zoomable node's children, hand-copied
-# into mapWaypoints.js's `zoomTargets` (fx/fy are 0..1 fractions of the
-# container, scale capped so a tight cluster doesn't zoom absurdly far).
-def zoom_target_for(member_keys, pad=0.09, max_scale=3.2, min_scale=1.15):
-    xs = [POSITIONS[k][0] / 100 for k in member_keys]
-    ys = [POSITIONS[k][1] / 100 for k in member_keys]
-    raw_minx, raw_maxx = min(xs), max(xs)
-    raw_miny, raw_maxy = min(ys), max(ys)
-    # padded box drives the initial "nicely framed" scale guess only —
-    # clip it to the canvas, since padding past the edge would demand
-    # showing background that doesn't exist out there
-    minx, maxx = max(0.0, raw_minx - pad), min(1.0, raw_maxx + pad)
-    miny, maxy = max(0.0, raw_miny - pad), min(1.0, raw_maxy + pad)
-    # scale is a single scalar applied to both axes (see MapMenu.jsx
-    # applyZoom) — constrain by whichever span is LARGER, not smaller.
-    # Members that happen to share a near-identical x or y (e.g. two
-    # children at the same y) would otherwise collapse that axis's
-    # span to ~0 and force an absurd zoom just from that coincidence.
-    span = max(maxx - minx, maxy - miny, 0.01)
-    scale = min(1 / span, max_scale)
-
-    # Two constraints have to hold at once for a given scale, and
-    # naively centering on the members then clamping toward the
-    # viewport (the old approach) can satisfy one at the other's
-    # expense: (a) the scaled scene must fully cover the viewport —
-    # a center too close to 0/1 exposes blank space past its edge —
-    # and (b) every member must land INSIDE the visible viewport, not
-    # just the background. Solve both together: at a given scale, the
-    # viewport can be centered anywhere in [members-visible range] AND
-    # [background-safe range] — if those overlap, pick the middle of
-    # the overlap; if not, this scale is too tight to satisfy both, so
-    # back off and try again. Visibility uses the RAW (unpadded) member
-    # extent — that's the actual content that must be on screen; the
-    # padding is just breathing room, not a hard requirement.
-    def overlap(raw_lo, raw_hi, s):
-        margin = 0.5 / s
-        vis_lo, vis_hi = raw_hi - margin, raw_lo + margin
-        safe_lo, safe_hi = margin, 1 - margin
-        ov_lo, ov_hi = max(vis_lo, safe_lo), min(vis_hi, safe_hi)
-        return (ov_lo, ov_hi) if ov_lo <= ov_hi else None
-
-    while scale > min_scale:
-        ox, oy = overlap(raw_minx, raw_maxx, scale), overlap(raw_miny, raw_maxy, scale)
-        if ox and oy:
-            fx, fy = (ox[0] + ox[1]) / 2, (oy[0] + oy[1]) / 2
-            return {"fx": round(fx, 3), "fy": round(fy, 3), "scale": round(scale, 2)}
-        scale *= 0.92
-    # backed all the way off to min_scale without finding a scale that
-    # satisfies both constraints (members span more than the viewport
-    # even at min_scale) — center on the raw member extent and let the
-    # background-safe clamp win, same as MapMenu.jsx's runtime clamp
-    scale = max(scale, min_scale)
-    margin = 0.5 / scale
-    fx = min(max((raw_minx + raw_maxx) / 2, margin), 1 - margin)
-    fy = min(max((raw_miny + raw_maxy) / 2, margin), 1 - margin)
-    return {"fx": round(fx, 3), "fy": round(fy, 3), "scale": round(scale, 2)}
-
-print("\nZoom targets (fx, fy, scale) — hand-copy into mapWaypoints.js zoomTargets:")
 ZOOM_GROUPS = {
     "experience": ["work", "resume", "education"],
     "projects": ["completed", "in-progress", "planned"],
     "about": ["contact"],
     "completed": ["pyro-mk7", "hephaestus-forge", "orbital-maneuver-solver"],
-    "in-progress": ["wip-1"],
-    "planned": ["plan-1", "plan-2"],
+    "in-progress": ["integrated-toolhead", "blended-body-aircraft", "cm5-cluster"],
+    "planned": [
+        "high-speed-motor", "electric-thruster", "precision-linear-stage",
+        "omnidirectional-base", "high-temperature-bearing", "large-diameter-air-bearing",
+        "unpowered-magnetic-bearing", "plant-exoskeleton", "envisage",
+        "land-trust-city",
+    ],
     "work": ["sunthru", "dreki", "work-study", "piasecki-steel"],
     "education": ["rpi", "classes"],
 }
-for node, members in ZOOM_GROUPS.items():
-    print(f"  {node:10s}: {zoom_target_for(members)}")
 
 # (from, to, kind, cluster) — cluster "hub" always visible; others only
 # visible while their cluster is the active zoom. Parent->child links
@@ -487,58 +348,276 @@ LINKS = [
     ("completed", "in-progress", "s", "projects"), ("in-progress", "planned", "s", "projects"),
     ("completed", "pyro-mk7", "p", "completed"), ("completed", "hephaestus-forge", "p", "completed"),
     ("completed", "orbital-maneuver-solver", "p", "completed"),
-    ("in-progress", "wip-1", "p", "in-progress"),
-    ("planned", "plan-1", "p", "planned"), ("planned", "plan-2", "p", "planned"),
+    ("in-progress", "integrated-toolhead", "p", "in-progress"),
+    ("in-progress", "blended-body-aircraft", "p", "in-progress"),
+    ("in-progress", "cm5-cluster", "p", "in-progress"),
+    ("planned", "high-speed-motor", "p", "planned"),
+    ("planned", "electric-thruster", "p", "planned"),
+    ("planned", "precision-linear-stage", "p", "planned"),
+    ("planned", "omnidirectional-base", "p", "planned"),
+    ("planned", "high-temperature-bearing", "p", "planned"),
+    ("planned", "large-diameter-air-bearing", "p", "planned"),
+    ("planned", "unpowered-magnetic-bearing", "p", "planned"),
+    ("planned", "plant-exoskeleton", "p", "planned"),
+    ("planned", "envisage", "p", "planned"),
+    ("planned", "land-trust-city", "p", "planned"),
     ("work", "sunthru", "p", "work"), ("work", "dreki", "p", "work"), ("work", "work-study", "p", "work"),
     ("work", "piasecki-steel", "p", "work"),
     ("education", "rpi", "p", "education"), ("education", "classes", "p", "education"),
     ("pyro-mk7", "hephaestus-forge", "s", "completed"),
     ("hephaestus-forge", "orbital-maneuver-solver", "s", "completed"),
-    ("plan-1", "plan-2", "s", "planned"),
+    ("cm5-cluster", "integrated-toolhead", "s", "in-progress"),
+    ("integrated-toolhead", "blended-body-aircraft", "s", "in-progress"),
+    # No sibling chain for "planned": with ten leaves the ten parent
+    # trails already read as a trail network, and a nine-link chain
+    # threading all of them turns it into a hairball.
     ("sunthru", "dreki", "s", "work"), ("dreki", "work-study", "s", "work"),
     ("work-study", "piasecki-steel", "s", "work"),
     ("rpi", "classes", "s", "education"),
 ]
 
-# ---------------- rivers (steepest-descent flow trace) ----------------
-CELL_DX, CELL_DY = W / GW, H / GH
+# Labels and clusters are hand-authored in mapWaypoints.js — read them
+# from there so there is one source of truth. Labels drive the collision
+# math; clusters decide which zoom scale a pair is judged at.
+WAYPOINTS_JS = os.path.join(ROOT, "src", "data", "mapWaypoints.js")
+LABEL_OF, CLUSTER_OF = {}, {}
+_nav_src = io.open(WAYPOINTS_JS, encoding="utf-8").read()
+for _m in re.finditer(
+    r'\{\s*node:\s*"([^"]+)"[^}]*?cluster:\s*"([^"]+)"[^}]*?label:\s*"([^"]+)"', _nav_src
+):
+    LABEL_OF[_m.group(1)] = _m.group(3)
+    CLUSTER_OF[_m.group(1)] = _m.group(2)
+_missing = sorted(set(POSITIONS_INTENT) - set(LABEL_OF))
+if _missing:
+    raise SystemExit(
+        f"No waypoint in src/data/mapWaypoints.js for: {_missing}\n"
+        "Add the nav entry (node/href/cluster/label) there first — this "
+        "script needs its label to reserve space for the rendered pill."
+    )
+_orphans = sorted(set(LABEL_OF) - set(POSITIONS_INTENT))
+if _orphans:
+    raise SystemExit(
+        f"No POSITIONS_INTENT entry here for: {_orphans}\n"
+        "Add a rough (x%, y%) intent so they can be placed."
+    )
 
-def grid_neighbors8(i, j):
-    for di in (-1, 0, 1):
-        for dj in (-1, 0, 1):
-            if di == 0 and dj == 0:
-                continue
-            ni, nj = i + di, j + dj
-            if 0 <= ni <= GW and 0 <= nj <= GH:
-                yield ni, nj
+ZOOM_SCALES = {}   # filled in Phase 5, fed back into Phase 4 next pass
 
+def label_w_px(node):
+    return LABEL_CHAR_W * len(LABEL_OF[node]) + LABEL_BASE_W
+
+def labels_clash(node_a, xy_a, node_b, xy_b, scale):
+    """True if two labels' pills would overlap on screen at `scale`.
+
+    Pills are centered under their dot, so both carry the same vertical
+    offset and comparing dot positions against pill dimensions is valid.
+    """
+    px_per_x = REF_VIEWPORT_W * scale / W
+    px_per_y = REF_VIEWPORT_H * scale / H
+    need_x = (label_w_px(node_a) / 2 + label_w_px(node_b) / 2) / px_per_x
+    need_y = LABEL_H_PX / px_per_y
+    return abs(xy_a[0] - xy_b[0]) < need_x and abs(xy_a[1] - xy_b[1]) < need_y
+
+# ---------------- Phases 2 & 4: waypoint placement ----------------
+MIN_PARENT_SEP = 60.0     # canvas units — cramped nav points are hard to click
+SNAP_RADIUS = 95.0        # hubs: keep the snap near the intended spot
+LEAF_SEARCH_SCHEDULE = [40.0, 65.0, 95.0, 135.0, 185.0]
+EDGE_MARGIN = 15.0
+
+# "Hiking sense" weights. A spot worth marking on a walking map is low,
+# level, and near water without being in it — and reachable from its
+# parent without scrambling up a face. Each term is normalized to 0..1
+# before weighting, so these read as relative priorities.
+W_ELEV = 1.00            # prefer valley floors over shoulders
+W_SLOPE = 1.60           # prefer level ground — the strongest single signal
+W_APPROACH = 0.90        # prefer an easy walk in from the parent
+W_INTENT = 0.55          # stay near the hand-authored layout intent
+W_WATER = 0.45           # mild pull toward a river (water is why trails go there)
+IN_RIVER_PENALTY = 4.0   # but never ON the river
+WATER_NEAR = 90.0        # units within which "near water" counts
+SLOPE_NORM = 0.02        # grade treated as "as steep as it matters"
+
+def nearest_peak_center(x0, y0):
+    best, best_d2 = (x0, y0), 1e18
+    for cx, cy, r, h in peaks:
+        d2 = (cx - x0) ** 2 + (cy - y0) ** 2
+        if d2 < best_d2:
+            best_d2, best = d2, (cx, cy)
+    return best
+
+def local_extremum(x0, y0, radius, seek_max):
+    gx0, gy0 = x0 / W * GW, y0 / H * GH
+    gr_x, gr_y = radius / W * GW, radius / H * GH
+    i0, i1 = max(0, int(gx0 - gr_x)), min(GW, int(gx0 + gr_x))
+    j0, j1 = max(0, int(gy0 - gr_y)), min(GH, int(gy0 + gr_y))
+    best_v, best_xy = (-1e18 if seek_max else 1e18), (x0, y0)
+    for i in range(i0, i1 + 1):
+        for j in range(j0, j1 + 1):
+            v = field[i][j]
+            if (v > best_v) if seek_max else (v < best_v):
+                best_v, best_xy = v, (i / GW * W, j / GH * H)
+    return best_xy
+
+def clamp_xy(sx, sy):
+    return (min(max(sx, EDGE_MARGIN), W - EDGE_MARGIN),
+            min(max(sy, EDGE_MARGIN), H - EDGE_MARGIN))
+
+def approach_grade(p_from, p_to, samples=12):
+    """Mean absolute grade along the straight line between two points.
+
+    A cheap stand-in for "can you walk it": a high value means the
+    direct line crosses a face, so the spot is awkward to reach from its
+    parent even if the ground there is pleasant.
+    """
+    seg = math.hypot(p_to[0] - p_from[0], p_to[1] - p_from[1]) / samples or 1.0
+    total, prev = 0.0, fval(*p_from)
+    for s in range(1, samples + 1):
+        t = s / samples
+        v = fval(p_from[0] + (p_to[0] - p_from[0]) * t,
+                 p_from[1] + (p_to[1] - p_from[1]) * t)
+        total += abs(v - prev) / seg
+        prev = v
+    return total / samples
+
+def place_hubs():
+    """Phase 2 — hubs sit on real summits: the landmarks you navigate by."""
+    out = {}
+    for key in POSITIONS_INTENT:
+        if key not in HUB_KEYS:
+            continue
+        x, y = POSITIONS_INTENT[key]
+        x0, y0 = x / 100 * W, y / 100 * H
+        sx, sy = nearest_peak_center(x0, y0)
+        # a hub can end up far from a sparse peak — don't wander past the
+        # search radius, just settle for the steepest nearby spot
+        if math.hypot(sx - x0, sy - y0) > SNAP_RADIUS * 1.6:
+            sx, sy = local_extremum(x0, y0, SNAP_RADIUS * 1.6, seek_max=True)
+        out[key] = clamp_xy(sx, sy)
+    return out
+
+def place_rest(hub_xy, river_dist, report):
+    """Phase 4 — everything that isn't a hub, by hiking sense.
+
+    Auto-resolving: candidates are scored, then the best one satisfying
+    every hard constraint (parent separation, no label clash with an
+    already-placed sibling, cell not already claimed) wins. If a search
+    radius yields nothing legal it widens; only if every radius fails
+    does a constraint get relaxed, and that is reported, never silent.
+    """
+    placed = dict(hub_xy)
+    claimed = set()
+
+    def claim(sx, sy, radius=25.0):
+        gi0, gi1 = int((sx - radius) / W * GW), int((sx + radius) / W * GW)
+        gj0, gj1 = int((sy - radius) / H * GH), int((sy + radius) / H * GH)
+        for i in range(max(0, gi0), min(GW, gi1) + 1):
+            for j in range(max(0, gj0), min(GH, gj1) + 1):
+                claimed.add((i, j))
+
+    for xy in hub_xy.values():
+        claim(*xy)
+
+    # parents before children, so a child can measure against its parent
+    intent_order = list(POSITIONS_INTENT)
+    order = sorted(
+        (k for k in POSITIONS_INTENT if k not in HUB_KEYS),
+        key=lambda k: (1 if k in LEAF_KEYS else 0, intent_order.index(k)),
+    )
+
+    for key in order:
+        ix, iy = POSITIONS_INTENT[key]
+        x0, y0 = ix / 100 * W, iy / 100 * H
+        parent_xy = placed.get(PARENT_OF.get(key))
+        cluster = CLUSTER_OF[key]
+        scale = ZOOM_SCALES.get(cluster, 1.0)
+        siblings = [n for n in placed if CLUSTER_OF.get(n) == cluster]
+        radii = LEAF_SEARCH_SCHEDULE if key in LEAF_KEYS else [SNAP_RADIUS]
+
+        chosen, relaxed = None, []
+        for relax in (0, 1, 2):
+            for radius in radii:
+                gr_x, gr_y = radius / W * GW, radius / H * GH
+                ci, cj = x0 / W * GW, y0 / H * GH
+                i0, i1 = max(0, int(ci - gr_x)), min(GW, int(ci + gr_x))
+                j0, j1 = max(0, int(cj - gr_y)), min(GH, int(cj + gr_y))
+                cands = []
+                for i in range(i0, i1 + 1):
+                    for j in range(j0, j1 + 1):
+                        if relax < 2 and (i, j) in claimed:
+                            continue
+                        cx, cy = clamp_xy(i / GW * W, j / GH * H)
+                        d_intent = math.hypot(cx - x0, cy - y0)
+                        if d_intent > radius:
+                            continue
+                        rd = river_dist[i][j]
+                        cost = (
+                            W_ELEV * field[i][j]
+                            + W_SLOPE * min(1.0, slope_grid[i][j] / SLOPE_NORM)
+                            + W_INTENT * (d_intent / max(radius, 1.0))
+                            + (IN_RIVER_PENALTY if rd <= max(CELL_DX, CELL_DY) else 0.0)
+                            - W_WATER * max(0.0, 1.0 - rd / WATER_NEAR)
+                        )
+                        if parent_xy:
+                            cost += W_APPROACH * min(
+                                1.0, approach_grade(parent_xy, (cx, cy)) / SLOPE_NORM
+                            )
+                        cands.append((cost, cx, cy))
+                cands.sort()
+                for _cost, cx, cy in cands:
+                    if relax < 1 and parent_xy and math.hypot(
+                        cx - parent_xy[0], cy - parent_xy[1]
+                    ) < MIN_PARENT_SEP:
+                        continue
+                    if relax < 1 and any(
+                        labels_clash(key, (cx, cy), s, placed[s], scale) for s in siblings
+                    ):
+                        continue
+                    chosen = (cx, cy)
+                    break
+                if chosen:
+                    break
+            if chosen:
+                if relax == 1:
+                    relaxed.append("parent separation / label clearance")
+                elif relax == 2:
+                    relaxed.append("claimed-cell exclusivity")
+                break
+
+        if not chosen:
+            # every radius at every relaxation failed — shouldn't happen
+            # on a full grid, but never place nothing
+            chosen = clamp_xy(x0, y0)
+            relaxed.append("fell back to raw intent")
+
+        placed[key] = chosen
+        claim(*chosen)
+        if relaxed:
+            report.append(f"  {key:26s} relaxed: {', '.join(relaxed)}")
+
+    return placed
+
+# ---------------- Phase 3: hydrology ----------------
 def trace_river(start_xy, max_dist):
-    # Real valley floors are mostly flat (see the heightfield comment
-    # up top), so a discrete grid-hop steepest-descent walk stalls out
-    # constantly once the ground levels off, and picking "whichever
-    # unvisited neighbor is lowest" to push through a stall tends to
-    # wander/spiral across a large flat basin instead of heading
-    # anywhere in particular. Trace in continuous space instead: at
-    # each step, probe a ring of directions around the current point
-    # for the steepest nearby drop and steer the running flow
-    # direction toward it; if nothing nearby is downhill (flat ground),
-    # keep coasting in that same established direction. Since motion is
-    # always a forward step along the (slowly-turning) direction vector
-    # rather than a hop between grid cells, there's no "seen" set and
-    # no possibility of backtracking or spiraling — it always makes
-    # steady progress toward the boundary, the way a real river
+    # Real valley floors are mostly flat, so a discrete grid-hop
+    # steepest-descent walk stalls constantly once the ground levels off,
+    # and picking "whichever unvisited neighbor is lowest" to push
+    # through a stall wanders across a flat basin. Trace in continuous
+    # space instead: probe a ring of directions for the steepest nearby
+    # drop and steer the running flow direction toward it; if nothing
+    # nearby is downhill, coast in the established direction. Motion is
+    # always a forward step along a slowly-turning vector rather than a
+    # hop between cells, so there is no backtracking or spiraling — it
+    # makes steady progress toward the boundary, the way a real river
     # crossing a flat plain does.
     x, y = start_xy
     pts = [(x, y)]
     step = max(CELL_DX, CELL_DY) * 0.6
     probe_dirs = [(math.cos(a), math.sin(a)) for a in (i / 16 * 2 * math.pi for i in range(16))]
-    # Elevation is normalized 0..1 across the WHOLE map, but a "flat"
-    # valley floor still has tiny local wobble from the low-amplitude
-    # base noise layer (see the heightfield comment up top) — with too
-    # small a threshold that wobble reads as "real" descent on every
-    # step, steering the direction a little each time until, over
-    # hundreds of steps, it's curved all the way back on itself. Only
-    # react to a drop big enough to be actual terrain, not noise.
+    # Elevation is normalized across the WHOLE map, but a "flat" valley
+    # floor still wobbles slightly from the base noise layer — too small
+    # a threshold reads that wobble as real descent every step, curving
+    # the path until it doubles back. Only react to a drop big enough to
+    # be actual terrain.
     DESCENT_EPS = 0.015
     dirx, diry = 0.0, 0.0
     traveled = 0.0
@@ -556,8 +635,6 @@ def trace_river(start_xy, max_dist):
             dirx = 0.6 * dirx + 0.4 * best_dx
             diry = 0.6 * diry + 0.4 * best_dy
         elif dirx == 0.0 and diry == 0.0:
-            # no descent found and no momentum yet (started on
-            # perfectly flat ground) — head for the nearest edge
             dirx = -1.0 if x < W / 2 else 1.0
             diry = -1.0 if y < H / 2 else 1.0
         L = math.hypot(dirx, diry) or 1.0
@@ -571,81 +648,49 @@ def trace_river(start_xy, max_dist):
         pts.append((x, y))
     return pts
 
-def select_river_starts(pool_size=9, min_sep=200.0, hub_avoid=60.0):
-    # Which peak flows the FARTHEST depends on which way its downhill
-    # direction happens to point, not just how central the peak is —
-    # a central peak can still dump into the nearest edge in a couple
-    # hundred units if that's the way the terrain tilts. So rather than
-    # guess from position alone, gather a well-separated pool of the
-    # highest peaks and let the caller actually trace all of them,
-    # keeping whichever ones travel the farthest.
-    hub_points = [N[k] for k in HUB_KEYS]
+def path_length(pts):
+    return sum(math.hypot(pts[k + 1][0] - pts[k][0], pts[k + 1][1] - pts[k][1])
+               for k in range(len(pts) - 1))
+
+def trace_rivers(hub_xy, want=3, pool_size=10, min_sep=200.0, hub_avoid=60.0):
+    """Trace from the highest well-separated peaks, keep the longest.
+
+    Which headwater flows FARTHEST depends on which way the terrain
+    tilts under it, not just how central it is, so gather a pool of high
+    peaks and actually trace them all rather than guessing from position.
+    """
+    hub_points = list(hub_xy.values())
     candidates = [(cx, cy) for cx, cy, r, h in peaks if 0 <= cx <= W and 0 <= cy <= H]
     candidates.sort(key=lambda p: fval(p[0], p[1]), reverse=True)
-    chosen = []
+    starts = []
     for cx, cy in candidates:
         if any(math.hypot(cx - hx, cy - hy) < hub_avoid for hx, hy in hub_points):
             continue
-        if any(math.hypot(cx - sx, cy - sy) < min_sep for sx, sy in chosen):
+        if any(math.hypot(cx - sx, cy - sy) < min_sep for sx, sy in starts):
             continue
-        chosen.append((cx, cy))
-        if len(chosen) >= pool_size:
+        starts.append((cx, cy))
+        if len(starts) >= pool_size:
             break
-    return chosen
 
-def path_length(pts):
-    return sum(math.hypot(pts[k + 1][0] - pts[k][0], pts[k + 1][1] - pts[k][1]) for k in range(len(pts) - 1))
-
-rivers_xy = []
-if ENABLE_RIVERS:
-    _river_starts = select_river_starts()
-    print(f"river start candidates: {len(_river_starts)}")
-    _traced = []
-    for sx, sy in _river_starts:
+    traced = []
+    for sx, sy in starts:
         pts = trace_river((sx, sy), max_dist=math.hypot(W, H) * 1.3)
         ex, ey = pts[-1]
-        reached_edge = ex <= 0.5 or ex >= W - 0.5 or ey <= 0.5 or ey >= H - 0.5
-        length = path_length(pts)
-        print(f"  start=({sx:.0f},{sy:.0f}) elev={fval(sx,sy):.2f} traced {len(pts)} points, "
-              f"length={length:.0f}u ({'reached edge' if reached_edge else 'did not reach edge'})")
-        if reached_edge and len(pts) >= 6:
-            _traced.append((length, (sx, sy), pts))
+        if (ex <= 0.5 or ex >= W - 0.5 or ey <= 0.5 or ey >= H - 0.5) and len(pts) >= 6:
+            traced.append((path_length(pts), (sx, sy), pts))
 
-    # keep the two that actually cover the most ground, well separated
-    _traced.sort(key=lambda t: t[0], reverse=True)
-    rivers_raw = []
-    chosen_starts = []
-    for length, start, pts in _traced:
-        if any(math.hypot(start[0] - sx, start[1] - sy) < 200 for sx, sy in chosen_starts):
+    traced.sort(key=lambda t: t[0], reverse=True)
+    kept, kept_starts = [], []
+    for _length, start, pts in traced:
+        if any(math.hypot(start[0] - sx, start[1] - sy) < min_sep for sx, sy in kept_starts):
             continue
-        rivers_raw.append(pts)
-        chosen_starts.append(start)
-        if len(rivers_raw) >= 2:
-            break
-
-    for pts in rivers_raw:
         thin = pts[::3] if len(pts) > 24 else pts
-        smooth = laplacian_smooth(thin, closed=False, iterations=3, factor=0.6)
-        rivers_xy.append(smooth)
-        d = catmull_path(smooth)
-        # solid blue line, like a real topo sheet's river — a thin
-        # darker underlay plus a brighter core reads as water without
-        # needing an actual gradient
-        parts.append(f'<path d="{d}" stroke="#3d6f9e" stroke-width="4.2" fill="none"/>')
-        parts.append(f'<path d="{d}" stroke="#5b9bd5" stroke-width="2.4" fill="none"/>')
+        kept.append(laplacian_smooth(thin, closed=False, iterations=3, factor=0.6))
+        kept_starts.append(start)
+        if len(kept) >= want:
+            break
+    return kept, len(starts), len(traced)
 
-print(f"\nrivers: {len(rivers_xy)} traced" + ("" if ENABLE_RIVERS else " (disabled — set ENABLE_RIVERS=True to bring them back)"))
-
-# write contours.svg now that rivers are appended to `parts`
-contours_svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
-                f'fill="none" stroke-linejoin="round" stroke-linecap="round">\n'
-                + "\n".join(parts) + "\n</svg>\n")
-with io.open(os.path.join(ROOT, "public", "assets", "contours.svg"), "w", encoding="utf-8") as f:
-    f.write(contours_svg)
-print("contours.svg:", len(contours_svg) // 1024, "KB")
-
-# river-proximity grid cells, used to lightly penalize trails that run
-# through or repeatedly cross a river instead of finding a clean ford
 def rasterize_near(points_xy, radius):
     cells = set()
     r_gx = max(1, int(radius / W * GW))
@@ -659,16 +704,131 @@ def rasterize_near(points_xy, radius):
                     cells.add((ni, nj))
     return cells
 
-river_cells = set()
-for smooth in rivers_xy:
-    river_cells |= rasterize_near(smooth, radius=max(CELL_DX, CELL_DY) * 1.1)
+def river_distance_grid(river_cells):
+    """Approx distance (canvas units) from each cell to the nearest river.
 
-# ---------------- terrain-following trails (A* over the heightfield) ----------------
+    Multi-source BFS in cell hops scaled by mean cell size — plenty
+    accurate for "is this near water" scoring, far cheaper than an exact
+    distance transform.
+    """
+    dist = [[float("inf")] * (GH + 1) for _ in range(GW + 1)]
+    q = deque()
+    for i, j in river_cells:
+        dist[i][j] = 0.0
+        q.append((i, j))
+    hop = (CELL_DX + CELL_DY) / 2
+    while q:
+        i, j = q.popleft()
+        for ni, nj in grid_neighbors8(i, j):
+            if dist[ni][nj] > dist[i][j] + hop:
+                dist[ni][nj] = dist[i][j] + hop
+                q.append((ni, nj))
+    return dist
+
+# ---------------- Phase 5: framing ----------------
+def zoom_target_for(positions, member_keys, pad=0.09, max_scale=3.2, min_scale=1.15):
+    xs = [positions[k][0] / W for k in member_keys]
+    ys = [positions[k][1] / H for k in member_keys]
+    raw_minx, raw_maxx = min(xs), max(xs)
+    raw_miny, raw_maxy = min(ys), max(ys)
+    # padded box drives the initial "nicely framed" scale guess only —
+    # clip it to the canvas, since padding past the edge would demand
+    # showing background that doesn't exist out there
+    minx, maxx = max(0.0, raw_minx - pad), min(1.0, raw_maxx + pad)
+    miny, maxy = max(0.0, raw_miny - pad), min(1.0, raw_maxy + pad)
+    # scale is a single scalar applied to both axes (see MapMenu.jsx
+    # applyZoom) — constrain by whichever span is LARGER, not smaller.
+    # Members sharing a near-identical x or y would otherwise collapse
+    # that axis's span to ~0 and force an absurd zoom from coincidence.
+    span = max(maxx - minx, maxy - miny, 0.01)
+    scale = min(1 / span, max_scale)
+
+    # Two constraints must hold at once: (a) the scaled scene must fully
+    # cover the viewport — a center too close to 0/1 exposes blank space
+    # past its edge — and (b) every member must land INSIDE the visible
+    # viewport. Solve both: at a given scale the viewport can be centered
+    # anywhere in [members-visible] AND [background-safe]; if those
+    # overlap take the middle, else back the scale off and retry.
+    # Visibility uses the RAW extent — padding is breathing room, not a
+    # hard requirement.
+    def overlap(raw_lo, raw_hi, s):
+        margin = 0.5 / s
+        vis_lo, vis_hi = raw_hi - margin, raw_lo + margin
+        safe_lo, safe_hi = margin, 1 - margin
+        ov_lo, ov_hi = max(vis_lo, safe_lo), min(vis_hi, safe_hi)
+        return (ov_lo, ov_hi) if ov_lo <= ov_hi else None
+
+    while scale > min_scale:
+        ox, oy = overlap(raw_minx, raw_maxx, scale), overlap(raw_miny, raw_maxy, scale)
+        if ox and oy:
+            fx, fy = (ox[0] + ox[1]) / 2, (oy[0] + oy[1]) / 2
+            return {"fx": round(fx, 3), "fy": round(fy, 3), "scale": round(scale, 2)}
+        scale *= 0.92
+    # backed off to min_scale without satisfying both (members span more
+    # than the viewport even there) — center on the raw extent and let
+    # the background-safe clamp win, same as MapMenu.jsx's runtime clamp
+    scale = max(scale, min_scale)
+    margin = 0.5 / scale
+    fx = min(max((raw_minx + raw_maxx) / 2, margin), 1 - margin)
+    fy = min(max((raw_miny + raw_maxy) / 2, margin), 1 - margin)
+    return {"fx": round(fx, 3), "fy": round(fy, 3), "scale": round(scale, 2)}
+
+# ================= run the pipeline =================
+print(f"Phase 1  terrain      {NUM_PEAKS} peaks on a {GW}x{GH} grid, seed {SEED}")
+
+hub_xy = place_hubs()
+print(f"Phase 2  summits      {len(hub_xy)} hubs snapped to peaks")
+
+rivers_xy, pool_n, traced_n = trace_rivers(hub_xy)
+river_cells = set()
+for _r in rivers_xy:
+    river_cells |= rasterize_near(_r, radius=max(CELL_DX, CELL_DY) * 1.1)
+river_dist = river_distance_grid(river_cells)
+print(f"Phase 3  hydrology    {len(rivers_xy)} rivers kept "
+      f"({traced_n} of {pool_n} candidate headwaters reached an edge)")
+
+# Placement needs each cluster's zoom scale to judge label overlap, but
+# the scale is derived from the placement — so iterate until the scales
+# stop moving. Two passes is normally enough; the loop caps at four.
+POSITIONS, ZOOM_TARGETS, placement_report = {}, {}, []
+for pass_i in range(4):
+    placement_report = []
+    POSITIONS = place_rest(hub_xy, river_dist, placement_report)
+    ZOOM_TARGETS = {n: zoom_target_for(POSITIONS, m) for n, m in ZOOM_GROUPS.items()}
+    new_scales = {n: t["scale"] for n, t in ZOOM_TARGETS.items()}
+    if new_scales == ZOOM_SCALES:
+        print(f"Phase 4  waypoints    {len(POSITIONS)} placed; "
+              f"zoom scales converged after {pass_i} refinement pass(es)")
+        break
+    ZOOM_SCALES = new_scales
+else:
+    print(f"Phase 4  waypoints    {len(POSITIONS)} placed; "
+          "zoom scales still moving after 4 passes (using last)")
+for _line in placement_report:
+    print(_line)
+print(f"Phase 5  framing      {len(ZOOM_TARGETS)} zoom targets")
+
+# Verify what actually matters: no two SIMULTANEOUSLY-VISIBLE labels
+# overlap. Hubs are judged at scale 1 (the un-zoomed map); cluster
+# members at their own cluster's scale.
+clashes = []
+check_groups = [("hub", 1.0, [k for k in POSITIONS if CLUSTER_OF[k] == "hub"])]
+for _node, _members in ZOOM_GROUPS.items():
+    check_groups.append((_node, ZOOM_TARGETS[_node]["scale"], _members))
+for _g, _s, _members in check_groups:
+    for _i, _a in enumerate(_members):
+        for _b in _members[_i + 1:]:
+            if labels_clash(_a, POSITIONS[_a], _b, POSITIONS[_b], _s):
+                clashes.append(f"  !! {_g}: {_a} / {_b} labels overlap at scale {_s}")
+print(f"         label check  {'no overlaps' if not clashes else f'{len(clashes)} OVERLAPS'}")
+for _c in clashes:
+    print(_c)
+
+# ---------------- Phase 6: routes ----------------
 # Real trails avoid sheer slopes — penalize elevation change per unit
-# distance far more than distance itself, so paths bend around peaks
-# and hug gentler terrain instead of cutting straight through. A light
-# extra cost near rivers nudges trails toward a single clean crossing
-# rather than running parallel through one or crossing it repeatedly.
+# distance far more than distance itself, so paths bend around peaks and
+# hug gentler terrain. A light extra cost near rivers nudges trails
+# toward a single clean ford rather than running parallel through one.
 STEEPNESS_WEIGHT = 26.0
 RIVER_PENALTY = 0.9
 
@@ -681,9 +841,7 @@ def astar(start, goal):
         return math.hypot((i - gi) * CELL_DX, (j - gj) * CELL_DY)
 
     open_heap = [(heuristic(start), 0.0, start)]
-    came_from = {}
-    best_cost = {start: 0.0}
-    closed = set()
+    came_from, best_cost, closed = {}, {start: 0.0}, set()
     while open_heap:
         _, cost, node = heapq.heappop(open_heap)
         if node in closed:
@@ -708,7 +866,7 @@ def astar(start, goal):
                 heapq.heappush(open_heap, (ncost + heuristic(nxt), ncost, nxt))
 
     if goal not in came_from and goal != start:
-        goal = min(best_cost, key=heuristic)  # unreachable (shouldn't happen on a full grid) — best effort
+        goal = min(best_cost, key=heuristic)  # unreachable on a full grid — best effort
     path, node = [], goal
     while node is not None:
         path.append(node)
@@ -728,44 +886,120 @@ def terrain_path(p0, p1, target_points=16):
         return [p0, p1]
     if len(pts) > target_points:
         stride = max(1, len(pts) // target_points)
+        tail = (path_ij[-1][0] / GW * W, path_ij[-1][1] / GH * H)
         pts = pts[::stride]
-        if pts[-1] != path_ij[-1]:
-            pts.append((path_ij[-1][0] / GW * W, path_ij[-1][1] / GH * H))
+        if pts[-1] != tail:
+            pts.append(tail)
     pts[0] = p0
     pts[-1] = p1
     return pts
 
 trails = []
-for a, b, kind, cluster in LINKS:
-    raw = terrain_path(N[a], N[b])
+for _a, _b, _kind, _cluster in LINKS:
+    raw = terrain_path(POSITIONS[_a], POSITIONS[_b])
     smooth = laplacian_smooth(raw, closed=False, iterations=2, factor=0.5) if len(raw) >= 3 else raw
-    d = catmull_path(smooth)
-    # bold red marked-trail look (topo sheets mark trails in red/tan
-    # with tick-mark-like dashes) — primary parent->child routes bolder
-    # and closer to solid, secondary lateral links thinner and gappier
-    style = (
-        {"stroke": "#c0392b", "strokeWidth": 4, "dash": "4 6"} if kind == "p"
-        else {"stroke": "#a8402f", "strokeWidth": 2.6, "dash": "3 9"}
-    )
-    trails.append({"d": d, "cluster": cluster, **style})
+    # Yellow marked-trail look, matching the accent used for waypoint
+    # dots in global.css — primary parent->child routes bolder and
+    # closer to solid, secondary lateral links thinner and gappier.
+    style = TRAIL_PRIMARY if _kind == "p" else TRAIL_SECONDARY
+    trails.append({"d": catmull_path(smooth), "cluster": _cluster, **style})
+print(f"Phase 6  routes       {len(trails)} trails over {len(LINKS)} links")
 
-js_lines = [
+# ---------------- Phase 7: render ----------------
+# Nothing above drew anything. All geometry is final, so the SVG is
+# assembled in one pass, bottom layer first.
+parts = [f'<rect x="0" y="0" width="{W}" height="{H}" fill="{FILL_COLORS[0]}"/>']
+
+# Hypsometric bands. Painter's algorithm: start with a full-canvas rect
+# in the lowest band's color, then for each threshold (ascending) fill
+# just the CLOSED marching-squares loops (peaks/basins that don't touch
+# the canvas edge — open, edge-crossing loops are skipped since closing
+# them correctly means following the canvas boundary) with the next
+# band's color. Successive thresholds' closed regions nest inside the
+# previous one, so layering low-to-high produces correct-looking bands
+# without ever computing an isoband polygon.
+for _lvl_i, _iso in enumerate(FILL_LEVELS):
+    ds = []
+    for line, closed in chain(segments_for(_iso)):
+        if not closed or len(line) < 4:
+            continue
+        thin = line[::2] if len(line) > 12 else line
+        ds.append(catmull_path(laplacian_smooth(thin, True, 3, 0.6), closed=True))
+    if ds:
+        parts.append(f'<path d="{"".join(ds)}" fill="{FILL_COLORS[_lvl_i + 1]}" fill-rule="evenodd"/>')
+
+# Contour lines — every 5th bolder, the way a real sheet marks index
+# lines. Grey on grey: elevation is carried by the fill value, so the
+# lines only have to describe shape.
+for _li in range(1, LEVELS + 1):
+    _iso = _li / (LEVELS + 1)
+    stroke, width, opacity = CONTOUR_INDEX if _li % 5 == 0 else CONTOUR_MINOR
+    ds = []
+    for line, closed in chain(segments_for(_iso)):
+        if len(line) < 4:
+            continue
+        thin = line[::2] if len(line) > 12 else line
+        ds.append(catmull_path(laplacian_smooth(thin, closed, 3, 0.6), closed=closed))
+    if ds:
+        parts.append(f'<path d="{"".join(ds)}" stroke="{stroke}" '
+                     f'stroke-width="{width}" opacity="{opacity}"/>')
+
+# Rivers last so they sit above the contours, as on a printed sheet. A
+# darker underlay plus a lighter core reads as water without a gradient,
+# and being the darkest ink on the map it stays legible against every
+# hypsometric band.
+for _smooth in rivers_xy:
+    d = catmull_path(_smooth)
+    parts.append(f'<path d="{d}" stroke="{RIVER_UNDER}" stroke-width="{RIVER_W_UNDER}" fill="none"/>')
+    parts.append(f'<path d="{d}" stroke="{RIVER_CORE}" stroke-width="{RIVER_W_CORE}" fill="none"/>')
+
+contours_svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
+                f'fill="none" stroke-linejoin="round" stroke-linecap="round">\n'
+                + "\n".join(parts) + "\n</svg>\n")
+with io.open(os.path.join(ROOT, "public", "assets", "contours.svg"), "w",
+              encoding="utf-8", newline="\n") as f:
+    f.write(contours_svg)
+
+trail_lines = [
     "// Auto-generated by tools/generate-map.py — do not hand-edit.",
-    "// Trail paths for the interactive site map, computed via A* over",
-    "// a fractal-noise heightfield (penalizing steep elevation change)",
-    "// so they curve around peaks and hug gentler terrain instead of",
-    "// cutting straight through (see MapMenu.jsx for render + zoom).",
+    "// Trail paths for the interactive site map, computed via A* over a",
+    "// fractal-noise heightfield (penalizing steep elevation change and",
+    "// river crossings) so they curve around peaks and hug gentler",
+    "// terrain instead of cutting straight through.",
     "export const mapTrails = [",
 ]
 for t in trails:
-    js_lines.append(
+    trail_lines.append(
         f'  {{ d: "{t["d"]}", cluster: "{t["cluster"]}", '
         f'stroke: "{t["stroke"]}", strokeWidth: {t["strokeWidth"]}, dash: "{t["dash"]}" }},'
     )
-js_lines.append("];")
+trail_lines.append("];")
+trails_path = os.path.join(ROOT, "src", "data", "mapTrails.js")
+os.makedirs(os.path.dirname(trails_path), exist_ok=True)
+with io.open(trails_path, "w", encoding="utf-8", newline="\n") as f:
+    f.write("\n".join(trail_lines) + "\n")
 
-out_path = os.path.join(ROOT, "src", "data", "mapTrails.js")
-os.makedirs(os.path.dirname(out_path), exist_ok=True)
-with io.open(out_path, "w", encoding="utf-8", newline="\n") as f:
-    f.write("\n".join(js_lines) + "\n")
-print("mapTrails.js:", len(trails), "trails")
+geom_lines = [
+    "// Auto-generated by tools/generate-map.py — do not hand-edit.",
+    "//",
+    "// Waypoint positions (x%, y%) snapped onto real terrain features,",
+    "// plus the per-cluster zoom framing derived from them. These live",
+    "// here rather than in mapWaypoints.js so the dots and the trails",
+    "// (bent to these same coordinates) can never drift apart — run",
+    "// `npm run generate-map` to regenerate both together.",
+    "export const mapPositions = {",
+]
+for _k, (_x, _y) in POSITIONS.items():
+    geom_lines.append(f'  "{_k}": [{round(_x / W * 100, 1)}, {round(_y / H * 100, 1)}],')
+geom_lines += ["};", "", "export const zoomTargets = {"]
+for _k, _t in ZOOM_TARGETS.items():
+    geom_lines.append(f'  "{_k}": {{ fx: {_t["fx"]}, fy: {_t["fy"]}, scale: {_t["scale"]} }},')
+geom_lines.append("};")
+with io.open(os.path.join(ROOT, "src", "data", "mapGeometry.js"), "w",
+              encoding="utf-8", newline="\n") as f:
+    f.write("\n".join(geom_lines) + "\n")
+
+print(f"Phase 7  render       contours.svg {len(contours_svg) // 1024} KB, "
+      f"mapTrails.js {len(trails)} trails, mapGeometry.js {len(POSITIONS)} positions")
+if clashes:
+    raise SystemExit(f"\n{len(clashes)} label overlap(s) remain — see above.")
