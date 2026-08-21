@@ -107,25 +107,44 @@ Edit `SEED` at the top of the script to re-roll the landscape. Waypoint
 hand in `src/data/mapWaypoints.js` — keep the `POSITIONS` dict at the
 top of `generate-map.py` in sync if you move a dot.
 
-## Deploying to rivers-design.com (Squarespace domain)
+## Deploying to rivers-design.com
 
-The domain is registered at Squarespace, but the built site is fully
-static, so it can be hosted anywhere. Easiest path — GitHub Pages:
+Hosted on **GitHub Pages**, built by GitHub Actions. Repo:
+[daedalus-create/rivers-design](https://github.com/daedalus-create/rivers-design).
 
-1. Push this repo to GitHub, enable **Settings → Pages** on the branch
-   that contains a built `dist/` (or add a GitHub Actions workflow that
-   runs `npm run build` and publishes `dist/`). The `public/CNAME` file
-   ends up in `dist/CNAME` automatically.
-2. In Squarespace: **Settings → Domains → rivers-design.com → DNS
-   Settings**, then add:
-   - Four `A` records, host `@`, pointing to
-     `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
-   - One `CNAME` record, host `www`, pointing to `<your-github-username>.github.io`
-3. Back in GitHub Pages settings, enter `rivers-design.com` as the
-   custom domain and enable **Enforce HTTPS** once the check passes.
+Every push to `main` triggers `.github/workflows/deploy.yml`, which runs
+`npm ci`, `npm run lint`, `npm run build`, and publishes `dist/` to
+Pages. Nothing to do by hand — commit and push:
 
-Netlify or Cloudflare Pages work just as well — connect the repo, set
-the build command to `npm run build` and the publish directory to
-`dist`, then point Squarespace DNS at the host they give you. Both
-handle SPA routing natively, so the manual `404.html` copy step is only
-required for GitHub Pages.
+```bash
+git push
+```
+
+Watch the run with `gh run watch`, or on the Actions tab.
+
+The custom domain is set on the Pages config (not via `public/CNAME` —
+with the Actions build source, GitHub reads the domain from repo
+settings, so the `CNAME` file is vestigial but harmless).
+
+### DNS at Squarespace
+
+The domain is registered at Squarespace. **Settings → Domains →
+rivers-design.com → DNS Settings**, then replace Squarespace's default
+records with:
+
+| Type  | Host | Value                      |
+|-------|------|----------------------------|
+| A     | `@`  | `185.199.108.153`          |
+| A     | `@`  | `185.199.109.153`          |
+| A     | `@`  | `185.199.110.153`          |
+| A     | `@`  | `185.199.111.153`          |
+| CNAME | `www`| `daedalus-create.github.io`|
+
+Delete the four pre-existing `@` A records pointing at Squarespace's
+own hosting (`198.185.159.x` / `198.49.23.x`) and repoint the `www`
+CNAME away from `ext-sq.squarespace.com`, or the domain keeps serving
+Squarespace instead of this site.
+
+Once DNS propagates, enable **Enforce HTTPS** under Settings → Pages
+(GitHub can't provision the certificate until the records resolve to
+it).
