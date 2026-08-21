@@ -59,10 +59,10 @@ export const projects = [
 
   // ── In progress ────────────────────────────────────────────────────
   {
-    slug: "cycloidal-extruder",
+    slug: "integrated-toolhead",
     status: "in-progress",
     num: "01",
-    title: "Cycloidal Extruder",
+    title: "Integrated Toolhead",
     sub: "A 3D printer toolhead designed as one assembly instead of a stack of parts",
     model: "engine",
     specs: [
@@ -103,10 +103,10 @@ export const projects = [
 
   // ── Planned ────────────────────────────────────────────────────────
   {
-    slug: "axial-flux-motor",
+    slug: "high-speed-motor",
     status: "planned",
     num: "01",
-    title: "Ring-Driven Axial Flux Motor",
+    title: "High-Speed Motor",
     sub: "A motor built to stay stable at speeds that shake conventional designs apart",
     model: "engine",
     specs: [
@@ -131,11 +131,11 @@ export const projects = [
     ],
   },
   {
-    slug: "cycloidal-linear-actuator",
+    slug: "precision-linear-stage",
     status: "planned",
     num: "03",
-    title: "Cycloidal Linear Actuator",
-    sub: "Precision by geometry rather than by feedback loop",
+    title: "Precision Linear Stage",
+    sub: "Precision that holds without a feedback loop correcting it",
     model: "engine",
     specs: [
       { k: "Stage", v: "Concept / research" },
@@ -145,10 +145,10 @@ export const projects = [
     ],
   },
   {
-    slug: "omni-stud-drive",
+    slug: "omnidirectional-base",
     status: "planned",
     num: "04",
-    title: "Omni Stud Drive",
+    title: "Omnidirectional Robot Base",
     sub: "An omnidirectional robot base that cannot slip",
     model: "drone",
     specs: [
@@ -159,10 +159,10 @@ export const projects = [
     ],
   },
   {
-    slug: "ruby-graphite-bearing",
+    slug: "high-temperature-bearing",
     status: "planned",
     num: "05",
-    title: "Ruby-Graphite Bearing",
+    title: "High-Temperature Bearing",
     sub: "A bearing for temperatures and pressures that destroy conventional ones",
     model: "concept",
     specs: [
@@ -173,31 +173,31 @@ export const projects = [
     ],
   },
   {
-    slug: "ring-air-bearing",
+    slug: "large-diameter-air-bearing",
     status: "planned",
     num: "06",
-    title: "Ring Air Bearing",
-    sub: "Supporting a large spinning ring on a genuinely uniform air film",
+    title: "Large-Diameter Air Bearing",
+    sub: "Air-film support for a geometry conventional bearings do not fit",
     model: "concept",
     specs: [
       { k: "Stage", v: "Concept / research" },
-      { k: "Problem", v: "Air bearings are built for shafts, not large thin rings" },
-      { k: "Goal", v: "Equal pressure at every point around the circumference" },
+      { k: "Problem", v: "Air bearings are built for shafts and flat faces, not this geometry" },
+      { k: "Goal", v: "Uniform support pressure across the whole bearing face" },
       { k: "Role", v: "One of three bearing candidates, each a different regime" },
     ],
   },
   {
-    slug: "passive-magnetic-bearing",
+    slug: "unpowered-magnetic-bearing",
     status: "planned",
     num: "07",
-    title: "Passive Magnetic Bearing",
+    title: "Unpowered Magnetic Bearing",
     sub: "Magnetic support with no power, no sensors, and no control loop",
     model: "concept",
     specs: [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "Commercial magnetic bearings all need power and a control loop" },
       { k: "Goal", v: "Contact-free support that centers itself, no electronics" },
-      { k: "Challenge", v: "Carrying the approach from compact rotors to a large ring" },
+      { k: "Challenge", v: "Scaling the approach up from compact rotors" },
     ],
   },
   {
