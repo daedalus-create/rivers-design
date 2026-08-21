@@ -44,20 +44,23 @@ GW, GH = 140, 84      # finer grid than before — more, denser contour lines
 LEVELS = 26            # real topo sheets read as dense; index line every 5th
 
 # ---------------- palette (grey / white / yellow) ----------------
-# Monochrome sheet: grey valley floors climbing to white summits, so
-# elevation reads by value alone. Yellow is reserved exclusively for the
-# NAVIGATION layer (trails, and the waypoint dots already yellow in
-# global.css) — the one saturated hue on the map always means "you can
-# click this", never decoration. Rivers are the darkest ink on the sheet
-# so they stay legible as water against every grey band.
+# Grey ground, white summits, yellow line work. Elevation reads by value
+# alone (grey valley floors climbing to white peaks), and yellow carries
+# the index contours — every 5th line, the one a real sheet emphasizes —
+# so the accent threads the whole map as drawing rather than as landmass.
+#
+# Water and trails are both dark, and are told apart the way a printed
+# sheet does it rather than by hue: water is a solid heavy double line,
+# trails are dashed. Rivers sit darker than the trails so that when the
+# two cross, the water still reads as continuous underneath.
 FILL_LEVELS = [0.15, 0.3, 0.45, 0.6, 0.75, 0.9]
 FILL_COLORS = ["#8c8c8c", "#9a9a9a", "#a9a9a9", "#bababa", "#cfcfcf", "#e7e7e7", "#fcfcfc"]
 CONTOUR_MINOR = ("#7c7c7c", "0.7", "0.45")   # (stroke, width, opacity)
-CONTOUR_INDEX = ("#585858", "1.4", "0.75")
-RIVER_UNDER, RIVER_CORE = "#2f2f2f", "#525252"
+CONTOUR_INDEX = ("#e0a92b", "1.6", "0.95")   # yellow index line, every 5th
+RIVER_UNDER, RIVER_CORE = "#1d1d1d", "#383838"
 RIVER_W_UNDER, RIVER_W_CORE = 5.0, 2.8
-TRAIL_PRIMARY = {"stroke": "#ffcc40", "strokeWidth": 4, "dash": "4 6"}
-TRAIL_SECONDARY = {"stroke": "#c99a1f", "strokeWidth": 2.6, "dash": "3 9"}
+TRAIL_PRIMARY = {"stroke": "#333333", "strokeWidth": 4, "dash": "4 6"}
+TRAIL_SECONDARY = {"stroke": "#4f4f4f", "strokeWidth": 2.6, "dash": "3 9"}
 
 # ---------------- label collision metrics ----------------
 # Waypoint labels are real DOM pills inside the zoomed scene, so their
@@ -898,9 +901,10 @@ trails = []
 for _a, _b, _kind, _cluster in LINKS:
     raw = terrain_path(POSITIONS[_a], POSITIONS[_b])
     smooth = laplacian_smooth(raw, closed=False, iterations=2, factor=0.5) if len(raw) >= 3 else raw
-    # Yellow marked-trail look, matching the accent used for waypoint
-    # dots in global.css — primary parent->child routes bolder and
-    # closer to solid, secondary lateral links thinner and gappier.
+    # Dashed charcoal marked-trail look — dashes (not hue) are what
+    # separate a trail from a river, so trails stay legible where they
+    # ford one. Primary parent->child routes bolder and closer to solid,
+    # secondary lateral links thinner and gappier.
     style = TRAIL_PRIMARY if _kind == "p" else TRAIL_SECONDARY
     trails.append({"d": catmull_path(smooth), "cluster": _cluster, **style})
 print(f"Phase 6  routes       {len(trails)} trails over {len(LINKS)} links")
