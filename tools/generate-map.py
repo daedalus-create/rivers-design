@@ -258,8 +258,11 @@ POSITIONS_INTENT = {
     "sunthru": (5, 81),
     "dreki": (27, 57),
     "work-study": (16, 62),
+    "piasecki-steel": (42, 70),
     "resume": (32, 76),
     "education": (24, 92),
+    "rpi": (18, 96),
+    "classes": (30, 96),
     "projects": (56, 46),
     "completed": (40, 76),
     "pyro-mk7": (18, 66),
@@ -284,14 +287,16 @@ SNAP_RADIUS = 95  # canvas units — keeps the snap close to the intended spot
 # are hard to tell apart or click accurately).
 LEAF_KEYS = {
     "pyro-mk7", "hephaestus-forge", "orbital-maneuver-solver",
-    "wip-1", "plan-1", "plan-2", "sunthru", "dreki", "work-study",
+    "wip-1", "plan-1", "plan-2", "sunthru", "dreki", "work-study", "piasecki-steel",
+    "rpi", "classes",
 }
 LEAF_SNAP_RADIUS = 40
 PARENT_OF = {
     "pyro-mk7": "completed", "hephaestus-forge": "completed", "orbital-maneuver-solver": "completed",
     "wip-1": "in-progress",
     "plan-1": "planned", "plan-2": "planned",
-    "sunthru": "work", "dreki": "work", "work-study": "work",
+    "sunthru": "work", "dreki": "work", "work-study": "work", "piasecki-steel": "work",
+    "rpi": "education", "classes": "education",
 }
 
 def nearest_peak_center(x0, y0):
@@ -371,6 +376,8 @@ SIBLING_GROUPS = [
     ("hephaestus-forge", "orbital-maneuver-solver"),
     ("plan-1", "plan-2"),
     ("sunthru", "dreki"), ("sunthru", "work-study"), ("dreki", "work-study"),
+    ("sunthru", "piasecki-steel"), ("dreki", "piasecki-steel"), ("work-study", "piasecki-steel"),
+    ("rpi", "classes"),
 ]
 # in-progress only has the one placeholder page so far — nothing to
 # check it against yet, add its sibling pair here once a 2nd exists
@@ -458,7 +465,8 @@ ZOOM_GROUPS = {
     "completed": ["pyro-mk7", "hephaestus-forge", "orbital-maneuver-solver"],
     "in-progress": ["wip-1"],
     "planned": ["plan-1", "plan-2"],
-    "work": ["sunthru", "dreki", "work-study"],
+    "work": ["sunthru", "dreki", "work-study", "piasecki-steel"],
+    "education": ["rpi", "classes"],
 }
 for node, members in ZOOM_GROUPS.items():
     print(f"  {node:10s}: {zoom_target_for(members)}")
@@ -482,10 +490,14 @@ LINKS = [
     ("in-progress", "wip-1", "p", "in-progress"),
     ("planned", "plan-1", "p", "planned"), ("planned", "plan-2", "p", "planned"),
     ("work", "sunthru", "p", "work"), ("work", "dreki", "p", "work"), ("work", "work-study", "p", "work"),
+    ("work", "piasecki-steel", "p", "work"),
+    ("education", "rpi", "p", "education"), ("education", "classes", "p", "education"),
     ("pyro-mk7", "hephaestus-forge", "s", "completed"),
     ("hephaestus-forge", "orbital-maneuver-solver", "s", "completed"),
     ("plan-1", "plan-2", "s", "planned"),
     ("sunthru", "dreki", "s", "work"), ("dreki", "work-study", "s", "work"),
+    ("work-study", "piasecki-steel", "s", "work"),
+    ("rpi", "classes", "s", "education"),
 ]
 
 # ---------------- rivers (steepest-descent flow trace) ----------------

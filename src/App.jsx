@@ -5,9 +5,10 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Experience from "./pages/Experience";
 import WorkExcerpts from "./pages/WorkExcerpts";
-import RoleDetail from "./pages/RoleDetail";
+import ExperienceDetail from "./pages/ExperienceDetail";
 import Resume from "./pages/Resume";
 import Education from "./pages/Education";
+import Classes from "./pages/Classes";
 import Projects from "./pages/Projects";
 import ProjectsCompleted from "./pages/ProjectsCompleted";
 import ProjectsInProgress from "./pages/ProjectsInProgress";
@@ -26,7 +27,8 @@ export default function App() {
         <Route path="/experience/work-excerpts" element={<WorkExcerpts />} />
         <Route path="/experience/resume" element={<Resume />} />
         <Route path="/experience/education" element={<Education />} />
-        <Route path="/experience/:slug" element={<RoleDetail />} />
+        <Route path="/experience/classes" element={<Classes />} />
+        <Route path="/experience/:slug" element={<ExperienceDetail />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/projects/completed" element={<ProjectsCompleted />} />
         <Route path="/projects/in-progress" element={<ProjectsInProgress />} />

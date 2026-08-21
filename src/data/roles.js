@@ -1,6 +1,6 @@
 // Work-excerpt role write-ups. Summarized on /experience/work-excerpts
 // and the home page, with each role getting its own page at
-// /experience/:slug (see RoleDetail.jsx).
+// /experience/:slug (see ExperienceDetail.jsx).
 
 export const roles = [
   {
@@ -27,22 +27,38 @@ export const roles = [
     num: "02",
     org: "Dreki Systems",
     title: "Dreki Systems:",
-    sub: "Manufacturing, machining, and CAD across two stints — Castleton, NY / Tysons Corner, VA",
+    sub: "Junior Design Engineer — Tysons Corner, VA",
     model: "concept",
-    desc: "Two stints at Dreki Systems — an engineering shop internship in 2024, then a junior design engineering role in 2025 — spanning fabrication, precision machining, and CAD design for rapid prototyping.",
+    desc: "Junior Design Engineer at Dreki Systems in 2025, establishing manufacturing systems for rapid prototyping and designing components in CAD.",
     body: [
-      "As an Engineering Shop Intern in Castleton, NY (June–August 2024), I developed templates from engineering drawings to improve machining accuracy on steel components, and helped fabricate a ladder and ladder cage used to improve worker safety during bridge repairs across New York and the surrounding area.",
-      "I returned in 2025 as a Junior Design Engineer in Tysons Corner, VA (May–August 2025), establishing manufacturing systems to support rapid prototyping and designing components in CAD across a range of engineering projects, working alongside senior engineers to develop new design solutions.",
+      "As a Junior Design Engineer in Tysons Corner, VA (May–August 2025), I established manufacturing systems to support rapid prototyping and designed components in CAD across a range of engineering projects, working alongside senior engineers to develop new design solutions.",
     ],
     specs: [
-      { k: "Roles", v: "Engineering Shop Intern (2024) → Junior Design Engineer (2025)" },
+      { k: "Role", v: "Junior Design Engineer, May–August 2025" },
       { k: "Field", v: "Manufacturing / rapid prototyping" },
-      { k: "Focus", v: "CAD design, machining templates, fabrication" },
+      { k: "Focus", v: "CAD design / systems for rapid prototyping" },
+    ],
+  },
+  {
+    slug: "piasecki-steel",
+    num: "03",
+    org: "Piasecki Steel",
+    title: "Piasecki Steel:",
+    sub: "Engineering Shop Intern — Castleton, NY",
+    model: "concept",
+    desc: "Engineering Shop Intern at Piasecki Steel in 2024, developing machining templates and helping fabricate safety equipment for bridge-repair work.",
+    body: [
+      "As an Engineering Shop Intern in Castleton, NY (June–August 2024), I developed templates from engineering drawings to improve machining accuracy on steel components, and helped fabricate a ladder and ladder cage used to improve worker safety during bridge repairs across New York and the surrounding area.",
+    ],
+    specs: [
+      { k: "Role", v: "Engineering Shop Intern, June–August 2024" },
+      { k: "Field", v: "Structural steel fabrication" },
+      { k: "Focus", v: "Machining templates / safety equipment fabrication" },
     ],
   },
   {
     slug: "work-study",
-    num: "03",
+    num: "04",
     org: "Student Living & Learning, RPI",
     title: "Student Living & Learning:",
     sub: "Work Study — Troy, NY",

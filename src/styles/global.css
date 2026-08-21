@@ -849,8 +849,9 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .section-title .colon { color: var(--accent); }
 
 /* ---------- Experience entries ---------- */
-/* Role write-up body copy on RoleDetail — the list/card view (Home,
-   WorkExcerpts) reuses .project instead. */
+/* Role/education write-up body copy on ExperienceDetail — the
+   list/card view (Home, WorkExcerpts, Education) reuses .project
+   instead. */
 .xp__body p + p { margin-top: var(--space-4); }
 .xp__body {
   font-weight: 300;

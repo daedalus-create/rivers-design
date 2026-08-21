@@ -1,4 +1,8 @@
+import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
+import Divider from "../components/Divider";
+import ModelViewer from "../components/LazyModelViewer";
+import { education } from "../data/education";
 
 export default function Education() {
   return (
@@ -17,17 +21,39 @@ export default function Education() {
       </section>
 
       <section className="section--tight wrap">
-        <Reveal className="statement">
-          <h2 className="statement__label">
-            Rensselaer Polytechnic Institute<span className="colon">:</span>
-          </h2>
-          <p className="statement__text">
-            Troy, NY — Bachelor of Science in Mechanical Dual Aerospace Engineering.
-            <br />
-            August 2022 – Projected Graduation: May 2026.
-          </p>
-        </Reveal>
+        {education.map((e) => (
+          <Reveal as="article" className="project" key={e.slug}>
+            <div className="project__head">
+              <span className="project__num">{e.num}</span>
+              <h2 className="project__title">
+                <Link to={`/experience/${e.slug}`}>{e.org}</Link>
+              </h2>
+            </div>
+            <p className="project__sub">{e.sub}</p>
+            <p className="project__desc">{e.desc}</p>
+            <ModelViewer kind={e.model} tag="3D Placeholder / Info & pics pending" />
+            <ul className="specs">
+              {e.specs.map((s) => (
+                <li key={s.k}>
+                  <span className="k">{s.k}</span>
+                  <span className="v">{s.v}</span>
+                </li>
+              ))}
+            </ul>
+            <Link className="link-arrow" to={`/experience/${e.slug}`}>
+              Full write-up <span className="arr">&rarr;</span>
+            </Link>
+          </Reveal>
+        ))}
       </section>
+
+      <Divider
+        to="/experience/classes"
+        label="Classes"
+        iconLeft="/assets/divider-icon-3.svg"
+        iconRight="/assets/divider-icon-2.svg"
+        flip
+      />
 
       <section className="section--tight wrap">
         <Reveal as="h2" className="section-title">
@@ -35,24 +61,24 @@ export default function Education() {
         </Reveal>
         <Reveal as="ul" className="specs" stagger={1}>
           <li>
-            <span className="k">Manufacturing Processes</span>
-            <span className="v">Manufacturing</span>
+            <span className="k">Manufacturing</span>
+            <span className="v">Manufacturing Processes</span>
           </li>
           <li>
-            <span className="k">Systems Laboratory 1</span>
-            <span className="v">Lab</span>
+            <span className="k">Lab</span>
+            <span className="v">Systems Laboratory 1</span>
           </li>
           <li>
-            <span className="k">Space Vehicle Design Capstone</span>
-            <span className="v">Capstone</span>
+            <span className="k">Capstone</span>
+            <span className="v">Space Vehicle Design Capstone</span>
           </li>
           <li>
-            <span className="k">Numerical Design Optimization</span>
-            <span className="v">Design</span>
+            <span className="k">Design</span>
+            <span className="v">Numerical Design Optimization</span>
           </li>
           <li>
-            <span className="k">Propulsion Systems</span>
-            <span className="v">Aerospace</span>
+            <span className="k">Aerospace</span>
+            <span className="v">Propulsion Systems</span>
           </li>
         </Reveal>
       </section>
