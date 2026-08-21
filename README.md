@@ -1,8 +1,7 @@
 # Rivers Design — rivers-design.com
 
 Portfolio site built with **React + Vite + React Router**, styled on the
-Figma comp's palette/type and the sizing/spacing/motion system of
-merttureli.com.
+Figma comp's palette/type.
 
 ## Stack
 
@@ -60,26 +59,6 @@ combined file:
 Project pages are data-driven from `src/data/projects.js` — add a new
 entry there and `/projects/your-slug` exists automatically.
 
-## Run locally
-
-```bash
-npm install
-npm run dev
-```
-
-Opens at http://localhost:5173.
-
-## Build
-
-```bash
-npm run build
-```
-
-Outputs static files to `dist/`. The `postbuild` script automatically
-copies `dist/index.html` to `dist/404.html` — this is the standard trick
-for serving a client-routed SPA from GitHub Pages, which has no server
-to rewrite unknown paths back to `index.html` itself.
-
 ## Swapping in real 3D models
 
 Each placeholder is a `<ModelViewer kind="…" />` (`engine`, `forge`,
@@ -106,45 +85,3 @@ Edit `SEED` at the top of the script to re-roll the landscape. Waypoint
 *positions* (which drive both the dots and the trail endpoints) live by
 hand in `src/data/mapWaypoints.js` — keep the `POSITIONS` dict at the
 top of `generate-map.py` in sync if you move a dot.
-
-## Deploying to rivers-design.com
-
-Hosted on **GitHub Pages**, built by GitHub Actions. Repo:
-[daedalus-create/rivers-design](https://github.com/daedalus-create/rivers-design).
-
-Every push to `main` triggers `.github/workflows/deploy.yml`, which runs
-`npm ci`, `npm run lint`, `npm run build`, and publishes `dist/` to
-Pages. Nothing to do by hand — commit and push:
-
-```bash
-git push
-```
-
-Watch the run with `gh run watch`, or on the Actions tab.
-
-The custom domain is set on the Pages config (not via `public/CNAME` —
-with the Actions build source, GitHub reads the domain from repo
-settings, so the `CNAME` file is vestigial but harmless).
-
-### DNS at Squarespace
-
-The domain is registered at Squarespace. **Settings → Domains →
-rivers-design.com → DNS Settings**, then replace Squarespace's default
-records with:
-
-| Type  | Host | Value                      |
-|-------|------|----------------------------|
-| A     | `@`  | `185.199.108.153`          |
-| A     | `@`  | `185.199.109.153`          |
-| A     | `@`  | `185.199.110.153`          |
-| A     | `@`  | `185.199.111.153`          |
-| CNAME | `www`| `daedalus-create.github.io`|
-
-Delete the four pre-existing `@` A records pointing at Squarespace's
-own hosting (`198.185.159.x` / `198.49.23.x`) and repoint the `www`
-CNAME away from `ext-sq.squarespace.com`, or the domain keeps serving
-Squarespace instead of this site.
-
-Once DNS propagates, enable **Enforce HTTPS** under Settings → Pages
-(GitHub can't provision the certificate until the records resolve to
-it).
