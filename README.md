@@ -47,17 +47,32 @@ combined file:
 /                              Home
 /about                         About
 /about/contact                 Contact
-/experience                    Experience (hub — links to the two below)
-/experience/work-excerpts      Role write-ups (SunThru, Dreki Systems)
+/experience                    Experience (hub — links to the three below)
+/experience/work-excerpts      Role write-ups (SunThru, Dreki Systems, …)
 /experience/resume             Resume
-/projects                      Projects (hub — links to the two below)
+/experience/education          Education
+/experience/classes            Classes taken at RPI
+/experience/:slug              Individual role/education write-up
+/projects                      Projects (hub — links to the three below)
 /projects/completed            Completed projects list
-/projects/still-working        In-progress project plans list
-/projects/:slug                Individual project page (pyro-mk7, hephaestus-forge, plan-1, plan-2)
+/projects/in-progress          Work-in-progress list
+/projects/planned              Planned projects list
+/projects/:slug                Individual project page (one per entry in projects.js)
 ```
 
 Project pages are data-driven from `src/data/projects.js` — add a new
 entry there and `/projects/your-slug` exists automatically.
+
+**When you add a project, also add its site-map waypoint**, or it
+exists as a page but can't be reached from the map overlay. That means
+a new entry in `POSITIONS_INTENT`, `LEAF_KEYS`, `PARENT_OF`,
+`ZOOM_GROUPS`, and `LINKS` in `tools/generate-map.py`, then
+`npm run generate-map` and copy the printed position and zoom target
+into `src/data/mapWaypoints.js`. The script flags leaves that snap too
+close to their parent or to a sibling — nudge the intent and re-run
+until it reports nothing. Keep map labels short (roughly two words):
+they render as fixed-width boxes and long ones collide once a cluster
+holds more than a few pins.
 
 ## Swapping in real 3D models
 

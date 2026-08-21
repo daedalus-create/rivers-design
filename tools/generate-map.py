@@ -269,10 +269,20 @@ POSITIONS_INTENT = {
     "hephaestus-forge": (52, 66),
     "orbital-maneuver-solver": (35, 55),
     "in-progress": (60, 80),
-    "wip-1": (62, 94),
+    "cycloidal-extruder": (56, 92),
+    "blended-body-aircraft": (68, 90),
+    "cm5-cluster": (40, 84),
     "planned": (78, 72),
-    "plan-1": (66, 84),
-    "plan-2": (97, 45),
+    "axial-flux-motor": (94, 32),
+    "electric-thruster": (96, 72),
+    "cycloidal-linear-actuator": (68, 72),
+    "omni-stud-drive": (95, 92),
+    "ruby-graphite-bearing": (80, 78),
+    "ring-air-bearing": (78, 92),
+    "passive-magnetic-bearing": (66, 60),
+    "plant-exoskeleton": (76, 38),
+    "envisage": (92, 46),
+    "land-trust-city": (66, 46),
     "about": (82, 40),
     "contact": (87, 68),
 }
@@ -287,14 +297,24 @@ SNAP_RADIUS = 95  # canvas units — keeps the snap close to the intended spot
 # are hard to tell apart or click accurately).
 LEAF_KEYS = {
     "pyro-mk7", "hephaestus-forge", "orbital-maneuver-solver",
-    "wip-1", "plan-1", "plan-2", "sunthru", "dreki", "work-study", "piasecki-steel",
+    "cycloidal-extruder", "blended-body-aircraft", "cm5-cluster",
+    "axial-flux-motor", "electric-thruster", "cycloidal-linear-actuator",
+    "omni-stud-drive", "ruby-graphite-bearing", "ring-air-bearing",
+    "passive-magnetic-bearing", "plant-exoskeleton", "envisage",
+    "land-trust-city",
+    "sunthru", "dreki", "work-study", "piasecki-steel",
     "rpi", "classes",
 }
 LEAF_SNAP_RADIUS = 40
 PARENT_OF = {
     "pyro-mk7": "completed", "hephaestus-forge": "completed", "orbital-maneuver-solver": "completed",
-    "wip-1": "in-progress",
-    "plan-1": "planned", "plan-2": "planned",
+    "cycloidal-extruder": "in-progress", "blended-body-aircraft": "in-progress",
+    "cm5-cluster": "in-progress",
+    "axial-flux-motor": "planned", "electric-thruster": "planned",
+    "cycloidal-linear-actuator": "planned", "omni-stud-drive": "planned",
+    "ruby-graphite-bearing": "planned", "ring-air-bearing": "planned",
+    "passive-magnetic-bearing": "planned", "plant-exoskeleton": "planned",
+    "envisage": "planned", "land-trust-city": "planned",
     "sunthru": "work", "dreki": "work", "work-study": "work", "piasecki-steel": "work",
     "rpi": "education", "classes": "education",
 }
@@ -371,16 +391,15 @@ for pkey, (x, y) in POSITIONS_INTENT.items():
 
 # flag any two leaf siblings that landed suspiciously close together
 # (same valley cell) so POSITIONS_INTENT can be nudged and re-run
+# Every pair of leaves sharing a parent, derived from PARENT_OF rather
+# than hand-listed — with 16 leaves that would be 50-odd pairs to keep
+# in sync by hand, and a forgotten pair silently skips its check.
 SIBLING_GROUPS = [
-    ("pyro-mk7", "hephaestus-forge"), ("pyro-mk7", "orbital-maneuver-solver"),
-    ("hephaestus-forge", "orbital-maneuver-solver"),
-    ("plan-1", "plan-2"),
-    ("sunthru", "dreki"), ("sunthru", "work-study"), ("dreki", "work-study"),
-    ("sunthru", "piasecki-steel"), ("dreki", "piasecki-steel"), ("work-study", "piasecki-steel"),
-    ("rpi", "classes"),
+    (a, b)
+    for i, a in enumerate(sorted(PARENT_OF))
+    for b in sorted(PARENT_OF)[i + 1:]
+    if PARENT_OF[a] == PARENT_OF[b]
 ]
-# in-progress only has the one placeholder page so far — nothing to
-# check it against yet, add its sibling pair here once a 2nd exists
 for a, b in SIBLING_GROUPS:
     ax, ay = POSITIONS[a][0] / 100 * W, POSITIONS[a][1] / 100 * H
     bx, by = POSITIONS[b][0] / 100 * W, POSITIONS[b][1] / 100 * H
@@ -463,8 +482,13 @@ ZOOM_GROUPS = {
     "projects": ["completed", "in-progress", "planned"],
     "about": ["contact"],
     "completed": ["pyro-mk7", "hephaestus-forge", "orbital-maneuver-solver"],
-    "in-progress": ["wip-1"],
-    "planned": ["plan-1", "plan-2"],
+    "in-progress": ["cycloidal-extruder", "blended-body-aircraft", "cm5-cluster"],
+    "planned": [
+        "axial-flux-motor", "electric-thruster", "cycloidal-linear-actuator",
+        "omni-stud-drive", "ruby-graphite-bearing", "ring-air-bearing",
+        "passive-magnetic-bearing", "plant-exoskeleton", "envisage",
+        "land-trust-city",
+    ],
     "work": ["sunthru", "dreki", "work-study", "piasecki-steel"],
     "education": ["rpi", "classes"],
 }
@@ -487,14 +511,30 @@ LINKS = [
     ("completed", "in-progress", "s", "projects"), ("in-progress", "planned", "s", "projects"),
     ("completed", "pyro-mk7", "p", "completed"), ("completed", "hephaestus-forge", "p", "completed"),
     ("completed", "orbital-maneuver-solver", "p", "completed"),
-    ("in-progress", "wip-1", "p", "in-progress"),
-    ("planned", "plan-1", "p", "planned"), ("planned", "plan-2", "p", "planned"),
+    ("in-progress", "cycloidal-extruder", "p", "in-progress"),
+    ("in-progress", "blended-body-aircraft", "p", "in-progress"),
+    ("in-progress", "cm5-cluster", "p", "in-progress"),
+    ("planned", "axial-flux-motor", "p", "planned"),
+    ("planned", "electric-thruster", "p", "planned"),
+    ("planned", "cycloidal-linear-actuator", "p", "planned"),
+    ("planned", "omni-stud-drive", "p", "planned"),
+    ("planned", "ruby-graphite-bearing", "p", "planned"),
+    ("planned", "ring-air-bearing", "p", "planned"),
+    ("planned", "passive-magnetic-bearing", "p", "planned"),
+    ("planned", "plant-exoskeleton", "p", "planned"),
+    ("planned", "envisage", "p", "planned"),
+    ("planned", "land-trust-city", "p", "planned"),
     ("work", "sunthru", "p", "work"), ("work", "dreki", "p", "work"), ("work", "work-study", "p", "work"),
     ("work", "piasecki-steel", "p", "work"),
     ("education", "rpi", "p", "education"), ("education", "classes", "p", "education"),
     ("pyro-mk7", "hephaestus-forge", "s", "completed"),
     ("hephaestus-forge", "orbital-maneuver-solver", "s", "completed"),
-    ("plan-1", "plan-2", "s", "planned"),
+    ("cm5-cluster", "cycloidal-extruder", "s", "in-progress"),
+    ("cycloidal-extruder", "blended-body-aircraft", "s", "in-progress"),
+    # No sibling chain for "planned": with ten leaves, the ten parent
+    # trails already read as a trail network, and a nine-link chain
+    # threading all of them turns it into a hairball. Parent trails
+    # only here.
     ("sunthru", "dreki", "s", "work"), ("dreki", "work-study", "s", "work"),
     ("work-study", "piasecki-steel", "s", "work"),
     ("rpi", "classes", "s", "education"),
