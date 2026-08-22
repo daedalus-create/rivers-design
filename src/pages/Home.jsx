@@ -10,7 +10,7 @@ export default function Home() {
       {/* Opening two sections follow the format of merttureli.com's own
           opening pair — the site's sizing/spacing system is already
           modelled on it. Structure borrowed, copy is Deon's. */}
-      <section className="page-hero intro" aria-label="Introduction">
+      <section className="page-hero intro wrap" aria-label="Introduction">
         <Reveal as="p" className="meta meta--wide intro__eyebrow">
           Mechanical / Aerospace engineering, Troy, NY
         </Reveal>
