@@ -10,7 +10,7 @@ export default function Home() {
       {/* Opening two sections follow the format of merttureli.com's own
           opening pair — the site's sizing/spacing system is already
           modelled on it. Structure borrowed, copy is Deon's. */}
-      <section className="page-hero intro" aria-label="Introduction">
+      <section className="page-hero intro wrap" aria-label="Introduction">
         <Reveal as="p" className="meta meta--wide intro__eyebrow">
           Mechanical / Aerospace engineering, Troy, NY
         </Reveal>
@@ -24,7 +24,7 @@ export default function Home() {
         </Reveal>
         <Reveal className="intro__foot meta" stagger={3}>
           <span className="idx">01</span>
-          <span>Placeholder: a one-line note on what you are looking for next</span>
+          <span>Looking for roles in additive manufacturing and process development</span>
         </Reveal>
       </section>
 
@@ -72,7 +72,7 @@ export default function Home() {
               </li>
               <li>
                 <span className="k">Next</span>
-                <span className="v">Placeholder: the role or work you are after</span>
+                <span className="v">Additive manufacturing / process development roles</span>
               </li>
             </ul>
           </Reveal>
