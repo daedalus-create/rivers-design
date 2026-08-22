@@ -15,8 +15,22 @@ import { ancestorsOf, childrenOf, nodeForPath, rootSections } from "../data/site
 // Doing it imperatively rather than through state keeps a resize or an
 // expansion from causing a second render pass just to draw a line.
 
-const CORNER = 10; // radius of the elbow where a connector turns
-const GUTTER = 46; // horizontal space the connectors run through
+// Radius of the elbow where a connector turns. The gutter it runs
+// through is a CSS variable so it can scale with the viewport, and this
+// is clamped against the actual run in connectorPath, so a generous
+// value here simply means "as round as there is room for".
+const CORNER = 22;
+
+// The tree is scaled to fill the screen. A fixed type size cannot do
+// this: the three collapsed sections use about 60% of the width, while
+// the deepest branch (Experience > Work Excerpts > four roles) overruns
+// it by 14% and pushes items off the left edge. So the whole thing is
+// measured after layout and scaled to fit — up when it is small, down
+// when a deep branch would otherwise overflow.
+const MAX_FIT = 2.2;
+const MIN_FIT = 0.5;
+const FIT_MARGIN = 0.98; // the field's own padding is the breathing room
+const REFIT_EVENT = "menu-refit";
 
 /** Elbow from a parent's right edge to one child's left edge. */
 function connectorPath(x0, y0, x1, y1) {
@@ -59,32 +73,49 @@ function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode
       if (!wrap || !label || !svg) return;
 
       const base = wrap.getBoundingClientRect();
-      const from = label.getBoundingClientRect();
-      const x0 = from.right - base.left;
-      const y0 = from.top + from.height / 2 - base.top;
+      // The tree is inside a scaled ancestor, so getBoundingClientRect
+      // reports screen pixels while the SVG draws in layout pixels.
+      // Recover the factor from this element rather than threading it
+      // down as a prop: offsetWidth is the untransformed box, so the
+      // ratio is exactly the scale in force here.
+      const k = wrap.offsetWidth ? base.width / wrap.offsetWidth : 1;
+      const px = (v) => v / k;
 
-      svg.setAttribute("width", String(base.width));
-      svg.setAttribute("height", String(base.height));
-      svg.setAttribute("viewBox", `0 0 ${base.width} ${base.height}`);
+      const from = label.getBoundingClientRect();
+      const x0 = px(from.right - base.left);
+      const y0 = px(from.top + from.height / 2 - base.top);
+      const w = px(base.width);
+      const h = px(base.height);
+
+      svg.setAttribute("width", String(w));
+      svg.setAttribute("height", String(h));
+      svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
 
       kids.forEach((_, i) => {
         const el = childRefs.current[i];
         const p = pathRefs.current[i];
         if (!el || !p) return;
         const to = el.getBoundingClientRect();
-        p.setAttribute("d", connectorPath(x0, y0, to.left - base.left, to.top + to.height / 2 - base.top));
+        p.setAttribute(
+          "d",
+          connectorPath(x0, y0, px(to.left - base.left), px(to.top + to.height / 2 - base.top)),
+        );
       });
     };
 
     draw();
     // Re-draw whenever anything reflows: a deeper expansion, a window
-    // resize, or the reveal transition settling.
+    // resize, or the reveal transition settling. A change of scale does
+    // NOT change any layout box, so ResizeObserver cannot see it — hence
+    // the explicit refit event from the parent.
     const ro = new ResizeObserver(draw);
     ro.observe(wrapRef.current);
     childRefs.current.forEach((el) => el && ro.observe(el));
+    window.addEventListener(REFIT_EVENT, draw);
     const raf = requestAnimationFrame(draw);
     return () => {
       ro.disconnect();
+      window.removeEventListener(REFIT_EVENT, draw);
       cancelAnimationFrame(raf);
     };
   }, [isOpen, kids, expandedPath]);
@@ -168,6 +199,44 @@ export default function MenuTree({ open, onClose }) {
     setExpandedPath(open && current ? ancestorsOf(current.node) : []);
   }
 
+  // Scale the tree to fill the field. Measured off offsetWidth/Height,
+  // which are the untransformed boxes, so the reading does not feed back
+  // into the scale it produces. Written straight to a CSS variable rather
+  // than held in state — this runs on every expand and every resize, and
+  // none of it needs to cause a re-render.
+  const fieldRef = useRef(null);
+  const rootsRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (!open) return undefined;
+
+    const refit = () => {
+      const field = fieldRef.current;
+      const tree = rootsRef.current;
+      if (!field || !tree || !tree.offsetWidth || !tree.offsetHeight) return;
+
+      const styles = getComputedStyle(field);
+      const availW = field.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight);
+      const availH = field.clientHeight - parseFloat(styles.paddingTop) - parseFloat(styles.paddingBottom);
+
+      const fit = Math.max(
+        MIN_FIT,
+        Math.min(MAX_FIT, (availW / tree.offsetWidth) * FIT_MARGIN, (availH / tree.offsetHeight) * FIT_MARGIN),
+      );
+      tree.style.setProperty("--fit", String(Math.round(fit * 1000) / 1000));
+      // connectors measure screen pixels, so they have to redraw at the
+      // new scale; a transform changes no layout box, so nothing else
+      // would tell them
+      window.dispatchEvent(new Event(REFIT_EVENT));
+    };
+
+    refit();
+    const ro = new ResizeObserver(refit);
+    ro.observe(fieldRef.current);
+    ro.observe(rootsRef.current);
+    return () => ro.disconnect();
+  }, [open, expandedPath]);
+
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (e) => {
@@ -188,12 +257,12 @@ export default function MenuTree({ open, onClose }) {
       <nav className="menu-tree" aria-label="Site menu">
         <div
           className="menu-tree__field"
-          style={{ "--gutter": `${GUTTER}px` }}
+          ref={fieldRef}
           onClick={(e) => {
             if (e.target === e.currentTarget) collapse();
           }}
         >
-          <div className="menu-tree__roots">
+          <div className="menu-tree__roots" ref={rootsRef}>
             {roots.map((r) => (
               <TreeNode
                 key={r.node}

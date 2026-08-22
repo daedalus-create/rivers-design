@@ -1000,19 +1000,34 @@ a.pill:hover .pill__inner { color: var(--accent); }
   justify-content: center;
 }
 .menu-tree__field {
+  /* The gutter each level of the tree branches across. Lives here rather
+     than as a constant in MenuTree.jsx so it can scale with the viewport;
+     the connector drawing measures real geometry and follows whatever
+     this resolves to. */
+  --gutter: clamp(40px, 5.5vw, 120px);
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: auto;
-  padding: var(--space-8) var(--page-margin);
+  /* Hidden, not auto: the tree is scaled to fit, but scaling does not
+     shrink its layout box, so an `auto` container would keep offering a
+     scrollbar for overflow that is no longer visible. Mobile re-enables
+     it below, where the type is left legible instead of scaled down. */
+  overflow: hidden;
+  padding: clamp(var(--space-7), 6vh, var(--space-9)) var(--page-margin);
 }
 .menu-tree__roots {
   display: flex;
   align-items: center;
-  gap: clamp(var(--space-7), 7vw, 140px);
+  gap: clamp(var(--space-8), 11vw, 260px);
   margin: auto;
+  /* --fit is measured and written by MenuTree.jsx so the tree fills the
+     screen: scaled up when only the three sections are showing, down when
+     a deep branch would otherwise run off the edge. */
+  transform: scale(var(--fit, 1));
+  transform-origin: center center;
+  transition: transform var(--dur-2) var(--ease-out);
 }
 
 .tnode {
@@ -1029,14 +1044,15 @@ a.pill:hover .pill__inner { color: var(--accent); }
   z-index: 1;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.6em;
   white-space: nowrap;
   text-decoration: none;
   font-family: var(--font-display);
-  font-size: var(--fs-meta);
+  font-size: clamp(17px, 1.6vw, 30px);
+  line-height: 1.15;
   letter-spacing: var(--ls-nav);
   color: var(--ink-a80);
-  padding: 6px 2px;
+  padding: 0.35em 2px;
   transition: color var(--t-hover);
 }
 .tnode__label:hover,
@@ -1046,8 +1062,10 @@ a.pill:hover .pill__inner { color: var(--accent); }
 /* The dot is the connector's landing point, so it only shows where a wire
    actually arrives — the three root sections have nothing feeding them. */
 .tnode__dot {
-  width: 5px;
-  height: 5px;
+  width: 0.28em;
+  height: 0.28em;
+  min-width: 5px;
+  min-height: 5px;
   border-radius: 50%;
   background: currentColor;
   opacity: 0;
@@ -1059,8 +1077,8 @@ a.pill:hover .pill__inner { color: var(--accent); }
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: var(--space-3);
-  margin-left: var(--gutter, 46px);
+  gap: clamp(var(--space-3), 2.2vh, 40px);
+  margin-left: var(--gutter);
 }
 .tnode__kid { display: flex; align-items: center; }
 
@@ -1074,7 +1092,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .tnode__wires path {
   fill: none;
   stroke: var(--ink-a45);
-  stroke-width: 1;
+  stroke-width: 1.25;
   vector-effect: non-scaling-stroke;
 }
 .tnode.is-dim .tnode__wires path { stroke: var(--ink-a25); }
@@ -1099,12 +1117,12 @@ a.pill:hover .pill__inner { color: var(--accent); }
   .menu-tree__roots {
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--space-5);
+    gap: clamp(var(--space-5), 3.5vh, 44px);
   }
-  .menu-tree__field { justify-content: flex-start; }
+  .menu-tree__field { justify-content: flex-start; overflow: auto; }
   /* Tighter branches so a deep path needs less sideways scrolling on a
      narrow screen. The field scrolls rather than the page. */
-  .tnode__kids { gap: var(--space-2); margin-left: 26px; }
+  .tnode__kids { gap: clamp(var(--space-2), 1.6vh, 18px); margin-left: 30px; }
 }
 
 /* ---------- Footer ---------- */
