@@ -27,7 +27,6 @@ export const projects = [
       { k: "Status", v: "Design concept — CAD complete" },
       { k: "Process", v: "Designed to be manufactured purely with additive techniques" },
       { k: "Focus", v: "Uses gas expansion of incoming fuel to aid airflow through the engine" },
-      { k: "Model", v: "CAD export coming soon" },
     ],
   },
   {
@@ -45,7 +44,6 @@ export const projects = [
       { k: "Accuracy", v: "0.2 mm dimensional" },
       { k: "Scope", v: "Automation / material handling" },
       { k: "Focus", v: "Lights-out additive production" },
-      { k: "Model", v: "CAD export coming soon" },
     ],
   },
   {
@@ -231,21 +229,6 @@ export const projects = [
       { k: "Concept", v: "An RPG, a sandbox, and a simulation, sold apart, secretly one universe" },
       { k: "Generation", v: "Stars, life, languages, and histories built before anyone logs in" },
       { k: "Philosophy", v: "Geometry and physics over hand-authoring" },
-    ],
-  },
-  {
-    slug: "land-trust-city",
-    status: "planned",
-    num: "10",
-    title: "Municipal Land Trust City",
-    sub: "A city-scale model where the city, not private capital, controls land and density",
-    model: "panel",
-    specs: [
-      { k: "Stage", v: "Concept / research" },
-      { k: "Problem", v: "Private rent compounds on top of business tax, squeezing small businesses" },
-      { k: "Model", v: "City-owned commercial land, fixed rent in place of business tax" },
-      { k: "Constant", v: "Green and walkable as a standing priority" },
-      { k: "Open question", v: "Legal feasibility of the ownership model — the largest risk" },
     ],
   },
 ];

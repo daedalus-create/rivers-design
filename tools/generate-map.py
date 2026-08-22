@@ -300,7 +300,6 @@ POSITIONS_INTENT = {
     "unpowered-magnetic-bearing": (66, 60),
     "plant-exoskeleton": (76, 38),
     "envisage": (92, 46),
-    "land-trust-city": (66, 46),
     "about": (82, 40),
     "contact": (87, 68),
 }
@@ -313,7 +312,7 @@ PARENT_OF = {
     "precision-linear-stage": "planned", "omnidirectional-base": "planned",
     "high-temperature-bearing": "planned", "large-diameter-air-bearing": "planned",
     "unpowered-magnetic-bearing": "planned", "plant-exoskeleton": "planned",
-    "envisage": "planned", "land-trust-city": "planned",
+    "envisage": "planned",
     "sunthru": "work", "dreki": "work", "work-study": "work", "piasecki-steel": "work",
     "rpi": "education", "classes": "education",
 }
@@ -329,7 +328,6 @@ ZOOM_GROUPS = {
         "high-speed-motor", "electric-thruster", "precision-linear-stage",
         "omnidirectional-base", "high-temperature-bearing", "large-diameter-air-bearing",
         "unpowered-magnetic-bearing", "plant-exoskeleton", "envisage",
-        "land-trust-city",
     ],
     "work": ["sunthru", "dreki", "work-study", "piasecki-steel"],
     "education": ["rpi", "classes"],
@@ -363,7 +361,6 @@ LINKS = [
     ("planned", "unpowered-magnetic-bearing", "p", "planned"),
     ("planned", "plant-exoskeleton", "p", "planned"),
     ("planned", "envisage", "p", "planned"),
-    ("planned", "land-trust-city", "p", "planned"),
     ("work", "sunthru", "p", "work"), ("work", "dreki", "p", "work"), ("work", "work-study", "p", "work"),
     ("work", "piasecki-steel", "p", "work"),
     ("education", "rpi", "p", "education"), ("education", "classes", "p", "education"),

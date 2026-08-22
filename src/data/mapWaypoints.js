@@ -55,7 +55,6 @@ const NAV = [
   { node: "unpowered-magnetic-bearing", href: "/projects/unpowered-magnetic-bearing", cluster: "planned", label: "Mag Bearing" },
   { node: "plant-exoskeleton", href: "/projects/plant-exoskeleton", cluster: "planned", label: "Exoskeleton" },
   { node: "envisage", href: "/projects/envisage", cluster: "planned", label: "Envisage" },
-  { node: "land-trust-city", href: "/projects/land-trust-city", cluster: "planned", label: "Trust City" },
   { node: "about", href: "/about", cluster: "hub", label: "About Me" },
   { node: "contact", href: "/about/contact", cluster: "about", label: "Contact" },
 ];

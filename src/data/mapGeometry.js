@@ -38,7 +38,6 @@ export const mapPositions = {
   "unpowered-magnetic-bearing": [65.7, 60.7],
   "plant-exoskeleton": [77.1, 35.7],
   "envisage": [92.1, 46.4],
-  "land-trust-city": [65.7, 45.2],
 };
 
 export const zoomTargets = {
