@@ -3,6 +3,7 @@ import Reveal from "../components/Reveal";
 import Divider from "../components/Divider";
 import ModelViewer from "../components/LazyModelViewer";
 import { education } from "../data/education";
+import Letters from "../components/Letters";
 
 export default function Education() {
   return (
@@ -26,7 +27,7 @@ export default function Education() {
             <div className="project__head">
               <span className="project__num">{e.num}</span>
               <h2 className="project__title">
-                <Link to={`/experience/${e.slug}`}>{e.org}</Link>
+                <Link to={`/experience/${e.slug}`}><Letters text={e.org} /></Link>
               </h2>
             </div>
             <p className="project__sub">{e.sub}</p>
@@ -54,7 +55,7 @@ export default function Education() {
               </>
             ) : null}
             <Link className="link-arrow" to={`/experience/${e.slug}`}>
-              Full write-up <span className="arr">&rarr;</span>
+              <Letters text="Full write-up" /> <span className="arr">&rarr;</span>
             </Link>
           </Reveal>
         ))}

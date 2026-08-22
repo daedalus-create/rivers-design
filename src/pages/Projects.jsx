@@ -3,6 +3,7 @@ import Reveal from "../components/Reveal";
 import Divider from "../components/Divider";
 import ModelViewer from "../components/LazyModelViewer";
 import { highlightsFor } from "../data/projects";
+import Letters from "../components/Letters";
 
 // The hub previews the first two entries of each section rather than
 // being three bare dividers, so the page shows actual work instead of
@@ -62,7 +63,7 @@ export default function Projects() {
                 <div className="project__head">
                   <span className="project__num">{p.num}</span>
                   <h3 className="project__title">
-                    <Link to={`/projects/${p.slug}`}>{p.title}</Link>
+                    <Link to={`/projects/${p.slug}`}><Letters text={p.title} /></Link>
                   </h3>
                 </div>
                 <p className="project__sub">{p.sub}</p>

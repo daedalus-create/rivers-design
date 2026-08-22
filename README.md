@@ -22,14 +22,14 @@ src/
   main.jsx                Router + global CSS entry
   App.jsx                 Route table
   styles/global.css       Design tokens + all styling
-  data/                   mapWaypoints.js (nav), mapGeometry.js + mapTrails.js
-                          (both generated), projects.js, roles.js,
+  data/                   siteTree.js (nav graph), projects.js, roles.js,
                           education.js, classes.js
   hooks/useReveal.js       Scroll-reveal hook
   components/
     Layout.jsx             Header + <Outlet/> + Footer, scroll-to-top/hash on route change
     Header.jsx              Logo, hamburger, date badge
-    MapMenu.jsx              Interactive site-map overlay (click-to-zoom navigation)
+    MenuTree.jsx             Branching site menu overlay
+    Letters.jsx              Splits a label for the hover animation
     Divider.jsx              Page-break component (icon marks + wordmark + pill link)
     Footer.jsx
     ModelViewer.jsx          three.js placeholder viewer (render loop only)
@@ -37,15 +37,15 @@ src/
     LazyModelViewer.jsx      code-split wrapper around ModelViewer (three.js is ~500KB)
   pages/                   One file per route (see below)
 tools/
-  generate-map.py          Regenerates contours.svg, mapTrails.js, mapGeometry.js
+  generate-map.py          Regenerates the contours.svg backdrop
   check-models.mjs         Smoke-tests every 3D placeholder builder
+  check-copy.mjs           Fails on banned characters in user-facing copy
 legacy-static/             Pre-React version of the site, kept for reference (not built/served)
 ```
 
 ## Routes
 
-Every site-map waypoint is its own real page — no more anchors inside a
-combined file:
+Every entry in the site menu is its own real page:
 
 ```
 /                              Home
@@ -67,24 +67,11 @@ combined file:
 Project pages are data-driven from `src/data/projects.js` — add a new
 entry there and `/projects/your-slug` exists automatically.
 
-**When you add a project, also add its site-map waypoint**, or it
-exists as a page but can't be reached from the map overlay:
-
-1. Add the nav entry (`node`, `href`, `cluster`, `label`) to
-   `src/data/mapWaypoints.js`.
-2. Add a rough `(x%, y%)` to `POSITIONS_INTENT` in
-   `tools/generate-map.py`, plus entries in `PARENT_OF`, `ZOOM_GROUPS`,
-   and `LINKS`.
-3. Run `npm run generate-map`.
-
-No coordinates to copy by hand — the script writes
-`src/data/mapGeometry.js` and `mapWaypoints.js` imports it. The intent
-is only a wish: placement snaps it onto ground that makes sense to
-stand on, resolves collisions itself, and fails the run if any two
-simultaneously-visible labels would overlap. It also refuses to run if
-the two files disagree about which waypoints exist, so they can't drift
-apart. Keep labels short anyway — a long one forces its neighbours
-further away and constrains the layout.
+**When you add a project, add it to the menu too**, or it exists as a
+page but cannot be reached: add the entry (`node`, `href`, `cluster`,
+`label`) to `src/data/siteTree.js`. `cluster` is the parent's node id,
+and the menu branches along it automatically — there is nothing to
+position or regenerate.
 
 ## Swapping in real 3D models
 
@@ -123,38 +110,26 @@ When you have real CAD exports:
 3. Import `GLTFLoader` from `three/examples/jsm/loaders/GLTFLoader.js`
    and load the file instead of calling the wireframe builder.
 
-## Regenerating the site-map terrain
+## Regenerating the backdrop
 
-`tools/generate-map.py` builds the topographic background
-(`public/assets/contours.svg`) and the terrain-following trail paths
-(`src/data/mapTrails.js`) from one fractal-noise heightfield, so they
-always agree with each other:
+`tools/generate-map.py` builds the contour drawing behind the site from
+a fractal-noise heightfield:
 
 ```bash
 npm run generate-map
 ```
 
-Edit `SEED` at the top of the script to re-roll the landscape.
+Edit `SEED` at the top to re-roll the landscape.
 
-It runs as a strict compute-then-render pipeline — terrain, summits,
-rivers, waypoints, framing, routes, and only then any drawing — so each
-phase can use the results of the ones before it. That ordering is
-load-bearing: rivers steer clear of the hub summits, waypoint placement
-steers clear of the rivers, and trails steer clear of both.
+It used to be much more than this: it placed waypoints on the terrain,
+traced rivers, routed A* trails between pages, and solved zoom framing
+for a click-to-explore site map. The branching menu replaced all of that,
+so the script now does three things only, in about a fifth of the code:
+build a heightfield, trace contours, write the SVG. Every line is the
+same grey and the same weight, deliberately, and it is kept dark and thin
+so it recedes behind text rather than competing with it. Opacity is set
+in CSS, so tuning how present it feels needs no regeneration.
 
-Waypoint *positions* are computed, not authored. `POSITIONS_INTENT` is a
-rough wish per waypoint; placement then looks for nearby ground that
-makes sense to stand on — low, level, near water but not in it, and
-reachable from its parent without crossing a face — and rejects any
-candidate that would crowd its parent or collide with a sibling's label
-at that cluster's zoom scale. Results land in `src/data/mapGeometry.js`,
-which `mapWaypoints.js` imports, so the dots and the trails bent to
-those same coordinates cannot drift apart.
-
-The palette is grey ground rising to white summits, with yellow drawing
-the index contours — every 5th line, the one a real sheet emphasizes — so
-the accent threads the whole map as line work rather than as landmass.
-Trails and rivers are both dark and are told apart the way a printed
-sheet does it rather than by hue: water is a solid heavy double line,
-trails are dashed. Waypoint dots stay accent yellow, so on the map a
-yellow dot is still the thing you click.
+It appears twice: full bleed behind the site menu, where it reads as the
+map's terrain, and down the side margins of the pages, masked to nothing
+across the middle so it never sits under a line of text.

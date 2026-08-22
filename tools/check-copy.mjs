@@ -70,7 +70,7 @@ const SOURCES = [
     "ProjectsInProgress", "ProjectsPlanned", "Resume", "WorkExcerpts",
   ].map((n) => `src/pages/${n}.jsx`),
   ...[
-    "Header", "Footer", "Layout", "Divider", "MapMenu", "ModelViewer",
+    "Header", "Footer", "Layout", "Divider", "MenuTree", "ModelViewer",
     "LazyModelViewer", "Reveal",
   ].map((n) => `src/components/${n}.jsx`),
   "index.html",

@@ -4,6 +4,7 @@ import Divider from "../components/Divider";
 import ModelViewer from "../components/LazyModelViewer";
 import { completedProjects } from "../data/projects";
 import { roles } from "../data/roles";
+import Letters from "../components/Letters";
 
 export default function Home() {
   return (
@@ -88,7 +89,7 @@ export default function Home() {
             <div className="project__head">
               <span className="project__num">{p.num}</span>
               <h3 className="project__title">
-                <Link to={`/projects/${p.slug}`}>{p.title}</Link>
+                <Link to={`/projects/${p.slug}`}><Letters text={p.title} /></Link>
               </h3>
             </div>
             <p className="project__sub">{p.sub}</p>
@@ -113,7 +114,7 @@ export default function Home() {
             <div className="project__head">
               <span className="project__num">{r.num}</span>
               <h3 className="project__title">
-                <Link to={`/experience/${r.slug}`}>{r.org}</Link>
+                <Link to={`/experience/${r.slug}`}><Letters text={r.org} /></Link>
               </h3>
             </div>
             <p className="project__sub">{r.sub}</p>
@@ -128,7 +129,7 @@ export default function Home() {
               ))}
             </ul>
             <Link className="link-arrow" to={`/experience/${r.slug}`}>
-              Full role details <span className="arr">&rarr;</span>
+              <Letters text="Full role details" /> <span className="arr">&rarr;</span>
             </Link>
           </Reveal>
         ))}

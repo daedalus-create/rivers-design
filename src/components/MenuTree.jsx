@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ancestorsOf, childrenOf, nodeForPath, rootSections } from "../data/siteTree";
+import Letters from "./Letters";
 
 // Branching site menu. Opens as the three sections in a row; clicking one
 // expands its pages to the right on curved connectors, and each of those
@@ -152,7 +153,9 @@ function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode
         }}
       >
         <span className="tnode__dot" aria-hidden="true" />
-        <span className="tnode__text">{node.label}</span>
+        <span className="tnode__text">
+          <Letters text={node.label} />
+        </span>
       </Link>
 
       {isOpen && kids.length > 0 && (
@@ -210,7 +213,11 @@ export default function MenuTree({ open, onClose }) {
   useLayoutEffect(() => {
     if (!open) return undefined;
 
-    const refit = () => {
+    let queued = 0;
+    let applied = null;
+
+    const measureAndApply = () => {
+      queued = 0;
       const field = fieldRef.current;
       const tree = rootsRef.current;
       if (!field || !tree || !tree.offsetWidth || !tree.offsetHeight) return;
@@ -219,22 +226,44 @@ export default function MenuTree({ open, onClose }) {
       const availW = field.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight);
       const availH = field.clientHeight - parseFloat(styles.paddingTop) - parseFloat(styles.paddingBottom);
 
-      const fit = Math.max(
-        MIN_FIT,
-        Math.min(MAX_FIT, (availW / tree.offsetWidth) * FIT_MARGIN, (availH / tree.offsetHeight) * FIT_MARGIN),
-      );
-      tree.style.setProperty("--fit", String(Math.round(fit * 1000) / 1000));
+      const fit =
+        Math.round(
+          Math.max(
+            MIN_FIT,
+            Math.min(MAX_FIT, (availW / tree.offsetWidth) * FIT_MARGIN, (availH / tree.offsetHeight) * FIT_MARGIN),
+          ) * 1000,
+        ) / 1000;
+
+      // Writing the same-ish value again restarts the transform
+      // transition from wherever it had got to, which is what made
+      // expanding look jittery: the effect re-ran for the new path AND
+      // the observer fired for the new layout, so the scale animation
+      // was interrupted and re-launched mid-flight. Only write a real
+      // change, and only once per frame.
+      if (applied !== null && Math.abs(applied - fit) < 0.004) return;
+      applied = fit;
+      tree.style.setProperty("--fit", String(fit));
       // connectors measure screen pixels, so they have to redraw at the
       // new scale; a transform changes no layout box, so nothing else
       // would tell them
       window.dispatchEvent(new Event(REFIT_EVENT));
     };
 
-    refit();
+    // Coalesce: an expansion changes the layout and the observer and the
+    // effect both want to react to it. One measurement per frame.
+    const refit = () => {
+      if (queued) return;
+      queued = requestAnimationFrame(measureAndApply);
+    };
+
+    measureAndApply();
     const ro = new ResizeObserver(refit);
     ro.observe(fieldRef.current);
     ro.observe(rootsRef.current);
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+      if (queued) cancelAnimationFrame(queued);
+    };
   }, [open, expandedPath]);
 
   useEffect(() => {
@@ -255,6 +284,9 @@ export default function MenuTree({ open, onClose }) {
   return (
     <div className={`menu-overlay${open ? " open" : ""}`} id="site-menu" aria-hidden={!open}>
       <nav className="menu-tree" aria-label="Site menu">
+        {/* Contour drawing behind the tree. Decorative only, so it is
+            hidden from assistive tech and takes no pointer events. */}
+        <div className="menu-backdrop" aria-hidden="true" />
         <div
           className="menu-tree__field"
           ref={fieldRef}

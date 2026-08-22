@@ -2,13 +2,11 @@
 // parent/child relationships the menu branches along.
 //
 // This is the single hand-authored source for what pages exist and how
-// they nest. The branching menu (MenuTree.jsx) reads the hierarchy; the
-// older topographic map reads the same list and pairs it with generated
-// coordinates (see mapWaypoints.js).
+// they nest, read by the branching menu (MenuTree.jsx).
 //
 // `cluster` names the parent's node id, or "hub" for a top-level section.
-// "home" is a hub in the data because the map drew it, but the menu shows
-// only the three sections a reader navigates into — the logo is home.
+// "home" is listed for completeness, but the menu shows only the three
+// sections a reader navigates into: the logo is home.
 
 export const NAV = [
   { node: "home", href: "/", cluster: "hub", label: "Home" },

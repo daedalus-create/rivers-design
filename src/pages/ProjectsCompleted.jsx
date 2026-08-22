@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
 import ModelViewer from "../components/LazyModelViewer";
 import { completedProjects } from "../data/projects";
+import Letters from "../components/Letters";
 
 export default function ProjectsCompleted() {
   return (
@@ -21,7 +22,7 @@ export default function ProjectsCompleted() {
             <div className="project__head">
               <span className="project__num">{p.num}</span>
               <h2 className="project__title">
-                <Link to={`/projects/${p.slug}`}>{p.title}</Link>
+                <Link to={`/projects/${p.slug}`}><Letters text={p.title} /></Link>
               </h2>
             </div>
             <p className="project__sub">{p.sub}</p>
@@ -35,7 +36,7 @@ export default function ProjectsCompleted() {
               ))}
             </ul>
             <Link className="link-arrow" to={`/projects/${p.slug}`}>
-              Full write-up <span className="arr">&rarr;</span>
+              <Letters text="Full write-up" /> <span className="arr">&rarr;</span>
             </Link>
           </Reveal>
         ))}
