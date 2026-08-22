@@ -46,8 +46,14 @@
      decoration. Right now that is exactly two things — the menu's
      "you are here" marker and the keyboard focus ring — so its presence
      always means "this is where you are", distinct from the yellow that
-     means "this is what you can click". */
-  --accent-cool: #6ea8bf;
+     means "this is what you can click".
+
+     Darkened as far as it can go while staying readable: 4.9:1 against
+     the sheet, which clears AA for text at any size. It labels the
+     current page, and the menu shrinks that label to about 16px on a
+     deep branch, so it cannot rely on the large-text allowance. Going
+     further drops below 4.5:1. */
+  --accent-cool: #5b96ae;
 
   --ink-a80: rgba(255, 255, 255, .80);
   --ink-a65: rgba(255, 255, 255, .65);
