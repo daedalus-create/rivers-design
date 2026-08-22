@@ -778,12 +778,17 @@ a.pill:hover .pill__inner { color: var(--accent); }
 }
 .intro__lede { margin-top: var(--space-6); max-width: 44ch; }
 .intro__foot {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-4);
   margin-top: clamp(var(--space-7), 7vh, var(--space-9));
 }
-.intro__foot .idx { color: var(--accent); }
+/* The index number sits on its own line above the note rather than
+   inline before it, so the note's text stays flush with the eyebrow,
+   name, and lede above — an inline "01 " prefix would push it out of
+   line with everything else in the hero. */
+.intro__foot .idx {
+  display: block;
+  color: var(--accent);
+  margin-bottom: var(--space-2);
+}
 
 .about-split {
   display: grid;
