@@ -12,7 +12,8 @@
 //    a paragraph.
 //
 // `model` must be one of: engine, panel, drone, concept.
-// "forge" is hardwired to the Hephaestus Forge animation — don't reuse it.
+// "forge" is hardwired to the G.A.S. assembly animation (the iframe in
+// ModelViewer.jsx) rather than a wireframe — don't reuse it.
 
 export const projects = [
   {
@@ -30,14 +31,18 @@ export const projects = [
     ],
   },
   {
+    // Slug stays "hephaestus-forge" on purpose: the page is already
+    // live at /projects/hephaestus-forge, and changing it would break
+    // that URL. It is an internal id, not shown anywhere.
     slug: "hephaestus-forge",
     status: "completed",
     num: "02",
-    title: "Hephaestus Forge",
+    title: "G.A.S. [Core XY System]",
     sub: "An automated additive manufacturing assembly line",
     model: "forge",
     specs: [
       { k: "Status", v: "Placeholder — write-up in progress" },
+      { k: "Accuracy", v: "0.2 mm dimensional" },
       { k: "Scope", v: "Automation / material handling" },
       { k: "Focus", v: "Lights-out additive production" },
       { k: "Model", v: "CAD export coming soon" },

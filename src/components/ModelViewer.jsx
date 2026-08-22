@@ -50,7 +50,9 @@ function buildEngine() {
   return g;
 }
 
-// Hephaestus Forge — gantry assembly line: bed, frame, carriage
+// G.A.S. [Core XY System] — gantry assembly line: bed, frame, carriage
+// (unused while the "forge" kind renders the animation iframe instead,
+// kept as the wireframe fallback)
 function buildForge() {
   const g = new THREE.Group();
   g.add(edges(new THREE.BoxGeometry(3.2, 0.18, 1.6), INK));
@@ -219,7 +221,7 @@ export default function ModelViewer({ kind = "engine", tag = "3D Placeholder / M
         <span className="model-frame__hint meta">Drag to orbit</span>
         <iframe
           src="/assets/hephaestus-forge-animation.html"
-          title="Hephaestus Forge — assembly animation"
+          title="G.A.S. [Core XY System] — assembly animation"
           loading="lazy"
         />
       </div>

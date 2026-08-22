@@ -39,7 +39,7 @@ const NAV = [
   { node: "projects", href: "/projects", cluster: "hub", label: "Projects" },
   { node: "completed", href: "/projects/completed", cluster: "projects", label: "Completed" },
   { node: "pyro-mk7", href: "/projects/pyro-mk7", cluster: "completed", label: "Pyro MK:7" },
-  { node: "hephaestus-forge", href: "/projects/hephaestus-forge", cluster: "completed", label: "Hephaestus Forge" },
+  { node: "hephaestus-forge", href: "/projects/hephaestus-forge", cluster: "completed", label: "G.A.S." },
   { node: "orbital-maneuver-solver", href: "/projects/orbital-maneuver-solver", cluster: "completed", label: "Orbital Solver" },
   { node: "in-progress", href: "/projects/in-progress", cluster: "projects", label: "Work in Progress" },
   { node: "integrated-toolhead", href: "/projects/integrated-toolhead", cluster: "in-progress", label: "Toolhead" },
