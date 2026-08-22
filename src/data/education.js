@@ -1,18 +1,11 @@
-// Education write-ups, same list/detail pattern as work-excerpt roles.
-// Summarized on /experience/education, with each entry getting its own
-// page at /experience/:slug (see ExperienceDetail.jsx).
-//
-// `highlights` is per entry rather than one list on the page, because two
-// schools do not share a set of notable courses. The Classes page still
-// holds the full RPI course list; these are just the ones worth leading
-// with.
+// Auto-generated from content/education.csv by tools/import-content.mjs.
+// Do not hand-edit: edit the spreadsheet and run `npm run import-content`.
 
 export const education = [
   {
     slug: "rpi",
     num: "01",
-    org: "Rensselaer Polytechnic Institute",
-    title: "Rensselaer Polytechnic Institute:",
+    title: "Rensselaer Polytechnic Institute",
     sub: "B.S. Mechanical Dual Aerospace Engineering, Troy, NY",
     model: "campus",
     desc: "Bachelor of Science in Mechanical Dual Aerospace Engineering at Rensselaer Polytechnic Institute, completed May 2026.",
@@ -36,8 +29,7 @@ export const education = [
   {
     slug: "waynflete",
     num: "02",
-    org: "Waynflete",
-    title: "Waynflete:",
+    title: "Waynflete",
     sub: "Secondary school, Portland, ME",
     model: "schoolhouse",
     desc: "Secondary school at Waynflete in Portland, Maine, where Astrophysics and Advanced Biology were the standout courses.",

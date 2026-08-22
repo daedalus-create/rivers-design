@@ -573,30 +573,30 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .divider--flip .divider__row { flex-direction: row-reverse; }
 
 /* ---------- Project cards ---------- */
-.project { margin-top: clamp(var(--space-9), 12vh, var(--space-10)); }
-.project:first-of-type { margin-top: 0; }
+.entry { margin-top: clamp(var(--space-9), 12vh, var(--space-10)); }
+.entry:first-of-type { margin-top: 0; }
 
-.project__head {
+.entry__head {
   display: flex;
   align-items: baseline;
   gap: var(--space-5);
   flex-wrap: wrap;
   margin-left: var(--indent);
 }
-.project__num {
+.entry__num {
   font-family: var(--font-display);
   font-size: clamp(30px, 3.6vw, 60px);
   line-height: var(--lh-title);
   color: var(--accent);
 }
-.project__num::after { content: ':'; }
-.project__title {
+.entry__num::after { content: ':'; }
+.entry__title {
   font-family: var(--font-display);
   font-size: var(--fs-title-1);
   line-height: var(--lh-title);
 }
-.project__title a { text-decoration: none; }
-.project__sub {
+.entry__title a { text-decoration: none; }
+.entry__sub {
   margin-top: var(--space-3);
   margin-left: calc(var(--indent) + clamp(0px, 4vw, 64px));
   font-size: var(--fs-body-lg);
@@ -604,7 +604,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
   color: var(--ink-a65);
   max-width: var(--max-text);
 }
-.project__desc {
+.entry__desc {
   margin-top: var(--space-4);
   margin-left: calc(var(--indent) + clamp(0px, 4vw, 64px));
   font-weight: 300;
@@ -696,7 +696,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
   .specs .k { padding-top: 0; }
 }
 
-.edu__highlights-label {
+.specs__label {
   margin-top: var(--space-6);
   color: var(--ink-a65);
 }
@@ -713,7 +713,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
 
 /* ---------- Experience entries ---------- */
 /* Role/education write-up body copy on ExperienceDetail — the
-   list/card view (Home, WorkExcerpts, Education) reuses .project
+   list/card view (Home, WorkExcerpts, Education) reuses .entry
    instead. */
 .xp__body p + p { margin-top: var(--space-4); }
 .xp__body {
@@ -1040,7 +1040,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
   .statement { grid-template-columns: 1fr; }
   .statement__text { padding-top: 0; }
   .divider__row { flex-wrap: wrap; justify-content: center; row-gap: var(--space-4); }
-  .project__sub { margin-left: 0; }
+  .entry__sub { margin-left: 0; }
   /* not enough room next to the fixed logo + hamburger for the
      slogan on narrow screens — hide it rather than wrap/collide */
   .site-header__tagline { display: none; }

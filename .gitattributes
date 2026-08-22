@@ -1,8 +1,15 @@
-# The map generator writes its outputs with explicit LF newlines. Git's
+# Generated files are written with explicit LF newlines. Git's
 # core.autocrlf would otherwise check them back out as CRLF on Windows,
-# so every `npm run generate-map` reported a diff on files whose content
-# had not changed at all. Pin them to LF and the run is a true no-op
-# when the terrain and nav graph are unchanged.
-src/data/mapGeometry.js text eol=lf
-src/data/mapTrails.js   text eol=lf
+# so every regeneration reported a diff on files whose content had not
+# changed at all. Pinning them to LF makes a re-run a true no-op.
 public/assets/contours.svg text eol=lf
+
+# Same reason for the content pipeline: tools/import-content.mjs writes
+# LF, so without this every `npm run import-content` would report a diff
+# on files whose content had not changed. The CSVs are pinned too, so a
+# spreadsheet round trip does not rewrite every line.
+src/data/projects.js  text eol=lf
+src/data/roles.js     text eol=lf
+src/data/education.js text eol=lf
+src/data/classes.js   text eol=lf
+content/*.csv         text eol=lf

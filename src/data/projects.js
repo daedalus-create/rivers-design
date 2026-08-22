@@ -1,23 +1,8 @@
-// Individual project pages are data-driven off this array — one
-// entry, one page, reached via /projects/:slug (see ProjectDetail.jsx).
+// Auto-generated from content/projects.csv by tools/import-content.mjs.
+// Do not hand-edit: edit the spreadsheet and run `npm run import-content`.
 //
-// Two editorial rules for everything below:
-//
-// 1. State the problem a project solves and where it stands, not the
-//    mechanism that solves it. These are unpublished designs and this
-//    site is public, so specifics (geometry, ratios, materials,
-//    control schemes) stay in the private archive rather than here.
-// 2. Keep spec values reasonably short. They sit in a two-column row
-//    beside their key, so a value that runs long reads as a paragraph
-//    wedged into a table.
-//
-// `model` names a builder in modelBuilders.js — one shape per subject, so
-// no two projects show the same placeholder. Add a builder there before
-// referencing a new name; an unknown one silently falls back to the
-// generic "concept" wireframe. `npm run check-models` catches typos.
-//
-// "forge" is hardwired to the G.A.S. assembly animation (the iframe in
-// ModelViewer.jsx) rather than a wireframe — don't reuse it.
+// `num` comes from row order within each status, so removing an entry
+// renumbers the rest automatically.
 
 export const projects = [
   {
@@ -34,9 +19,6 @@ export const projects = [
     ],
   },
   {
-    // Slug stays "hephaestus-forge" on purpose: the page is already
-    // live at /projects/hephaestus-forge, and changing it would break
-    // that URL. It is an internal id, not shown anywhere.
     slug: "hephaestus-forge",
     status: "completed",
     num: "02",
@@ -63,8 +45,6 @@ export const projects = [
       { k: "Goal", v: "Demonstrate the usability of key orbital-mechanics formulas" },
     ],
   },
-
-  // ── In progress ────────────────────────────────────────────────────
   {
     slug: "integrated-toolhead",
     status: "in-progress",
@@ -107,8 +87,6 @@ export const projects = [
       { k: "Next", v: "Fabrication and single-board bring-up" },
     ],
   },
-
-  // ── Planned ────────────────────────────────────────────────────────
   {
     slug: "high-speed-motor",
     status: "planned",
@@ -228,10 +206,7 @@ export const inProgressProjects = projects.filter((p) => p.status === "in-progre
 export const plannedProjects = projects.filter((p) => p.status === "planned");
 export const getProject = (slug) => projects.find((p) => p.slug === slug);
 
-// The Projects hub previews the first two entries of each section. The
-// rule lives here rather than in the page so "highlighted" means the same
-// thing wherever it is used, and so reordering a section automatically
-// reorders what gets highlighted.
+// The Projects hub previews the first two entries of each section.
 export const HIGHLIGHT_COUNT = 2;
 export const highlightsFor = (status) =>
   projects.filter((p) => p.status === status).slice(0, HIGHLIGHT_COUNT);

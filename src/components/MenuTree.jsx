@@ -110,7 +110,7 @@ function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode
     // NOT change any layout box, so ResizeObserver cannot see it — hence
     // the explicit refit event from the parent.
     const ro = new ResizeObserver(draw);
-    ro.observe(wrapRef.current);
+    if (wrapRef.current) ro.observe(wrapRef.current);
     childRefs.current.forEach((el) => el && ro.observe(el));
     window.addEventListener(REFIT_EVENT, draw);
     const raf = requestAnimationFrame(draw);
@@ -258,8 +258,9 @@ export default function MenuTree({ open, onClose }) {
 
     measureAndApply();
     const ro = new ResizeObserver(refit);
-    ro.observe(fieldRef.current);
-    ro.observe(rootsRef.current);
+    // Guarded: observe() throws on null, and the refs are only populated
+    // once the overlay has rendered.
+    [fieldRef.current, rootsRef.current].forEach((el) => el && ro.observe(el));
     return () => {
       ro.disconnect();
       if (queued) cancelAnimationFrame(queued);

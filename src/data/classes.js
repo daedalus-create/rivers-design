@@ -1,7 +1,5 @@
-// Every class taken at RPI, rendered as project-plaque-style cards on
-// /experience/classes (see Classes.jsx). No per-class detail pages —
-// just the numbered card look, with a longer excerpt in place of a
-// spec list.
+// Auto-generated from content/classes.csv by tools/import-content.mjs.
+// Do not hand-edit: edit the spreadsheet and run `npm run import-content`.
 
 export const classes = [
   {

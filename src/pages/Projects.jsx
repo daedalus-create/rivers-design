@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
 import Divider from "../components/Divider";
-import ModelViewer from "../components/LazyModelViewer";
 import { highlightsFor } from "../data/projects";
 import Letters from "../components/Letters";
+import EntryCard from "../components/EntryCard";
 
 // The hub previews the first two entries of each section rather than
 // being three bare dividers, so the page shows actual work instead of
@@ -59,29 +59,18 @@ export default function Projects() {
 
           <section className="section--tight wrap" aria-label={`${label} highlights`}>
             {highlightsFor(status).map((p) => (
-              <Reveal as="article" className="project" key={p.slug}>
-                <div className="project__head">
-                  <span className="project__num">{p.num}</span>
-                  <h3 className="project__title">
-                    <Link to={`/projects/${p.slug}`}><Letters text={p.title} /></Link>
-                  </h3>
-                </div>
-                <p className="project__sub">{p.sub}</p>
-                <ModelViewer kind={p.model} tag={tag} />
-                <ul className="specs">
-                  {p.specs.map((s) => (
-                    <li key={s.k}>
-                      <span className="k">{s.k}</span>
-                      <span className="v">{s.v}</span>
-                    </li>
-                  ))}
-                </ul>
-              </Reveal>
+              <EntryCard
+                key={p.slug}
+                entry={p}
+                to={`/projects/${p.slug}`}
+                viewerTag={tag}
+                headingLevel={3}
+              />
             ))}
 
             <Reveal>
               <Link className="link-arrow" to={href}>
-                All {label} <span className="arr">&rarr;</span>
+                <Letters text={`All ${label}`} /> <span className="arr">&rarr;</span>
               </Link>
             </Reveal>
           </section>
