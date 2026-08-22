@@ -35,7 +35,6 @@ export const mapPositions = {
   "omnidirectional-base": [95.0, 91.7],
   "high-temperature-bearing": [82.1, 78.6],
   "large-diameter-air-bearing": [80.7, 90.5],
-  "unpowered-magnetic-bearing": [65.7, 60.7],
   "plant-exoskeleton": [77.1, 35.7],
   "envisage": [92.1, 46.4],
 };

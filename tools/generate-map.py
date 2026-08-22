@@ -76,7 +76,14 @@ TRAIL_SECONDARY = {"stroke": "#4f4f4f", "strokeWidth": 2.6, "dash": "3 9"}
 # space is safe, under-reserving puts overlapping pills on the page.
 REF_VIEWPORT_W, REF_VIEWPORT_H = 1280, 720
 LABEL_CHAR_W, LABEL_BASE_W = 13.5, 48.0
-LABEL_H_PX = 46.0     # pill height, plus headroom for the "You are here" line
+LABEL_H_PX = 50.0     # tallest measured pill (47.2px, the "You are here" state) + headroom
+# A zoomable node's pill also carries a "Click again to open ->" caption
+# while its cluster is the active zoom, so its rendered width is set by
+# that caption rather than by its own label — "Planned" measures 151px
+# against the 142px its 7 characters imply. Without this floor the model
+# under-reserves for every hub, which is the one direction that puts
+# overlapping pills on the page.
+ZOOMABLE_MIN_W = 165.0
 
 random.seed(SEED)
 
@@ -297,7 +304,6 @@ POSITIONS_INTENT = {
     "omnidirectional-base": (95, 92),
     "high-temperature-bearing": (80, 78),
     "large-diameter-air-bearing": (78, 92),
-    "unpowered-magnetic-bearing": (66, 60),
     "plant-exoskeleton": (76, 38),
     "envisage": (92, 46),
     "about": (82, 40),
@@ -311,7 +317,7 @@ PARENT_OF = {
     "high-speed-motor": "planned", "electric-thruster": "planned",
     "precision-linear-stage": "planned", "omnidirectional-base": "planned",
     "high-temperature-bearing": "planned", "large-diameter-air-bearing": "planned",
-    "unpowered-magnetic-bearing": "planned", "plant-exoskeleton": "planned",
+    "plant-exoskeleton": "planned",
     "envisage": "planned",
     "sunthru": "work", "dreki": "work", "work-study": "work", "piasecki-steel": "work",
     "rpi": "education", "classes": "education",
@@ -327,7 +333,7 @@ ZOOM_GROUPS = {
     "planned": [
         "high-speed-motor", "electric-thruster", "precision-linear-stage",
         "omnidirectional-base", "high-temperature-bearing", "large-diameter-air-bearing",
-        "unpowered-magnetic-bearing", "plant-exoskeleton", "envisage",
+        "plant-exoskeleton", "envisage",
     ],
     "work": ["sunthru", "dreki", "work-study", "piasecki-steel"],
     "education": ["rpi", "classes"],
@@ -358,7 +364,6 @@ LINKS = [
     ("planned", "omnidirectional-base", "p", "planned"),
     ("planned", "high-temperature-bearing", "p", "planned"),
     ("planned", "large-diameter-air-bearing", "p", "planned"),
-    ("planned", "unpowered-magnetic-bearing", "p", "planned"),
     ("planned", "plant-exoskeleton", "p", "planned"),
     ("planned", "envisage", "p", "planned"),
     ("work", "sunthru", "p", "work"), ("work", "dreki", "p", "work"), ("work", "work-study", "p", "work"),
@@ -404,7 +409,8 @@ if _orphans:
 ZOOM_SCALES = {}   # filled in Phase 5, fed back into Phase 4 next pass
 
 def label_w_px(node):
-    return LABEL_CHAR_W * len(LABEL_OF[node]) + LABEL_BASE_W
+    w = LABEL_CHAR_W * len(LABEL_OF[node]) + LABEL_BASE_W
+    return max(w, ZOOMABLE_MIN_W) if node in ZOOM_GROUPS else w
 
 def labels_clash(node_a, xy_a, node_b, xy_b, scale):
     """True if two labels' pills would overlap on screen at `scale`.

@@ -65,9 +65,9 @@
   --fs-title-2: clamp(22px, 2.4vw, 34px);
   --fs-body-lg: clamp(17px, 1.35vw, 21px);
   --fs-body: 16px;
-  --fs-body-sm: 14px;
-  --fs-meta: 12px;
-  --fs-meta-sm: 10px;
+  --fs-body-sm: 15px;
+  --fs-meta: 13px;
+  --fs-meta-sm: 11.5px;
 
   --lh-display: 0.96;
   --lh-title: 1.08;
@@ -171,7 +171,7 @@ body::after {
   letter-spacing: var(--ls-caps);
   text-transform: uppercase;
   line-height: var(--lh-meta);
-  color: var(--ink-a65);
+  color: var(--ink-a80);
 }
 .meta--wide { letter-spacing: var(--ls-caps-wide); }
 .meta--accent { color: var(--accent); }
@@ -425,7 +425,7 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   content: 'Click again to open →';
   display: block;
   margin-top: 3px;
-  font-size: 10px;
+  font-size: var(--fs-meta-sm);
   letter-spacing: var(--ls-caps);
   text-transform: uppercase;
   color: #a67c1f;
@@ -473,7 +473,7 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
 .map[data-zoom] .map__jump { display: flex; }
 .map__jump-label {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: var(--fs-meta-sm);
   letter-spacing: var(--ls-caps);
   text-transform: uppercase;
   color: var(--ink-a45);
@@ -559,7 +559,7 @@ path[data-cluster="hub"] { transition: opacity var(--dur-3) var(--ease-out); }
   content: 'You are here';
   display: block;
   margin-top: 2px;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: var(--ls-caps);
   text-transform: uppercase;
   color: #8a6a20;
@@ -817,7 +817,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
 }
 .specs li {
   display: grid;
-  grid-template-columns: minmax(140px, 220px) 1fr;
+  grid-template-columns: minmax(150px, 250px) 1fr;
   gap: var(--space-5);
   padding: var(--space-3) 0;
   border-bottom: 1px solid var(--line-hair);
@@ -827,15 +827,31 @@ a.pill:hover .pill__inner { color: var(--accent); }
   font-size: var(--fs-meta);
   letter-spacing: var(--ls-caps);
   text-transform: uppercase;
-  color: var(--ink-a45);
-  padding-top: 3px;
+  color: var(--ink-a65);
+  padding-top: 2px;
 }
+/* The value is the content, not a label — so it is NOT uppercased. Caps
+   plus heavy tracking at 12px made every spec a wall to decipher; a
+   sentence reads far faster in sentence case at a larger size. The key
+   beside it stays small caps, which is what keeps the row scannable. */
 .specs .v {
   font-family: var(--font-display);
-  font-size: var(--fs-meta);
-  letter-spacing: var(--ls-caps);
-  text-transform: uppercase;
-  color: var(--ink-a80);
+  font-size: var(--fs-body-sm);
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+/* On a narrow screen the fixed key column starves the value — at 375px it
+   left 54px for the text. Stack the pair instead: the key becomes a small
+   caps line above its value, which is what it already looks like. */
+@media (max-width: 640px) {
+  .specs li {
+    grid-template-columns: 1fr;
+    gap: var(--space-1, 4px);
+    padding: var(--space-4) 0;
+  }
+  .specs .k { padding-top: 0; }
 }
 
 /* Section titles inside pages (Completed:, Planned:, Resume:) */
@@ -885,6 +901,87 @@ a.pill:hover .pill__inner { color: var(--accent); }
 }
 .page-hero .display { margin-top: var(--space-4); }
 .page-hero .lede { margin-top: var(--space-6); }
+
+/* ---------- Home intro (hero + about) ----------
+   Layout follows the opening two sections of merttureli.com, which the
+   rest of this site's sizing/spacing system is already modelled on: a
+   left-column hero with the name set very large across two lines over a
+   short intro, then a two-column about pairing a portrait with a lead
+   paragraph and a label/value fact list. Structure only — all copy here
+   is Deon's own. */
+.intro {
+  padding-top: clamp(var(--space-8), 9vh, var(--space-10));
+  padding-bottom: clamp(var(--space-7), 7vh, var(--space-9));
+  padding-left: calc(var(--page-margin) + var(--indent));
+}
+.intro__eyebrow { display: block; max-width: 46ch; }
+.intro__name {
+  font-family: var(--font-display);
+  font-size: var(--fs-display-1);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+  text-transform: uppercase;
+  font-weight: 400;
+  margin-top: var(--space-5);
+}
+/* second line of the name sits under the first as its own block, so the
+   two read as one stacked wordmark rather than a wrapped heading */
+.intro__name--last {
+  display: block;
+  margin-top: 0;
+  color: var(--ink-a80);
+}
+.intro__lede { margin-top: var(--space-6); max-width: 44ch; }
+.intro__foot {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  margin-top: clamp(var(--space-7), 7vh, var(--space-9));
+}
+.intro__foot .idx { color: var(--accent); }
+
+.about-split {
+  display: grid;
+  grid-template-columns: minmax(260px, 420px) 1fr;
+  gap: var(--space-7) clamp(var(--space-7), 6vw, var(--space-10));
+  align-items: start;
+  margin-left: var(--indent);
+}
+.about-split__head {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-top: 1px solid var(--line-hair);
+  padding-top: var(--space-4);
+}
+/* Portrait slot. Deliberately a framed placeholder rather than a broken
+   <img>: there is no photo in the repo yet, and an empty box that says so
+   is more useful than a missing-image icon. Drop the file in
+   public/assets/ and swap this for an <img> when there is one. */
+.portrait {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border: 1px solid var(--ink-a25);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      var(--ink-a08) 0 1px,
+      transparent 1px 12px
+    );
+  display: grid;
+  place-items: center;
+}
+.portrait__note { color: var(--ink-a65); text-align: center; padding: 0 var(--space-5); }
+.about-split__name { margin-bottom: var(--space-5); }
+.about-split__body { margin-top: var(--space-5); max-width: 62ch; }
+.about-split .specs { margin-top: var(--space-6); }
+
+@media (max-width: 860px) {
+  .about-split { grid-template-columns: 1fr; margin-left: 0; }
+  .intro { padding-left: var(--page-margin); }
+  .portrait { max-width: 340px; }
+}
 
 /* ---------- Footer ---------- */
 .site-footer {

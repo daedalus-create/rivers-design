@@ -7,14 +7,14 @@
 //    mechanism that solves it. These are unpublished designs and this
 //    site is public, so specifics (geometry, ratios, materials,
 //    control schemes) stay in the private archive rather than here.
-// 2. Keep spec values short. `.specs .v` is uppercased in CSS, and
-//    long sentences in all-caps are unreadable — aim for a label, not
-//    a paragraph.
+// 2. Keep spec values reasonably short. They sit in a two-column row
+//    beside their key, so a value that runs long reads as a paragraph
+//    wedged into a table.
 //
-// `model` names a builder in ModelViewer.jsx — one shape per subject, so
+// `model` names a builder in modelBuilders.js — one shape per subject, so
 // no two projects show the same placeholder. Add a builder there before
 // referencing a new name; an unknown one silently falls back to the
-// generic "concept" wireframe.
+// generic "concept" wireframe. `npm run check-models` catches typos.
 //
 // "forge" is hardwired to the G.A.S. assembly animation (the iframe in
 // ModelViewer.jsx) rather than a wireframe — don't reuse it.
@@ -190,27 +190,13 @@ export const projects = [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "Air bearings are built for shafts and flat faces, not this geometry" },
       { k: "Goal", v: "Uniform support pressure across the whole bearing face" },
-      { k: "Role", v: "One of three bearing candidates, each a different regime" },
-    ],
-  },
-  {
-    slug: "unpowered-magnetic-bearing",
-    status: "planned",
-    num: "07",
-    title: "Unpowered Magnetic Bearing",
-    sub: "Magnetic support with no power, no sensors, and no control loop",
-    model: "magbearing",
-    specs: [
-      { k: "Stage", v: "Concept / research" },
-      { k: "Problem", v: "Commercial magnetic bearings all need power and a control loop" },
-      { k: "Goal", v: "Contact-free support that centers itself, no electronics" },
-      { k: "Challenge", v: "Scaling the approach up from compact rotors" },
+      { k: "Role", v: "A bearing option for the ring-drive motor" },
     ],
   },
   {
     slug: "plant-exoskeleton",
     status: "planned",
-    num: "08",
+    num: "07",
     title: "Modular Plant Exoskeleton",
     sub: "A self-watering enclosure that treats a potted plant as a design object",
     model: "planter",
@@ -224,7 +210,7 @@ export const projects = [
   {
     slug: "envisage",
     status: "planned",
-    num: "09",
+    num: "08",
     title: "Envisage",
     sub: "A procedurally generated galaxy shared by three games that look unrelated",
     model: "galaxy",
@@ -241,3 +227,11 @@ export const completedProjects = projects.filter((p) => p.status === "completed"
 export const inProgressProjects = projects.filter((p) => p.status === "in-progress");
 export const plannedProjects = projects.filter((p) => p.status === "planned");
 export const getProject = (slug) => projects.find((p) => p.slug === slug);
+
+// The Projects hub previews the first two entries of each section. The
+// rule lives here rather than in the page so "highlighted" means the same
+// thing wherever it is used, and so reordering a section automatically
+// reorders what gets highlighted.
+export const HIGHLIGHT_COUNT = 2;
+export const highlightsFor = (status) =>
+  projects.filter((p) => p.status === status).slice(0, HIGHLIGHT_COUNT);

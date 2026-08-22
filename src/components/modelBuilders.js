@@ -435,33 +435,6 @@ function buildAirBearing() {
   return g;
 }
 
-// Unpowered Magnetic Bearing — alternating permanent-magnet stator with a
-// rotor that floats in it (hence the slow bob as well as the spin)
-function buildMagBearing() {
-  const g = new THREE.Group();
-
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * Math.PI * 2;
-    const mag = edges(new THREE.BoxGeometry(0.2, 0.16, 0.28), i % 2 ? INK : ACCENT, 0.8);
-    mag.position.set(Math.cos(a) * 1.08, 0, Math.sin(a) * 1.08);
-    mag.rotation.y = -a;
-    g.add(mag);
-  }
-  g.add(circle(1.26, INK, 0.35));
-
-  const rotor = new THREE.Group();
-  rotor.add(circle(0.74, ACCENT, 0.9));
-  rotor.add(circle(0.62, ACCENT, 0.5));
-  for (let i = 0; i < 6; i++) {
-    const a = (i / 6) * Math.PI * 2;
-    rotor.add(poly([[0, 0, 0], [Math.cos(a) * 0.62, 0, Math.sin(a) * 0.62]], ACCENT, 0.3));
-  }
-  g.add(rotor);
-
-  g.userData.anims = [spin(rotor, "y", 1.9), shuttle(rotor, "y", 0.07, 0.9)];
-  return g;
-}
-
 // Modular Plant Exoskeleton — ribbed printed shell around a pot, with the
 // reservoir band at the base
 function buildPlanter() {
@@ -664,7 +637,6 @@ export const BUILDERS = {
   studbase: buildStudBase,
   bearing: buildBearing,
   airbearing: buildAirBearing,
-  magbearing: buildMagBearing,
   planter: buildPlanter,
   galaxy: buildGalaxy,
   // experience & education

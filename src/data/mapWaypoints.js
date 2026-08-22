@@ -52,7 +52,6 @@ const NAV = [
   { node: "omnidirectional-base", href: "/projects/omnidirectional-base", cluster: "planned", label: "Robot Base" },
   { node: "high-temperature-bearing", href: "/projects/high-temperature-bearing", cluster: "planned", label: "Hot Bearing" },
   { node: "large-diameter-air-bearing", href: "/projects/large-diameter-air-bearing", cluster: "planned", label: "Air Bearing" },
-  { node: "unpowered-magnetic-bearing", href: "/projects/unpowered-magnetic-bearing", cluster: "planned", label: "Mag Bearing" },
   { node: "plant-exoskeleton", href: "/projects/plant-exoskeleton", cluster: "planned", label: "Exoskeleton" },
   { node: "envisage", href: "/projects/envisage", cluster: "planned", label: "Envisage" },
   { node: "about", href: "/about", cluster: "hub", label: "About Me" },
