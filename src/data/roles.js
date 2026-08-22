@@ -1,13 +1,11 @@
-// Work-excerpt role write-ups. Summarized on /experience/work-excerpts
-// and the home page, with each role getting its own page at
-// /experience/:slug (see ExperienceDetail.jsx).
+// Auto-generated from content/experience.csv by tools/import-content.mjs.
+// Do not hand-edit: edit the spreadsheet and run `npm run import-content`.
 
 export const roles = [
   {
     slug: "sunthru",
     num: "01",
-    org: "SunThru",
-    title: "SunThru:",
+    title: "SunThru",
     sub: "Aerogel monolith manufacturer",
     model: "panel",
     desc: "Placeholder: one or two sentences on the role: what SunThru makes, what you own there day to day, and the kind of engineering problems you get to solve.",
@@ -25,8 +23,7 @@ export const roles = [
   {
     slug: "dreki",
     num: "02",
-    org: "Dreki Systems",
-    title: "Dreki Systems:",
+    title: "Dreki Systems",
     sub: "Junior Design Engineer, Tysons Corner, VA",
     model: "drone",
     desc: "Junior Design Engineer at Dreki Systems in 2025, establishing manufacturing systems for rapid prototyping and designing components in CAD.",
@@ -42,8 +39,7 @@ export const roles = [
   {
     slug: "piasecki-steel",
     num: "03",
-    org: "Piasecki Steel",
-    title: "Piasecki Steel:",
+    title: "Piasecki Steel",
     sub: "Engineering Shop Intern, Castleton, NY",
     model: "weldment",
     desc: "Engineering Shop Intern at Piasecki Steel in 2024, developing machining templates and helping fabricate safety equipment for bridge-repair work.",
@@ -59,8 +55,7 @@ export const roles = [
   {
     slug: "work-study",
     num: "04",
-    org: "Student Living & Learning, RPI",
-    title: "Student Living & Learning:",
+    title: "Student Living & Learning",
     sub: "Work Study, Troy, NY",
     model: "desk",
     desc: "Supporting RPI's Assistant Deans with day-to-day operations and fielding parent questions about students' time on campus.",

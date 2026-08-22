@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "generate-map": "python tools/generate-map.py",
     "check-models": "node tools/check-models.mjs",
-    "check-copy": "node tools/check-copy.mjs"
+    "check-copy": "node tools/check-copy.mjs",
+    "import-content": "node tools/import-content.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",

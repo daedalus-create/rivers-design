@@ -30,6 +30,7 @@ export default function ExperienceDetail() {
         </Reveal>
         <Reveal as="h1" className="display" stagger={1}>
           {item.title}
+          <span className="colon">:</span>
         </Reveal>
         <Reveal as="p" className="lede" stagger={2}>
           {item.sub}
