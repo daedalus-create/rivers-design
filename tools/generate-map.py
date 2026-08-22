@@ -288,6 +288,7 @@ POSITIONS_INTENT = {
     "education": (24, 92),
     "rpi": (18, 96),
     "classes": (30, 96),
+    "waynflete": (40, 92),
     "projects": (56, 46),
     "completed": (40, 76),
     "pyro-mk7": (18, 66),
@@ -320,7 +321,7 @@ PARENT_OF = {
     "plant-exoskeleton": "planned",
     "envisage": "planned",
     "sunthru": "work", "dreki": "work", "work-study": "work", "piasecki-steel": "work",
-    "rpi": "education", "classes": "education",
+    "rpi": "education", "classes": "education", "waynflete": "education",
 }
 LEAF_KEYS = set(PARENT_OF)
 
@@ -336,7 +337,7 @@ ZOOM_GROUPS = {
         "plant-exoskeleton", "envisage",
     ],
     "work": ["sunthru", "dreki", "work-study", "piasecki-steel"],
-    "education": ["rpi", "classes"],
+    "education": ["rpi", "classes", "waynflete"],
 }
 
 # (from, to, kind, cluster) — cluster "hub" always visible; others only
@@ -369,6 +370,7 @@ LINKS = [
     ("work", "sunthru", "p", "work"), ("work", "dreki", "p", "work"), ("work", "work-study", "p", "work"),
     ("work", "piasecki-steel", "p", "work"),
     ("education", "rpi", "p", "education"), ("education", "classes", "p", "education"),
+    ("education", "waynflete", "p", "education"),
     ("pyro-mk7", "hephaestus-forge", "s", "completed"),
     ("hephaestus-forge", "orbital-maneuver-solver", "s", "completed"),
     ("cm5-cluster", "integrated-toolhead", "s", "in-progress"),

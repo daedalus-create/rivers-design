@@ -12,8 +12,8 @@ export default function Experience() {
           Experience
         </Reveal>
         <Reveal as="p" className="lede" stagger={2}>
-          Hands-on engineering roles across manufacturing and design — placeholder copy, swap in the real story
-          for each role.
+          Hands-on engineering roles across manufacturing and design. Placeholder: swap in the real story for
+          each role.
         </Reveal>
       </section>
 

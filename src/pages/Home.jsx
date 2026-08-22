@@ -13,19 +13,19 @@ export default function Home() {
           modelled on it. Structure borrowed, copy is Deon's. */}
       <section className="intro" aria-label="Introduction">
         <Reveal as="p" className="meta meta--wide intro__eyebrow">
-          Mechanical / Aerospace engineering — Troy, NY
+          Mechanical / Aerospace engineering, Troy, NY
         </Reveal>
         <Reveal as="h1" className="intro__name" stagger={1}>
           Deon
           <span className="intro__name--last">Rivers</span>
         </Reveal>
         <Reveal as="p" className="lede intro__lede" stagger={2}>
-          I design hardware for how it will actually get made. Mechanical Dual Aerospace Engineering at RPI,
+          I design hardware for how it will actually get made. A Mechanical Dual Aerospace Engineering graduate of RPI,
           class of 2026, with a bias toward DFM and additive manufacturing.
         </Reveal>
         <Reveal className="intro__foot meta" stagger={3}>
           <span className="idx">01</span>
-          <span>Placeholder — a one-line note on what you are looking for next</span>
+          <span>Placeholder: a one-line note on what you are looking for next</span>
         </Reveal>
       </section>
 
@@ -38,20 +38,20 @@ export default function Home() {
 
           <Reveal>
             <div className="portrait">
-              <span className="portrait__note meta">Portrait — photo pending</span>
+              <span className="portrait__note meta">Portrait: photo pending</span>
             </div>
           </Reveal>
 
           <Reveal stagger={1}>
             <h2 className="display about-split__name">Deon Rivers</h2>
             <p className="lede">
-              A Mechanical Dual Aerospace Engineering student at Rensselaer Polytechnic Institute, building
+              A Mechanical Dual Aerospace Engineering graduate of Rensselaer Polytechnic Institute, building
               toward a career in design, DFM, and additive manufacturing.
             </p>
             <p className="about-split__body">
               Hands-on experience spans CAD design, machining, and rapid-prototyping work at Dreki Systems,
               alongside side projects like an additively-manufactured jet engine and a Python orbital-maneuver
-              solver. Room Manager at RPI&rsquo;s student makerspace, The Forge, since 2022 — helping other
+              solver. Room Manager at RPI&rsquo;s student makerspace, The Forge, since 2022, helping other
               students prototype and design for manufacturability.
             </p>
             <ul className="specs">
@@ -68,43 +68,43 @@ export default function Home() {
                 <span className="v">Siemens NX / Fusion 360 / Autodesk Inventor / Mastercam / MATLAB</span>
               </li>
               <li>
-                <span className="k">Now</span>
-                <span className="v">Mechanical / Aerospace Engineering, RPI — Class of 2026</span>
+                <span className="k">Degree</span>
+                <span className="v">B.S. Mechanical Dual Aerospace Engineering, RPI, 2026</span>
               </li>
               <li>
                 <span className="k">Next</span>
-                <span className="v">Placeholder — the role or work you are after</span>
+                <span className="v">Placeholder: the role or work you are after</span>
               </li>
             </ul>
           </Reveal>
         </div>
-      </section>
 
-      <section className="section wrap" id="idea" aria-label="Philosophy">
-        <Reveal className="statement">
-          <h2 className="statement__label">
-            The Idea<span className="colon">:</span>
-          </h2>
-          <p className="statement__text">
-            Engineer for function, design for form:
-            <br />
-            Focus on DFM, keep it simple,
-            <br />
-            but always leave room for soul.
-          </p>
-        </Reveal>
-        <Reveal className="statement" stagger={1}>
-          <h2 className="statement__label">
-            The Dream<span className="colon">:</span>
-          </h2>
-          <p className="statement__text">
-            Utility over profit, objects that matter:
-            <br />
-            A cleaner more sustainable tomorrow
-            <br />
-            where life isn&rsquo;t just getting through today.
-          </p>
-        </Reveal>
+        <div className="about-creed">
+          <Reveal className="statement">
+            <h2 className="statement__label">
+              The Idea<span className="colon">:</span>
+            </h2>
+            <p className="statement__text">
+              Engineer for function, design for form:
+              <br />
+              Focus on DFM, keep it simple,
+              <br />
+              but always leave room for soul.
+            </p>
+          </Reveal>
+          <Reveal className="statement" stagger={1}>
+            <h2 className="statement__label">
+              The Dream<span className="colon">:</span>
+            </h2>
+            <p className="statement__text">
+              Utility over profit, objects that matter:
+              <br />
+              A cleaner more sustainable tomorrow
+              <br />
+              where life isn&rsquo;t just getting through today.
+            </p>
+          </Reveal>
+        </div>
       </section>
 
       <Divider to="/projects" label="Projects" />

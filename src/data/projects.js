@@ -28,7 +28,7 @@ export const projects = [
     sub: "A jet engine designed for additive manufacturing",
     model: "engine",
     specs: [
-      { k: "Status", v: "Design concept — CAD complete" },
+      { k: "Status", v: "Design concept, CAD complete" },
       { k: "Process", v: "Designed to be manufactured purely with additive techniques" },
       { k: "Focus", v: "Uses gas expansion of incoming fuel to aid airflow through the engine" },
     ],
@@ -44,7 +44,7 @@ export const projects = [
     sub: "An automated additive manufacturing assembly line",
     model: "forge",
     specs: [
-      { k: "Status", v: "Placeholder — write-up in progress" },
+      { k: "Status", v: "Placeholder: write-up in progress" },
       { k: "Accuracy", v: "0.2 mm dimensional" },
       { k: "Scope", v: "Automation / material handling" },
       { k: "Focus", v: "Lights-out additive production" },
@@ -73,8 +73,8 @@ export const projects = [
     sub: "A 3D printer toolhead designed as one assembly instead of a stack of parts",
     model: "toolhead",
     specs: [
-      { k: "Stage", v: "Detail design — drawings and preliminary BOM complete" },
-      { k: "Problem", v: "Toolheads fail in predictable places — ground filament, thermal limits, cable fatigue" },
+      { k: "Stage", v: "Detail design, drawings and preliminary BOM complete" },
+      { k: "Problem", v: "Toolheads fail in predictable places: ground filament, thermal limits, cable fatigue" },
       { k: "Approach", v: "One integrated design instead of patching each failure mode" },
       { k: "Next", v: "Prototype build and validation" },
     ],
@@ -87,7 +87,7 @@ export const projects = [
     sub: "Resolving the engine-placement compromise that has held back blended wing body designs",
     model: "bwb",
     specs: [
-      { k: "Stage", v: "Concept finalized — configuration locked, test plan drafted" },
+      { k: "Stage", v: "Concept finalized, configuration locked, test plan drafted" },
       { k: "Problem", v: "A blended body has nowhere clean to hang an engine" },
       { k: "Approach", v: "Reshape the airframe so engines mount conventionally" },
       { k: "Open threads", v: "Low-speed yaw control, systems integration" },
@@ -101,9 +101,9 @@ export const projects = [
     sub: "A dense compute cluster for evolutionary computation and neural network work",
     model: "carrier",
     specs: [
-      { k: "Stage", v: "Carrier board design — second revision" },
+      { k: "Stage", v: "Carrier board design, second revision" },
       { k: "Problem", v: "No dense Compute Module 5 carrier exists on the market" },
-      { k: "Why", v: "Genetic algorithms are embarrassingly parallel — many small nodes suit them" },
+      { k: "Why", v: "Genetic algorithms are embarrassingly parallel, so many small nodes suit them" },
       { k: "Next", v: "Fabrication and single-board bring-up" },
     ],
   },
@@ -134,7 +134,7 @@ export const projects = [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "One blade row can only do so much work before the flow separates" },
       { k: "Approach", v: "Spread the pressure rise across matched stages" },
-      { k: "Depends on", v: "The motor and bearing work — one link in a motor-to-airframe chain" },
+      { k: "Depends on", v: "The motor and bearing work, one link in a motor-to-airframe chain" },
     ],
   },
   {
@@ -203,7 +203,7 @@ export const projects = [
     specs: [
       { k: "Stage", v: "Concept" },
       { k: "Problem", v: "Plant products are functional and ugly, or decorative and useless" },
-      { k: "Goal", v: "Not a growing station — an object with presence" },
+      { k: "Goal", v: "Not a growing station, but an object with presence" },
       { k: "Scope", v: "Modular, 3D printed, indoor or full weather" },
     ],
   },
@@ -215,7 +215,7 @@ export const projects = [
     sub: "A procedurally generated galaxy shared by three games that look unrelated",
     model: "galaxy",
     specs: [
-      { k: "Stage", v: "Design document — 17 module specs drafted" },
+      { k: "Stage", v: "Design document, 17 module specs drafted" },
       { k: "Concept", v: "An RPG, a sandbox, and a simulation, sold apart, secretly one universe" },
       { k: "Generation", v: "Stars, life, languages, and histories built before anyone logs in" },
       { k: "Philosophy", v: "Geometry and physics over hand-authoring" },

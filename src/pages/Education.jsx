@@ -15,8 +15,8 @@ export default function Education() {
           Education
         </Reveal>
         <Reveal as="p" className="lede" stagger={2}>
-          Bachelor of Science in Mechanical Dual Aerospace Engineering at Rensselaer Polytechnic Institute —
-          expected graduation May 2026.
+          A B.S. in Mechanical Dual Aerospace Engineering from Rensselaer Polytechnic Institute, completed May
+          2026, and secondary school at Waynflete before it.
         </Reveal>
       </section>
 
@@ -40,6 +40,19 @@ export default function Education() {
                 </li>
               ))}
             </ul>
+            {e.highlights?.length ? (
+              <>
+                <p className="meta edu__highlights-label">Highlighted classes</p>
+                <ul className="specs">
+                  {e.highlights.map((h) => (
+                    <li key={h.k}>
+                      <span className="k">{h.k}</span>
+                      <span className="v">{h.v}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
             <Link className="link-arrow" to={`/experience/${e.slug}`}>
               Full write-up <span className="arr">&rarr;</span>
             </Link>
@@ -55,33 +68,6 @@ export default function Education() {
         flip
       />
 
-      <section className="section--tight wrap">
-        <Reveal as="h2" className="section-title">
-          Highlighted Classes<span className="colon">:</span>
-        </Reveal>
-        <Reveal as="ul" className="specs" stagger={1}>
-          <li>
-            <span className="k">Manufacturing</span>
-            <span className="v">Manufacturing Processes</span>
-          </li>
-          <li>
-            <span className="k">Lab</span>
-            <span className="v">Systems Laboratory 1</span>
-          </li>
-          <li>
-            <span className="k">Capstone</span>
-            <span className="v">Space Vehicle Design Capstone</span>
-          </li>
-          <li>
-            <span className="k">Design</span>
-            <span className="v">Numerical Design Optimization</span>
-          </li>
-          <li>
-            <span className="k">Aerospace</span>
-            <span className="v">Propulsion Systems</span>
-          </li>
-        </Reveal>
-      </section>
     </>
   );
 }

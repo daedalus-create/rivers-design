@@ -23,6 +23,7 @@ export const mapPositions = {
   "piasecki-steel": [41.4, 66.7],
   "rpi": [17.9, 96.4],
   "classes": [30.0, 96.4],
+  "waynflete": [40.0, 92.9],
   "pyro-mk7": [17.9, 66.7],
   "hephaestus-forge": [52.9, 65.5],
   "orbital-maneuver-solver": [35.0, 54.8],
@@ -47,5 +48,5 @@ export const zoomTargets = {
   "in-progress": { fx: 0.546, fy: 0.729, scale: 2.18 },
   "planned": { fx: 0.594, fy: 0.574, scale: 1.3 },
   "work": { fx: 0.277, fy: 0.653, scale: 1.98 },
-  "education": { fx: 0.246, fy: 0.826, scale: 3.2 },
+  "education": { fx: 0.29, fy: 0.781, scale: 2.49 },
 };

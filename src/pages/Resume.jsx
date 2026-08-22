@@ -11,7 +11,7 @@ export default function Resume() {
           Resume
         </Reveal>
         <Reveal as="p" className="lede" stagger={2}>
-          Mechanical / Aerospace engineering student at RPI with hands-on manufacturing and CAD experience —
+          A Mechanical / Aerospace engineering graduate of RPI with hands-on manufacturing and CAD experience,
           looking for engineering roles in design, DFM, and additive manufacturing.
         </Reveal>
       </section>
@@ -20,7 +20,7 @@ export default function Resume() {
         <Reveal as="ul" className="specs">
           <li>
             <span className="k">Education</span>
-            <span className="v">B.S. Mechanical Dual Aerospace Engineering — RPI, expected May 2026</span>
+            <span className="v">B.S. Mechanical Dual Aerospace Engineering, RPI, May 2026</span>
           </li>
           <li>
             <span className="k">Skills</span>
@@ -32,7 +32,7 @@ export default function Resume() {
           </li>
           <li>
             <span className="k">Download</span>
-            <span className="v">Available on request — see Contact for email</span>
+            <span className="v">Available on request, see Contact for email</span>
           </li>
         </Reveal>
       </section>

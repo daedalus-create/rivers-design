@@ -36,7 +36,7 @@ export default function Contact() {
           </li>
           <li>
             <span className="k">Elsewhere</span>
-            <span className="v">Placeholder — LinkedIn / GitHub / Printables</span>
+            <span className="v">Placeholder: LinkedIn / GitHub / Printables</span>
           </li>
         </Reveal>
       </section>

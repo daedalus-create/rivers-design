@@ -854,6 +854,11 @@ a.pill:hover .pill__inner { color: var(--accent); }
   .specs .k { padding-top: 0; }
 }
 
+.edu__highlights-label {
+  margin-top: var(--space-6);
+  color: var(--ink-a65);
+}
+
 /* Section titles inside pages (Completed:, Planned:, Resume:) */
 .section-title {
   font-family: var(--font-display);
@@ -976,6 +981,21 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .about-split__name { margin-bottom: var(--space-5); }
 .about-split__body { margin-top: var(--space-5); max-width: 62ch; }
 .about-split .specs { margin-top: var(--space-6); }
+/* The Idea / The Dream used to be their own section below the about. They
+   belong to the same introduction, so they sit inside it, separated by a
+   rule rather than by a section break. */
+.about-creed {
+  margin-left: var(--indent);
+  margin-top: clamp(var(--space-8), 7vh, var(--space-10));
+  border-top: 1px solid var(--line-hair);
+  padding-top: var(--space-7);
+}
+/* .statement carries its own indent for the About page; here the wrapper
+   already provides it, so don't indent twice */
+.about-creed .statement { margin-left: 0; }
+@media (max-width: 860px) {
+  .about-creed { margin-left: 0; }
+}
 
 @media (max-width: 860px) {
   .about-split { grid-template-columns: 1fr; margin-left: 0; }

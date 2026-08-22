@@ -104,7 +104,7 @@ export default function ModelViewer({ kind = "concept", tag = "3D Placeholder / 
         <span className="model-frame__hint meta">Drag to orbit</span>
         <iframe
           src="/assets/hephaestus-forge-animation.html"
-          title="G.A.S. [Core XY System] — assembly animation"
+          title="G.A.S. [Core XY System] assembly animation"
           loading="lazy"
         />
       </div>

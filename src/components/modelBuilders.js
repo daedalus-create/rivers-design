@@ -613,6 +613,38 @@ function buildCampus() {
   return g;
 }
 
+// Waynflete — secondary school: a gabled schoolhouse, deliberately
+// simpler and smaller than the RPI facade so the two schools do not read
+// as the same building
+function buildSchoolhouse() {
+  const g = new THREE.Group();
+  g.add(edges(new THREE.BoxGeometry(1.7, 0.85, 1.0), INK, 0.8));
+
+  // gable ends plus the ridge between them
+  for (const z of [0.5, -0.5]) {
+    g.add(poly([[-0.85, 0.42, z], [0, 0.92, z], [0.85, 0.42, z]], ACCENT, 0.9));
+  }
+  g.add(poly([[0, 0.92, 0.5], [0, 0.92, -0.5]], ACCENT, 0.7));
+  for (const s of [1, -1]) {
+    g.add(poly([[s * 0.85, 0.42, 0.5], [s * 0.85, 0.42, -0.5]], INK, 0.5));
+  }
+
+  // door, and a row of windows either side of it
+  const door = edges(new THREE.BoxGeometry(0.24, 0.4, 0.03), ACCENT, 0.8);
+  door.position.set(0, -0.22, 0.51);
+  g.add(door);
+  for (const x of [-0.56, -0.28, 0.28, 0.56]) {
+    const win = edges(new THREE.BoxGeometry(0.16, 0.2, 0.03), INK, 0.55);
+    win.position.set(x, 0.02, 0.51);
+    g.add(win);
+  }
+
+  const step = edges(new THREE.BoxGeometry(0.5, 0.06, 0.2), INK, 0.45);
+  step.position.set(0, -0.45, 0.6);
+  g.add(step);
+  return g;
+}
+
 // Fallback for a new entry that hasn't been given its own shape yet.
 export function buildConcept() {
   const g = new THREE.Group();
@@ -645,6 +677,7 @@ export const BUILDERS = {
   weldment: buildWeldment,
   desk: buildDesk,
   campus: buildCampus,
+  schoolhouse: buildSchoolhouse,
   // fallback
   concept: buildConcept,
 };

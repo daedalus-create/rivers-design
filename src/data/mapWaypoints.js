@@ -36,6 +36,7 @@ const NAV = [
   { node: "education", href: "/experience/education", cluster: "experience", label: "Education" },
   { node: "rpi", href: "/experience/rpi", cluster: "education", label: "RPI" },
   { node: "classes", href: "/experience/classes", cluster: "education", label: "Classes" },
+  { node: "waynflete", href: "/experience/waynflete", cluster: "education", label: "Waynflete" },
   { node: "projects", href: "/projects", cluster: "hub", label: "Projects" },
   { node: "completed", href: "/projects/completed", cluster: "projects", label: "Completed" },
   { node: "pyro-mk7", href: "/projects/pyro-mk7", cluster: "completed", label: "Pyro MK:7" },
