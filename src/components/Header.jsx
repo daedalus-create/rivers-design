@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import MapMenu from "./MapMenu";
+import MenuTree from "./MenuTree";
 
 function formatDate(d) {
   const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -67,7 +67,7 @@ export default function Header() {
         </div>
       </div>
 
-      <MapMenu open={open} onClose={() => setOpen(false)} />
+      <MenuTree open={open} onClose={() => setOpen(false)} />
     </header>
   );
 }

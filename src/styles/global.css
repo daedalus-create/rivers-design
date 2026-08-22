@@ -914,11 +914,9 @@ a.pill:hover .pill__inner { color: var(--accent); }
    short intro, then a two-column about pairing a portrait with a lead
    paragraph and a label/value fact list. Structure only — all copy here
    is Deon's own. */
-.intro {
-  padding-top: clamp(var(--space-8), 9vh, var(--space-10));
-  padding-bottom: clamp(var(--space-7), 7vh, var(--space-9));
-  padding-left: calc(var(--page-margin) + var(--indent));
-}
+/* Spacing comes from .page-hero, which every other page's header uses,
+   so the opening block sits in exactly the same slot as the rest of the
+   site. Only the name's treatment is local. */
 .intro__eyebrow { display: block; max-width: 46ch; }
 .intro__name {
   font-family: var(--font-display);
@@ -927,7 +925,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
   letter-spacing: var(--ls-display);
   text-transform: uppercase;
   font-weight: 400;
-  margin-top: var(--space-5);
+  margin-top: var(--space-4);
 }
 /* second line of the name sits under the first as its own block, so the
    two read as one stacked wordmark rather than a wrapped heading */
@@ -981,26 +979,132 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .about-split__name { margin-bottom: var(--space-5); }
 .about-split__body { margin-top: var(--space-5); max-width: 62ch; }
 .about-split .specs { margin-top: var(--space-6); }
-/* The Idea / The Dream used to be their own section below the about. They
-   belong to the same introduction, so they sit inside it, separated by a
-   rule rather than by a section break. */
-.about-creed {
-  margin-left: var(--indent);
-  margin-top: clamp(var(--space-8), 7vh, var(--space-10));
-  border-top: 1px solid var(--line-hair);
-  padding-top: var(--space-7);
-}
-/* .statement carries its own indent for the About page; here the wrapper
-   already provides it, so don't indent twice */
-.about-creed .statement { margin-left: 0; }
-@media (max-width: 860px) {
-  .about-creed { margin-left: 0; }
-}
 
 @media (max-width: 860px) {
   .about-split { grid-template-columns: 1fr; margin-left: 0; }
-  .intro { padding-left: var(--page-margin); }
   .portrait { max-width: 340px; }
+}
+
+/* ---------- Branching site menu ----------
+   Three sections in a row; clicking one expands its pages to the right on
+   curved connectors, and each of those expands again down to individual
+   pages. A node is [label][children] in a flex row with children stacked
+   and centred against the parent, so the tree grows rightward and the
+   whole thing stays centred without absolute positioning. Connectors are
+   measured and drawn by MenuTree.jsx, which flexbox cannot do. */
+.menu-tree {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.menu-tree__field {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: var(--space-8) var(--page-margin);
+}
+.menu-tree__roots {
+  display: flex;
+  align-items: center;
+  gap: clamp(var(--space-7), 7vw, 140px);
+  margin: auto;
+}
+
+.tnode {
+  position: relative;
+  display: flex;
+  align-items: center;
+  transition: opacity var(--dur-2, 240ms) var(--ease-out);
+}
+.tnode.is-dim { opacity: 0.3; }
+.tnode.is-dim:hover { opacity: 0.55; }
+
+.tnode__label {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-size: var(--fs-meta);
+  letter-spacing: var(--ls-nav);
+  color: var(--ink-a80);
+  padding: 6px 2px;
+  transition: color var(--t-hover);
+}
+.tnode__label:hover,
+.tnode__label:focus-visible { color: var(--accent); }
+.tnode__label.is-current { color: var(--accent); }
+
+/* The dot is the connector's landing point, so it only shows where a wire
+   actually arrives — the three root sections have nothing feeding them. */
+.tnode__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+  flex: none;
+}
+.tnode__kid > .tnode > .tnode__label .tnode__dot { opacity: 0.9; }
+
+.tnode__kids {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-left: var(--gutter, 46px);
+}
+.tnode__kid { display: flex; align-items: center; }
+
+.tnode__wires {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 0;
+}
+.tnode__wires path {
+  fill: none;
+  stroke: var(--ink-a45);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.tnode.is-dim .tnode__wires path { stroke: var(--ink-a25); }
+
+.menu-tree__back {
+  position: absolute;
+  left: var(--page-margin);
+  bottom: var(--space-7);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--ink-a65);
+  font-family: var(--font-display);
+  font-size: var(--fs-meta);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  transition: color var(--t-hover);
+}
+.menu-tree__back:hover { color: var(--accent); }
+
+@media (max-width: 720px) {
+  .menu-tree__roots {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-5);
+  }
+  .menu-tree__field { justify-content: flex-start; }
+  /* Tighter branches so a deep path needs less sideways scrolling on a
+     narrow screen. The field scrolls rather than the page. */
+  .tnode__kids { gap: var(--space-2); margin-left: 26px; }
 }
 
 /* ---------- Footer ---------- */

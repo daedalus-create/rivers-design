@@ -383,10 +383,11 @@ LINKS = [
     ("rpi", "classes", "s", "education"),
 ]
 
-# Labels and clusters are hand-authored in mapWaypoints.js — read them
-# from there so there is one source of truth. Labels drive the collision
-# math; clusters decide which zoom scale a pair is judged at.
-WAYPOINTS_JS = os.path.join(ROOT, "src", "data", "mapWaypoints.js")
+# Labels and clusters are hand-authored in siteTree.js, which the
+# branching menu reads too — one source of truth for what pages exist.
+# Labels drive the collision math; clusters decide which zoom scale a
+# pair is judged at.
+WAYPOINTS_JS = os.path.join(ROOT, "src", "data", "siteTree.js")
 LABEL_OF, CLUSTER_OF = {}, {}
 _nav_src = io.open(WAYPOINTS_JS, encoding="utf-8").read()
 for _m in re.finditer(

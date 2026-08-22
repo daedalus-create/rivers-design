@@ -11,7 +11,7 @@ export default function Home() {
       {/* Opening two sections follow the format of merttureli.com's own
           opening pair — the site's sizing/spacing system is already
           modelled on it. Structure borrowed, copy is Deon's. */}
-      <section className="intro" aria-label="Introduction">
+      <section className="page-hero intro" aria-label="Introduction">
         <Reveal as="p" className="meta meta--wide intro__eyebrow">
           Mechanical / Aerospace engineering, Troy, NY
         </Reveal>
@@ -76,33 +76,6 @@ export default function Home() {
                 <span className="v">Placeholder: the role or work you are after</span>
               </li>
             </ul>
-          </Reveal>
-        </div>
-
-        <div className="about-creed">
-          <Reveal className="statement">
-            <h2 className="statement__label">
-              The Idea<span className="colon">:</span>
-            </h2>
-            <p className="statement__text">
-              Engineer for function, design for form:
-              <br />
-              Focus on DFM, keep it simple,
-              <br />
-              but always leave room for soul.
-            </p>
-          </Reveal>
-          <Reveal className="statement" stagger={1}>
-            <h2 className="statement__label">
-              The Dream<span className="colon">:</span>
-            </h2>
-            <p className="statement__text">
-              Utility over profit, objects that matter:
-              <br />
-              A cleaner more sustainable tomorrow
-              <br />
-              where life isn&rsquo;t just getting through today.
-            </p>
           </Reveal>
         </div>
       </section>
