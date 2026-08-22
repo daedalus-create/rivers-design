@@ -9,7 +9,8 @@
     "postbuild": "node -e \"require('fs').copyFileSync('dist/index.html','dist/404.html')\"",
     "lint": "oxlint",
     "preview": "vite preview",
-    "generate-map": "python tools/generate-map.py"
+    "generate-map": "python tools/generate-map.py",
+    "check-models": "node tools/check-models.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",

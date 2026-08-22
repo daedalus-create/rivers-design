@@ -11,7 +11,11 @@
 //    long sentences in all-caps are unreadable — aim for a label, not
 //    a paragraph.
 //
-// `model` must be one of: engine, panel, drone, concept.
+// `model` names a builder in ModelViewer.jsx — one shape per subject, so
+// no two projects show the same placeholder. Add a builder there before
+// referencing a new name; an unknown one silently falls back to the
+// generic "concept" wireframe.
+//
 // "forge" is hardwired to the G.A.S. assembly animation (the iframe in
 // ModelViewer.jsx) rather than a wireframe — don't reuse it.
 
@@ -52,7 +56,7 @@ export const projects = [
     num: "03",
     title: "Orbital Maneuver Solver",
     sub: "A Python tool for exploring orbital-maneuver dynamics",
-    model: "concept",
+    model: "orbit",
     specs: [
       { k: "Language", v: "Python" },
       { k: "Focus", v: "Orbital dynamics / maneuver formulas" },
@@ -67,7 +71,7 @@ export const projects = [
     num: "01",
     title: "Integrated Toolhead",
     sub: "A 3D printer toolhead designed as one assembly instead of a stack of parts",
-    model: "engine",
+    model: "toolhead",
     specs: [
       { k: "Stage", v: "Detail design — drawings and preliminary BOM complete" },
       { k: "Problem", v: "Toolheads fail in predictable places — ground filament, thermal limits, cable fatigue" },
@@ -81,7 +85,7 @@ export const projects = [
     num: "02",
     title: "Blended Body Aircraft",
     sub: "Resolving the engine-placement compromise that has held back blended wing body designs",
-    model: "drone",
+    model: "bwb",
     specs: [
       { k: "Stage", v: "Concept finalized — configuration locked, test plan drafted" },
       { k: "Problem", v: "A blended body has nowhere clean to hang an engine" },
@@ -95,7 +99,7 @@ export const projects = [
     num: "03",
     title: "CM5 Cluster Compute Platform",
     sub: "A dense compute cluster for evolutionary computation and neural network work",
-    model: "panel",
+    model: "carrier",
     specs: [
       { k: "Stage", v: "Carrier board design — second revision" },
       { k: "Problem", v: "No dense Compute Module 5 carrier exists on the market" },
@@ -111,7 +115,7 @@ export const projects = [
     num: "01",
     title: "High-Speed Motor",
     sub: "A motor built to stay stable at speeds that shake conventional designs apart",
-    model: "engine",
+    model: "ringmotor",
     specs: [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "Center-supported rotors turn any eccentricity into vibration at speed" },
@@ -125,7 +129,7 @@ export const projects = [
     num: "02",
     title: "Multi-Stage Electric Thruster",
     sub: "Extracting more thrust from a given duct diameter than a single-stage fan can",
-    model: "engine",
+    model: "thruster",
     specs: [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "One blade row can only do so much work before the flow separates" },
@@ -139,7 +143,7 @@ export const projects = [
     num: "03",
     title: "Precision Linear Stage",
     sub: "Precision that holds without a feedback loop correcting it",
-    model: "engine",
+    model: "linearstage",
     specs: [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "Every conventional linear drive has backlash to correct for" },
@@ -153,7 +157,7 @@ export const projects = [
     num: "04",
     title: "Omnidirectional Robot Base",
     sub: "An omnidirectional robot base that cannot slip",
-    model: "drone",
+    model: "studbase",
     specs: [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "Mobile bases trade away precision, load capacity, or direction" },
@@ -167,7 +171,7 @@ export const projects = [
     num: "05",
     title: "High-Temperature Bearing",
     sub: "A bearing for temperatures and pressures that destroy conventional ones",
-    model: "concept",
+    model: "bearing",
     specs: [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "Steel bearings are limited by their lubricant; ceramics are costly and brittle" },
@@ -181,7 +185,7 @@ export const projects = [
     num: "06",
     title: "Large-Diameter Air Bearing",
     sub: "Air-film support for a geometry conventional bearings do not fit",
-    model: "concept",
+    model: "airbearing",
     specs: [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "Air bearings are built for shafts and flat faces, not this geometry" },
@@ -195,7 +199,7 @@ export const projects = [
     num: "07",
     title: "Unpowered Magnetic Bearing",
     sub: "Magnetic support with no power, no sensors, and no control loop",
-    model: "concept",
+    model: "magbearing",
     specs: [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "Commercial magnetic bearings all need power and a control loop" },
@@ -209,7 +213,7 @@ export const projects = [
     num: "08",
     title: "Modular Plant Exoskeleton",
     sub: "A self-watering enclosure that treats a potted plant as a design object",
-    model: "concept",
+    model: "planter",
     specs: [
       { k: "Stage", v: "Concept" },
       { k: "Problem", v: "Plant products are functional and ugly, or decorative and useless" },
@@ -223,7 +227,7 @@ export const projects = [
     num: "09",
     title: "Envisage",
     sub: "A procedurally generated galaxy shared by three games that look unrelated",
-    model: "concept",
+    model: "galaxy",
     specs: [
       { k: "Stage", v: "Design document — 17 module specs drafted" },
       { k: "Concept", v: "An RPG, a sandbox, and a simulation, sold apart, secretly one universe" },

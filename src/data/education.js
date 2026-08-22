@@ -9,7 +9,7 @@ export const education = [
     org: "Rensselaer Polytechnic Institute",
     title: "Rensselaer Polytechnic Institute:",
     sub: "B.S. Mechanical Dual Aerospace Engineering — Troy, NY",
-    model: "concept",
+    model: "campus",
     desc: "Bachelor of Science in Mechanical Dual Aerospace Engineering at Rensselaer Polytechnic Institute, expected May 2026.",
     body: [
       "Studying Mechanical Dual Aerospace Engineering at RPI since August 2022, with an expected graduation of May 2026.",

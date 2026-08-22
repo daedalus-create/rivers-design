@@ -28,7 +28,7 @@ export const roles = [
     org: "Dreki Systems",
     title: "Dreki Systems:",
     sub: "Junior Design Engineer — Tysons Corner, VA",
-    model: "concept",
+    model: "drone",
     desc: "Junior Design Engineer at Dreki Systems in 2025, establishing manufacturing systems for rapid prototyping and designing components in CAD.",
     body: [
       "As a Junior Design Engineer in Tysons Corner, VA (May–August 2025), I established manufacturing systems to support rapid prototyping and designed components in CAD across a range of engineering projects, working alongside senior engineers to develop new design solutions.",
@@ -45,7 +45,7 @@ export const roles = [
     org: "Piasecki Steel",
     title: "Piasecki Steel:",
     sub: "Engineering Shop Intern — Castleton, NY",
-    model: "concept",
+    model: "weldment",
     desc: "Engineering Shop Intern at Piasecki Steel in 2024, developing machining templates and helping fabricate safety equipment for bridge-repair work.",
     body: [
       "As an Engineering Shop Intern in Castleton, NY (June–August 2024), I developed templates from engineering drawings to improve machining accuracy on steel components, and helped fabricate a ladder and ladder cage used to improve worker safety during bridge repairs across New York and the surrounding area.",
@@ -62,7 +62,7 @@ export const roles = [
     org: "Student Living & Learning, RPI",
     title: "Student Living & Learning:",
     sub: "Work Study — Troy, NY",
-    model: "concept",
+    model: "desk",
     desc: "Supporting RPI's Assistant Deans with day-to-day operations and fielding parent questions about students' time on campus.",
     body: [
       "Since September 2024, I've worked as a Work Study student with RPI's Office of Student Living and Learning in Troy, NY, aiding the Assistant Deans with day-to-day tasks that keep the office running and help ensure student success.",

@@ -23,7 +23,8 @@ src/
   App.jsx                 Route table
   styles/global.css       Design tokens + all styling
   data/                   mapWaypoints.js (nav), mapGeometry.js + mapTrails.js
-                          (both generated), projects.js, roles.js
+                          (both generated), projects.js, roles.js,
+                          education.js, classes.js
   hooks/useReveal.js       Scroll-reveal hook
   components/
     Layout.jsx             Header + <Outlet/> + Footer, scroll-to-top/hash on route change
@@ -31,11 +32,13 @@ src/
     MapMenu.jsx              Interactive site-map overlay (click-to-zoom navigation)
     Divider.jsx              Page-break component (icon marks + wordmark + pill link)
     Footer.jsx
-    ModelViewer.jsx          three.js placeholder viewer
+    ModelViewer.jsx          three.js placeholder viewer (render loop only)
+    modelBuilders.js         one wireframe builder per project/role/school
     LazyModelViewer.jsx      code-split wrapper around ModelViewer (three.js is ~500KB)
   pages/                   One file per route (see below)
 tools/
   generate-map.py          Regenerates contours.svg, mapTrails.js, mapGeometry.js
+  check-models.mjs         Smoke-tests every 3D placeholder builder
 legacy-static/             Pre-React version of the site, kept for reference (not built/served)
 ```
 
@@ -85,9 +88,35 @@ further away and constrains the layout.
 
 ## Swapping in real 3D models
 
-Each placeholder is a `<ModelViewer kind="…" />` (`engine`, `forge`,
-`panel`, `drone`, `concept`) rendering a wireframe builder in
-`src/components/ModelViewer.jsx`. When you have real CAD exports:
+Each placeholder is a `<ModelViewer kind="…" />` whose `kind` names a
+wireframe builder in `src/components/modelBuilders.js`. There is one
+builder per subject rather than a handful shared around — a generic shape
+on a dozen pages tells a reader nothing and makes two different projects
+look like the same project. `concept` survives only as the fallback for a
+new entry that has not been given its own shape yet, and an unknown kind
+falls back to it silently.
+
+Builders construct three.js geometry and never touch a renderer, so they
+can be checked without a browser:
+
+```bash
+npm run check-models
+```
+
+That builds every shape and fails on the things a page load will not
+catch: an empty group, a non-finite position, a model that outgrows the
+camera framing, an animation pointing at an object that was never added,
+or an entry in `projects.js` / `roles.js` / `education.js` naming a
+builder that does not exist. It also reports any kind shared by more than
+one entry.
+
+Movement is declarative — a builder returns `userData.anims`, a list of
+`spin` / `shuttle` / `orbit` descriptors, and the render loop in
+`ModelViewer.jsx` applies them. That is why the thruster can turn three
+fan stages at three speeds and the magnetic bearing can spin and float at
+once.
+
+When you have real CAD exports:
 
 1. Export as `.glb`.
 2. Drop the file in `public/assets/models/`.
@@ -122,6 +151,10 @@ at that cluster's zoom scale. Results land in `src/data/mapGeometry.js`,
 which `mapWaypoints.js` imports, so the dots and the trails bent to
 those same coordinates cannot drift apart.
 
-The palette is grey and white for terrain, with yellow reserved for the
-navigation layer (trails and waypoint dots) so the one saturated hue on
-the map always means "you can click this".
+The palette is grey ground rising to white summits, with yellow drawing
+the index contours — every 5th line, the one a real sheet emphasizes — so
+the accent threads the whole map as line work rather than as landmass.
+Trails and rivers are both dark and are told apart the way a printed
+sheet does it rather than by hue: water is a solid heavy double line,
+trails are dashed. Waypoint dots stay accent yellow, so on the map a
+yellow dot is still the thing you click.
