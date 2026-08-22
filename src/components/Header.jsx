@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import MapMenu from "./MapMenu";
+import MenuTree from "./MenuTree";
 
 function formatDate(d) {
   const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -22,7 +22,7 @@ export default function Header() {
     <header className="site-header wrap">
       {/* Moving group — fixed to the viewport, stays put while the page scrolls beneath it */}
       <div className="site-header__fixed">
-        <Link className="logo" to="/" aria-label="Rivers Design — home">
+        <Link className="logo" to="/" aria-label="Rivers Design, home">
           <img src="/assets/logo.svg" alt="Rivers Design" />
         </Link>
 
@@ -67,7 +67,7 @@ export default function Header() {
         </div>
       </div>
 
-      <MapMenu open={open} onClose={() => setOpen(false)} />
+      <MenuTree open={open} onClose={() => setOpen(false)} />
     </header>
   );
 }

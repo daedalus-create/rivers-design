@@ -7,12 +7,17 @@
 //    mechanism that solves it. These are unpublished designs and this
 //    site is public, so specifics (geometry, ratios, materials,
 //    control schemes) stay in the private archive rather than here.
-// 2. Keep spec values short. `.specs .v` is uppercased in CSS, and
-//    long sentences in all-caps are unreadable — aim for a label, not
-//    a paragraph.
+// 2. Keep spec values reasonably short. They sit in a two-column row
+//    beside their key, so a value that runs long reads as a paragraph
+//    wedged into a table.
 //
-// `model` must be one of: engine, panel, drone, concept.
-// "forge" is hardwired to the Hephaestus Forge animation — don't reuse it.
+// `model` names a builder in modelBuilders.js — one shape per subject, so
+// no two projects show the same placeholder. Add a builder there before
+// referencing a new name; an unknown one silently falls back to the
+// generic "concept" wireframe. `npm run check-models` catches typos.
+//
+// "forge" is hardwired to the G.A.S. assembly animation (the iframe in
+// ModelViewer.jsx) rather than a wireframe — don't reuse it.
 
 export const projects = [
   {
@@ -23,24 +28,26 @@ export const projects = [
     sub: "A jet engine designed for additive manufacturing",
     model: "engine",
     specs: [
-      { k: "Status", v: "Design concept — CAD complete" },
+      { k: "Status", v: "Design concept, CAD complete" },
       { k: "Process", v: "Designed to be manufactured purely with additive techniques" },
       { k: "Focus", v: "Uses gas expansion of incoming fuel to aid airflow through the engine" },
-      { k: "Model", v: "CAD export coming soon" },
     ],
   },
   {
+    // Slug stays "hephaestus-forge" on purpose: the page is already
+    // live at /projects/hephaestus-forge, and changing it would break
+    // that URL. It is an internal id, not shown anywhere.
     slug: "hephaestus-forge",
     status: "completed",
     num: "02",
-    title: "Hephaestus Forge",
+    title: "G.A.S. [Core XY System]",
     sub: "An automated additive manufacturing assembly line",
     model: "forge",
     specs: [
-      { k: "Status", v: "Placeholder — write-up in progress" },
+      { k: "Status", v: "Placeholder: write-up in progress" },
+      { k: "Accuracy", v: "0.2 mm dimensional" },
       { k: "Scope", v: "Automation / material handling" },
       { k: "Focus", v: "Lights-out additive production" },
-      { k: "Model", v: "CAD export coming soon" },
     ],
   },
   {
@@ -49,7 +56,7 @@ export const projects = [
     num: "03",
     title: "Orbital Maneuver Solver",
     sub: "A Python tool for exploring orbital-maneuver dynamics",
-    model: "concept",
+    model: "orbit",
     specs: [
       { k: "Language", v: "Python" },
       { k: "Focus", v: "Orbital dynamics / maneuver formulas" },
@@ -64,10 +71,10 @@ export const projects = [
     num: "01",
     title: "Integrated Toolhead",
     sub: "A 3D printer toolhead designed as one assembly instead of a stack of parts",
-    model: "engine",
+    model: "toolhead",
     specs: [
-      { k: "Stage", v: "Detail design — drawings and preliminary BOM complete" },
-      { k: "Problem", v: "Toolheads fail in predictable places — ground filament, thermal limits, cable fatigue" },
+      { k: "Stage", v: "Detail design, drawings and preliminary BOM complete" },
+      { k: "Problem", v: "Toolheads fail in predictable places: ground filament, thermal limits, cable fatigue" },
       { k: "Approach", v: "One integrated design instead of patching each failure mode" },
       { k: "Next", v: "Prototype build and validation" },
     ],
@@ -78,9 +85,9 @@ export const projects = [
     num: "02",
     title: "Blended Body Aircraft",
     sub: "Resolving the engine-placement compromise that has held back blended wing body designs",
-    model: "drone",
+    model: "bwb",
     specs: [
-      { k: "Stage", v: "Concept finalized — configuration locked, test plan drafted" },
+      { k: "Stage", v: "Concept finalized, configuration locked, test plan drafted" },
       { k: "Problem", v: "A blended body has nowhere clean to hang an engine" },
       { k: "Approach", v: "Reshape the airframe so engines mount conventionally" },
       { k: "Open threads", v: "Low-speed yaw control, systems integration" },
@@ -92,11 +99,11 @@ export const projects = [
     num: "03",
     title: "CM5 Cluster Compute Platform",
     sub: "A dense compute cluster for evolutionary computation and neural network work",
-    model: "panel",
+    model: "carrier",
     specs: [
-      { k: "Stage", v: "Carrier board design — second revision" },
+      { k: "Stage", v: "Carrier board design, second revision" },
       { k: "Problem", v: "No dense Compute Module 5 carrier exists on the market" },
-      { k: "Why", v: "Genetic algorithms are embarrassingly parallel — many small nodes suit them" },
+      { k: "Why", v: "Genetic algorithms are embarrassingly parallel, so many small nodes suit them" },
       { k: "Next", v: "Fabrication and single-board bring-up" },
     ],
   },
@@ -108,7 +115,7 @@ export const projects = [
     num: "01",
     title: "High-Speed Motor",
     sub: "A motor built to stay stable at speeds that shake conventional designs apart",
-    model: "engine",
+    model: "ringmotor",
     specs: [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "Center-supported rotors turn any eccentricity into vibration at speed" },
@@ -122,12 +129,12 @@ export const projects = [
     num: "02",
     title: "Multi-Stage Electric Thruster",
     sub: "Extracting more thrust from a given duct diameter than a single-stage fan can",
-    model: "engine",
+    model: "thruster",
     specs: [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "One blade row can only do so much work before the flow separates" },
       { k: "Approach", v: "Spread the pressure rise across matched stages" },
-      { k: "Depends on", v: "The motor and bearing work — one link in a motor-to-airframe chain" },
+      { k: "Depends on", v: "The motor and bearing work, one link in a motor-to-airframe chain" },
     ],
   },
   {
@@ -136,7 +143,7 @@ export const projects = [
     num: "03",
     title: "Precision Linear Stage",
     sub: "Precision that holds without a feedback loop correcting it",
-    model: "engine",
+    model: "linearstage",
     specs: [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "Every conventional linear drive has backlash to correct for" },
@@ -150,7 +157,7 @@ export const projects = [
     num: "04",
     title: "Omnidirectional Robot Base",
     sub: "An omnidirectional robot base that cannot slip",
-    model: "drone",
+    model: "studbase",
     specs: [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "Mobile bases trade away precision, load capacity, or direction" },
@@ -164,7 +171,7 @@ export const projects = [
     num: "05",
     title: "High-Temperature Bearing",
     sub: "A bearing for temperatures and pressures that destroy conventional ones",
-    model: "concept",
+    model: "bearing",
     specs: [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "Steel bearings are limited by their lubricant; ceramics are costly and brittle" },
@@ -178,69 +185,40 @@ export const projects = [
     num: "06",
     title: "Large-Diameter Air Bearing",
     sub: "Air-film support for a geometry conventional bearings do not fit",
-    model: "concept",
+    model: "airbearing",
     specs: [
       { k: "Stage", v: "Concept / research" },
       { k: "Problem", v: "Air bearings are built for shafts and flat faces, not this geometry" },
       { k: "Goal", v: "Uniform support pressure across the whole bearing face" },
-      { k: "Role", v: "One of three bearing candidates, each a different regime" },
-    ],
-  },
-  {
-    slug: "unpowered-magnetic-bearing",
-    status: "planned",
-    num: "07",
-    title: "Unpowered Magnetic Bearing",
-    sub: "Magnetic support with no power, no sensors, and no control loop",
-    model: "concept",
-    specs: [
-      { k: "Stage", v: "Concept / research" },
-      { k: "Problem", v: "Commercial magnetic bearings all need power and a control loop" },
-      { k: "Goal", v: "Contact-free support that centers itself, no electronics" },
-      { k: "Challenge", v: "Scaling the approach up from compact rotors" },
+      { k: "Role", v: "A bearing option for the ring-drive motor" },
     ],
   },
   {
     slug: "plant-exoskeleton",
     status: "planned",
-    num: "08",
+    num: "07",
     title: "Modular Plant Exoskeleton",
     sub: "A self-watering enclosure that treats a potted plant as a design object",
-    model: "concept",
+    model: "planter",
     specs: [
       { k: "Stage", v: "Concept" },
       { k: "Problem", v: "Plant products are functional and ugly, or decorative and useless" },
-      { k: "Goal", v: "Not a growing station — an object with presence" },
+      { k: "Goal", v: "Not a growing station, but an object with presence" },
       { k: "Scope", v: "Modular, 3D printed, indoor or full weather" },
     ],
   },
   {
     slug: "envisage",
     status: "planned",
-    num: "09",
+    num: "08",
     title: "Envisage",
     sub: "A procedurally generated galaxy shared by three games that look unrelated",
-    model: "concept",
+    model: "galaxy",
     specs: [
-      { k: "Stage", v: "Design document — 17 module specs drafted" },
+      { k: "Stage", v: "Design document, 17 module specs drafted" },
       { k: "Concept", v: "An RPG, a sandbox, and a simulation, sold apart, secretly one universe" },
       { k: "Generation", v: "Stars, life, languages, and histories built before anyone logs in" },
       { k: "Philosophy", v: "Geometry and physics over hand-authoring" },
-    ],
-  },
-  {
-    slug: "land-trust-city",
-    status: "planned",
-    num: "10",
-    title: "Municipal Land Trust City",
-    sub: "A city-scale model where the city, not private capital, controls land and density",
-    model: "panel",
-    specs: [
-      { k: "Stage", v: "Concept / research" },
-      { k: "Problem", v: "Private rent compounds on top of business tax, squeezing small businesses" },
-      { k: "Model", v: "City-owned commercial land, fixed rent in place of business tax" },
-      { k: "Constant", v: "Green and walkable as a standing priority" },
-      { k: "Open question", v: "Legal feasibility of the ownership model — the largest risk" },
     ],
   },
 ];
@@ -249,3 +227,11 @@ export const completedProjects = projects.filter((p) => p.status === "completed"
 export const inProgressProjects = projects.filter((p) => p.status === "in-progress");
 export const plannedProjects = projects.filter((p) => p.status === "planned");
 export const getProject = (slug) => projects.find((p) => p.slug === slug);
+
+// The Projects hub previews the first two entries of each section. The
+// rule lives here rather than in the page so "highlighted" means the same
+// thing wherever it is used, and so reordering a section automatically
+// reorders what gets highlighted.
+export const HIGHLIGHT_COUNT = 2;
+export const highlightsFor = (status) =>
+  projects.filter((p) => p.status === status).slice(0, HIGHLIGHT_COUNT);

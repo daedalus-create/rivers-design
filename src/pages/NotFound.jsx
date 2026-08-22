@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
+import Letters from "../components/Letters";
 
 export default function NotFound() {
   return (
@@ -13,7 +14,7 @@ export default function NotFound() {
       <Reveal as="p" className="lede" stagger={2}>
         That page doesn&rsquo;t exist.{" "}
         <Link className="link-arrow" to="/" style={{ marginTop: 0, display: "inline" }}>
-          Back to home <span className="arr">&rarr;</span>
+          <Letters text="Back to home" /> <span className="arr">&rarr;</span>
         </Link>
       </Reveal>
     </section>

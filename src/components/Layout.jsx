@@ -19,6 +19,9 @@ export default function Layout() {
 
   return (
     <>
+      {/* Contour drawing in the side margins. Decorative only, so it is
+          hidden from assistive tech and takes no pointer events. */}
+      <div className="page-backdrop" aria-hidden="true" />
       <Header />
       <main>
         <Outlet />

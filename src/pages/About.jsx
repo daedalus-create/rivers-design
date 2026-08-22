@@ -12,7 +12,7 @@ export default function About() {
           About
         </Reveal>
         <Reveal as="p" className="lede" stagger={2}>
-          Deon Rivers — a Mechanical Dual Aerospace Engineering student at Rensselaer Polytechnic Institute,
+          Deon Rivers, a Mechanical Dual Aerospace Engineering graduate of Rensselaer Polytechnic Institute,
           building toward a career in design, DFM, and additive manufacturing.
         </Reveal>
       </section>
@@ -23,10 +23,10 @@ export default function About() {
             Who I Am<span className="colon">:</span>
           </h2>
           <p className="statement__text">
-            Mechanical / Aerospace engineering student at RPI, expected to graduate May 2026. Hands-on experience
+            Mechanical / Aerospace engineering graduate of RPI, class of May 2026. Hands-on experience
             spans CAD design, machining, and rapid-prototyping work at Dreki Systems, alongside side projects like
             an additively-manufactured jet engine and a Python orbital-maneuver solver. Room Manager at RPI&rsquo;s
-            student makerspace, The Forge, since 2022 — helping other students prototype and design for
+            student makerspace, The Forge, since 2022, helping other students prototype and design for
             manufacturability.
           </p>
         </Reveal>
@@ -67,8 +67,8 @@ export default function About() {
             <span className="v">Siemens NX / Fusion 360 / Autodesk Inventor / Mastercam / MATLAB</span>
           </li>
           <li>
-            <span className="k">Now</span>
-            <span className="v">Mechanical / Aerospace Engineering, RPI — Class of 2026</span>
+            <span className="k">Degree</span>
+            <span className="v">B.S. Mechanical Dual Aerospace Engineering, RPI, 2026</span>
           </li>
         </Reveal>
       </section>

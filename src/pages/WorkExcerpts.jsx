@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
 import ModelViewer from "../components/LazyModelViewer";
 import { roles } from "../data/roles";
+import Letters from "../components/Letters";
 
 export default function WorkExcerpts() {
   return (
@@ -21,7 +22,7 @@ export default function WorkExcerpts() {
             <div className="project__head">
               <span className="project__num">{r.num}</span>
               <h2 className="project__title">
-                <Link to={`/experience/${r.slug}`}>{r.org}</Link>
+                <Link to={`/experience/${r.slug}`}><Letters text={r.org} /></Link>
               </h2>
             </div>
             <p className="project__sub">{r.sub}</p>
@@ -36,7 +37,7 @@ export default function WorkExcerpts() {
               ))}
             </ul>
             <Link className="link-arrow" to={`/experience/${r.slug}`}>
-              Full write-up <span className="arr">&rarr;</span>
+              <Letters text="Full write-up" /> <span className="arr">&rarr;</span>
             </Link>
           </Reveal>
         ))}

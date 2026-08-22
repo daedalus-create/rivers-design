@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Letters from "./Letters";
 
 // Page-break divider: rule + icon marks + wordmark + a pill linking
 // onward to the next page/section — the Figma "spacer" component.
@@ -24,7 +25,7 @@ export default function Divider({
           <img src={iconRight} alt="" />
         </div>
         <Link className="pill" to={to} style={{ textDecoration: "none" }}>
-          <span className="pill__inner">{label}</span>
+          <span className="pill__inner"><Letters text={label} /></span>
         </Link>
       </div>
     </div>
