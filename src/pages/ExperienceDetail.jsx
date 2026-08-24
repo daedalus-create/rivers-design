@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import Reveal from "../components/Reveal";
+import Letters from "../components/Letters";
 import ModelViewer from "../components/LazyModelViewer";
 import { getRole } from "../data/roles";
 import { getEducationEntry } from "../data/education";
@@ -56,7 +57,7 @@ export default function ExperienceDetail() {
         </Reveal>
         <Reveal stagger={3}>
           <Link className="link-arrow" to={backHref}>
-            &larr; Back to {backLabel}
+            <span className="arr">&larr;</span> <Letters text={`Back to ${backLabel}`} />
           </Link>
         </Reveal>
       </section>

@@ -5,8 +5,6 @@
 // they nest, read by the branching menu (MenuTree.jsx).
 //
 // `cluster` names the parent's node id, or "hub" for a top-level section.
-// "home" is listed for completeness, but the menu shows only the three
-// sections a reader navigates into: the logo is home.
 
 export const NAV = [
   { node: "home", href: "/", cluster: "hub", label: "Home" },
@@ -53,8 +51,8 @@ export const getNavNode = (node) => BY_NODE.get(node);
 /** Direct children of a node id, in NAV order. */
 export const childrenOf = (node) => NAV.filter((n) => n.cluster === node);
 
-/** The three sections the menu opens with. Home is reached via the logo. */
-export const rootSections = () => NAV.filter((n) => n.cluster === "hub" && n.node !== "home");
+/** The root row the menu opens with: Home plus the three sections. */
+export const rootSections = () => NAV.filter((n) => n.cluster === "hub");
 
 /** Ancestor chain for a node, outermost first, excluding the node itself. */
 export function ancestorsOf(node) {
