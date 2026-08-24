@@ -33,6 +33,11 @@ const MIN_FIT = 0.5;
 const FIT_MARGIN = 0.98; // the field's own padding is the breathing room
 const REFIT_EVENT = "menu-refit";
 
+// Below this the menu stacks into a vertical accordion (see global.css) —
+// nothing branches sideways, so there is nothing to scale to fit.
+const MOBILE_QUERY = "(max-width: 720px)";
+const isMobileTree = () => window.matchMedia(MOBILE_QUERY).matches;
+
 /** Elbow from a parent's right edge to one child's left edge. */
 function connectorPath(x0, y0, x1, y1) {
   if (Math.abs(y1 - y0) < 0.5) return `M${x0} ${y0} L${x1} ${y1}`;
@@ -68,6 +73,9 @@ function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode
     if (!isOpen || !kids.length) return undefined;
 
     const draw = () => {
+      // The wires are CSS-hidden on the mobile accordion; skip measuring
+      // geometry that will never be drawn.
+      if (isMobileTree()) return;
       const wrap = wrapRef.current;
       const label = labelRef.current;
       const svg = svgRef.current;
@@ -147,6 +155,18 @@ function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode
           if (!isLeaf && !isOpen) {
             e.preventDefault();
             onToggle(depth, node.node);
+            // On the mobile accordion the children land below this label
+            // rather than beside it, so the field's own scroll has to be
+            // nudged for them to come into view. Two rAFs: one for React
+            // to commit the newly expanded kids, one for layout to settle
+            // before measuring where to scroll.
+            if (isMobileTree()) {
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  labelRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+                });
+              });
+            }
             return;
           }
           onNavigate();
@@ -221,6 +241,14 @@ export default function MenuTree({ open, onClose }) {
       const field = fieldRef.current;
       const tree = rootsRef.current;
       if (!field || !tree || !tree.offsetWidth || !tree.offsetHeight) return;
+
+      if (isMobileTree()) {
+        if (applied !== 1) {
+          applied = 1;
+          tree.style.setProperty("--fit", "1");
+        }
+        return;
+      }
 
       const styles = getComputedStyle(field);
       const availW = field.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight);

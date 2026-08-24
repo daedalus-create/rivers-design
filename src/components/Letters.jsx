@@ -13,23 +13,43 @@
 //
 // That duplicate copy is excluded from text selection, or selecting a
 // title would copy it twice.
-
-// A plain space would collapse between inline-blocks. Built from its
-// char code so the source carries no invisible bytes.
-const NBSP = String.fromCharCode(160);
-
+//
+// Grouped one `.ch-set` per word, joined by a real (breakable) space
+// text node rather than one `.ch-set` for the whole phrase — a single
+// inline-flex box has no line-break opportunity inside it at all, so a
+// multi-word label like "Work in Progress" was one unbreakable run that
+// could run off the edge of a narrow container with nowhere to wrap.
+// The --i index still counts continuously across the whole phrase, so
+// the stagger reads as one sweep regardless of the word breaks.
 export default function Letters({ text }) {
   const label = String(text);
+  const words = label.split(" ");
+  let i = 0;
+  const nodes = [];
+  words.forEach((word, wi) => {
+    if (wi > 0) {
+      nodes.push(" ");
+      i += 1;
+    }
+    nodes.push(
+      <span className="ch-set" key={`w${wi}`}>
+        {[...word].map((ch) => {
+          const node = (
+            <span className="ch" style={{ "--i": i }} key={i}>
+              {ch}
+            </span>
+          );
+          i += 1;
+          return node;
+        })}
+      </span>,
+    );
+  });
+
   return (
     <>
       <span className="letters-sr">{label}</span>
-      <span className="ch-set" aria-hidden="true">
-        {[...label].map((ch, i) => (
-          <span className="ch" style={{ "--i": i }} key={`${i}-${ch}`}>
-            {ch === " " ? NBSP : ch}
-          </span>
-        ))}
-      </span>
+      <span aria-hidden="true">{nodes}</span>
     </>
   );
 }
