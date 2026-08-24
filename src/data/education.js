@@ -6,11 +6,11 @@ export const education = [
     slug: "rpi",
     num: "01",
     title: "Rensselaer Polytechnic Institute",
-    sub: "B.S. Mechanical Dual Aerospace Engineering, Troy, NY",
+    sub: "B.S. Mechanical and Aerospace Engineering, Troy, NY",
     model: "campus",
-    desc: "Bachelor of Science in Mechanical Dual Aerospace Engineering at Rensselaer Polytechnic Institute, completed May 2026.",
+    desc: "Bachelor of Science in Mechanical and Aerospace Engineering at Rensselaer Polytechnic Institute, completed May 2026.",
     body: [
-      "Studied Mechanical Dual Aerospace Engineering at RPI from August 2022, graduating in May 2026.",
+      "Studied Mechanical and Aerospace Engineering at RPI from August 2022, graduating in May 2026.",
       "Coursework focused on manufacturing processes, systems design, and propulsion. See Classes for the full list of courses.",
     ],
     highlights: [
@@ -21,7 +21,7 @@ export const education = [
       { k: "Aerospace", v: "Propulsion Systems" },
     ],
     specs: [
-      { k: "Degree", v: "B.S. Mechanical Dual Aerospace Engineering" },
+      { k: "Degree", v: "B.S. Mechanical and Aerospace Engineering" },
       { k: "Dates", v: "August 2022 to May 2026" },
       { k: "Location", v: "Troy, NY" },
     ],

@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import Reveal from "../components/Reveal";
+import Letters from "../components/Letters";
 import ModelViewer from "../components/LazyModelViewer";
 import { getProject } from "../data/projects";
 import NotFound from "./NotFound";
@@ -58,7 +59,7 @@ export default function ProjectDetail() {
         </Reveal>
         <Reveal stagger={2}>
           <Link className="link-arrow" to={backHref}>
-            &larr; Back to {backLabel}
+            <span className="arr">&larr;</span> <Letters text={`Back to ${backLabel}`} />
           </Link>
         </Reveal>
       </section>

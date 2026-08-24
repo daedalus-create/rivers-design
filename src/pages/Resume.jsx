@@ -20,7 +20,7 @@ export default function Resume() {
         <Reveal as="ul" className="specs">
           <li>
             <span className="k">Education</span>
-            <span className="v">B.S. Mechanical Dual Aerospace Engineering, RPI, May 2026</span>
+            <span className="v">B.S. Mechanical and Aerospace Engineering, RPI, May 2026</span>
           </li>
           <li>
             <span className="k">Skills</span>

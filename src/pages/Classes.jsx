@@ -16,7 +16,7 @@ export default function Classes() {
           </>
         }
         title="Classes"
-        lede="Every class taken at RPI toward the Mechanical Dual Aerospace Engineering degree."
+        lede="Every class taken at RPI toward the Mechanical and Aerospace Engineering degree."
       />
       {/* Classes have no page of their own, so the cards do not link. */}
       <EntryList entries={classes} linkable={false} ariaLabel="Classes" />
