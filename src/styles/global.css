@@ -504,6 +504,27 @@ button:focus-visible .ch {
 a.pill { text-decoration: none; }
 a.pill:hover .pill__inner { color: var(--accent); }
 
+/* Every clamp() above bottoms out well before a phone-width viewport
+   (the 3.54vw term only clears its own floor past ~988px), so the badge
+   sits at a constant pixel width no matter how narrow the screen gets.
+   The fixed-position date badge in the header had nothing to shrink
+   against and ran past the right edge on a 320-360px phone; a Divider's
+   pill carries a page label instead of a fixed-length date, and
+   "Work in Progress" ran off both edges at the same width, with
+   `white-space: nowrap` leaving it nowhere to go but off-screen. */
+@media (max-width: 480px) {
+  .pill__inner {
+    font-size: clamp(24px, 3.54vw, 70px);
+    padding: clamp(10px, 1.52vw, 30px) clamp(12px, 1.72vw, 34px);
+  }
+  /* The date keeps its single line — MM/DD/YYYY never benefits from
+     wrapping — but a longer label wraps instead of overflowing. */
+  .divider .pill__inner {
+    white-space: normal;
+    text-align: center;
+  }
+}
+
 /* ---------- Sections ---------- */
 .section { padding-top: var(--section-y); padding-bottom: var(--section-y); }
 .section--tight { padding-top: var(--space-9); padding-bottom: var(--space-9); }
@@ -1001,10 +1022,33 @@ a.pill:hover .pill__inner { color: var(--accent); }
     align-items: flex-start;
     gap: clamp(var(--space-5), 3.5vh, 44px);
   }
-  .menu-tree__field { justify-content: flex-start; overflow: auto; }
-  /* Tighter branches so a deep path needs less sideways scrolling on a
-     narrow screen. The field scrolls rather than the page. */
-  .tnode__kids { gap: clamp(var(--space-2), 1.6vh, 18px); margin-left: 30px; }
+  .menu-tree__field {
+    justify-content: flex-start;
+    align-items: flex-start;
+    /* A branch used to open sideways here too, just with a smaller
+       gutter — which meant expanding "Experience" could push
+       "Work Excerpts" (and everything under it) off the right edge of a
+       320px phone with no cue that it was still there, only reachable by
+       guessing to scroll sideways in a full-bleed overlay. Below this
+       width a branch now opens straight down instead: nothing renders
+       further right than its parent, so there is nothing to lose off the
+       edge and the page's ordinary vertical scroll is what reveals it. */
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .tnode { flex-direction: column; align-items: flex-start; }
+  /* The curved connectors are geometry for a sideways branch; with kids
+     stacked under their parent instead, a left guide line says the same
+     thing without any measuring. */
+  .tnode__wires { display: none; }
+  .tnode__kids {
+    flex-direction: column;
+    margin-left: 0;
+    margin-top: var(--space-2);
+    padding-left: var(--space-5);
+    border-left: 1px solid var(--ink-a14);
+    gap: clamp(var(--space-2), 1.6vh, 18px);
+  }
 }
 
 /* ---------- Footer ---------- */
