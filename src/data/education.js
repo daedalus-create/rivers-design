@@ -32,9 +32,9 @@ export const education = [
     title: "Waynflete",
     sub: "Secondary school, Portland, ME",
     model: "schoolhouse",
-    desc: "Secondary school at Waynflete in Portland, Maine, where Astrophysics and Advanced Biology were the standout courses.",
+    desc: "Secondary school at Waynflete in Portland, Maine, from 2009 to 2022, graduating Summa Cum Laude, with Astrophysics and Advanced Biology as the standout courses.",
     body: [
-      "Placeholder: a sentence or two on your time at Waynflete. What you were involved in outside class, and what pointed you toward engineering.",
+      "I was at Waynflete in Portland, ME from 2009 through 2022, and graduated Summa Cum Laude. Outside of class most of my time went to the stage crew, three years of it as Stage Manager, which is where I learned to plan a build backwards from the date it has to work.",
       "Astrophysics and Advanced Biology were the courses that stuck. Placeholder: add what each one covered and what you took from it.",
     ],
     highlights: [
@@ -43,10 +43,15 @@ export const education = [
     ],
     specs: [
       { k: "School", v: "Waynflete" },
-      { k: "Dates", v: "Placeholder: years attended" },
+      { k: "Dates", v: "2009 to 2022" },
       { k: "Location", v: "Portland, ME" },
+      { k: "Honors", v: "Summa Cum Laude" },
     ],
   },
 ];
 
 export const getEducationEntry = (slug) => education.find((e) => e.slug === slug);
+
+// The Experience hub previews the first two schools.
+export const HIGHLIGHT_COUNT = 2;
+export const educationHighlights = education.slice(0, HIGHLIGHT_COUNT);
