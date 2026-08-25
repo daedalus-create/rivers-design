@@ -25,6 +25,13 @@ export const timelineEntries = [...withKind(roles, "work"), ...withKind(educatio
   .filter((e) => e.start)
   .sort((a, b) => b.start.localeCompare(a.start));
 
+// The home page carries the three most recent, which on a list already
+// sorted newest-first is just the top of it. Here rather than in the page
+// for the same reason the sort is: what "most recent" means is a property
+// of the chronology, not of who happens to be rendering it.
+export const HOME_COUNT = 3;
+export const homeTimeline = timelineEntries.slice(0, HOME_COUNT);
+
 // Anything missing a `start` would silently vanish from the page above,
 // so say so at build time instead. The importer already refuses a `date`
 // without a `start`; this catches an entry with neither.

@@ -1,8 +1,5 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import Letters from "./Letters";
-import SpecList from "./SpecList";
-import ModelViewer from "./LazyModelViewer";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import ExpandingCard from "./ExpandingCard";
 import { elbow, unscale } from "./connectors";
 
 // The work history as a timeline: one trunk down the middle, a curved
@@ -64,7 +61,7 @@ function useActiveIndex(count, containerRef) {
         // and dates, the part that stays put while the body opens beneath
         // it. Using the centre would let an entry drift as it grows, and
         // unseat itself just by opening.
-        const head = row.querySelector("[data-tl-head]");
+        const head = row.querySelector("[data-xc-head]");
         const y = (head || row).getBoundingClientRect().top;
         const dist = Math.abs(y - line);
         const penalty = i === activeRef.current ? -HYSTERESIS : 0;
@@ -98,6 +95,18 @@ function useActiveIndex(count, containerRef) {
   return active;
 }
 
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const sync = () => setMatches(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [query]);
+  return matches;
+}
+
 // A pointer that cannot hover must not be able to latch an entry open: a
 // tap on a touch screen fires mouseenter and then never fires the
 // matching leave, so the entry would stay open until another was tapped.
@@ -115,70 +124,11 @@ function useCanHover() {
 
 // One row. Owns the branch running from its dot down to each block of
 // detail, which only exists while the row is open.
-// `registerDot` hands the dot element up to the parent: the trunk is
-// measured across all the rows at once, so the element has to live in
-// the parent's array, not in a ref this row keeps to itself.
+// One row: the dot the trunk lands on, and the card. `registerDot` hands
+// the dot element up to the parent, because the trunk is measured across
+// all the rows at once and so the element has to live in the parent's
+// array rather than in a ref this row keeps to itself.
 function Row({ entry, index, open, live, side, basePath, linkLabel, viewerTag, onHover, registerDot }) {
-  const branchRef = useRef(null);
-  const moreRef = useRef(null);
-  const bitPathRefs = useRef([]);
-  const bitDotRefs = useRef([]);
-
-  const bits = useMemo(() => {
-    const list = [];
-    if (entry.desc) list.push("desc");
-    if (entry.specs && entry.specs.length) list.push("specs");
-    if (linkLabel) list.push("link");
-    return list;
-  }, [entry.desc, entry.specs, linkLabel]);
-
-  useLayoutEffect(() => {
-    if (!open) return undefined;
-
-    const draw = () => {
-      const more = moreRef.current;
-      const svg = branchRef.current;
-      if (!more || !svg) return;
-
-      const { rect: base, px } = unscale(more);
-      const w = px(base.width);
-      const h = px(base.height);
-      if (!w || !h) return;
-      svg.setAttribute("width", String(w));
-      svg.setAttribute("height", String(h));
-      svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
-
-      // The sub-trunk hangs on the inner edge, the side the main wire
-      // arrived from, so the detail reads as hanging off the entry rather
-      // than starting again on its own.
-      const channel = parseFloat(getComputedStyle(more).getPropertyValue("--tl-branch")) || 24;
-      const x0 = side === "is-left" ? w - channel / 2 : channel / 2;
-
-      bits.forEach((_, i) => {
-        const dot = bitDotRefs.current[i];
-        const path = bitPathRefs.current[i];
-        if (!dot || !path) return;
-        const r = dot.getBoundingClientRect();
-        path.setAttribute(
-          "d",
-          elbow(x0, 0, px(r.left + r.width / 2 - base.left), px(r.top + r.height / 2 - base.top)),
-        );
-      });
-    };
-
-    draw();
-    const ro = new ResizeObserver(draw);
-    if (moreRef.current) ro.observe(moreRef.current);
-    bitDotRefs.current.forEach((el) => el && ro.observe(el));
-    const raf = requestAnimationFrame(draw);
-    return () => {
-      ro.disconnect();
-      cancelAnimationFrame(raf);
-    };
-  }, [open, bits, side]);
-
-  const to = `${basePath}/${entry.slug}`;
-
   return (
     <li
       className={`tl ${side}${open ? " is-open" : ""}`}
@@ -190,80 +140,29 @@ function Row({ entry, index, open, live, side, basePath, linkLabel, viewerTag, o
       <span className="tl__dot" aria-hidden="true" ref={registerDot} />
 
       <div className="tl__body">
-        {/* Condensed this is [model][name over dates]. Open, it turns the
-            corner: the name goes across the top and the model grows to
-            fill the width under it. Same two elements either way, so the
-            change is something CSS can move between rather than a swap
-            between two different trees. */}
-        <div className="tl__card">
-          <div className="tl__thumb">
-            {live && entry.model ? (
-              <ModelViewer kind={entry.model} tag={viewerTag} />
-            ) : (
-              <div className="model-frame" />
-            )}
-          </div>
-
-          <div className="tl__head" data-tl-head>
-            <h3 className="tl__title">
-              <Link to={to}>
-                <Letters text={entry.title} />
-              </Link>
-            </h3>
-            <p className="tl__when meta">
-              <span className="tl__date">{entry.date}</span>
-              {entry.place && <span className="tl__place">{entry.place}</span>}
-              {entry.kind === "education" && <span className="tl__kind">School</span>}
-            </p>
-            {entry.sub && <p className="tl__sub">{entry.sub}</p>}
-          </div>
-        </div>
-
-        {/* Kept mounted rather than unmounted so the open and close is
-            something to animate, and so the text is in the document for a
-            find-in-page. It is aria-hidden while closed and its link is
-            out of the tab order, though: a link you cannot see is not one
-            to land focus on. The title above stays focusable and goes to
-            the same page, so nothing here is the only route to its own
-            content. */}
-        <div className="tl__more" aria-hidden={!open} ref={moreRef}>
-          {open && (
-            <svg className="tl__branch" aria-hidden="true" ref={branchRef}>
-              <g>
-                {bits.map((b, i) => (
-                  <path key={b} ref={(el) => (bitPathRefs.current[i] = el)} />
-                ))}
-              </g>
-            </svg>
-          )}
-
-          <div className="tl__more-inner">
-            {bits.map((bit, i) => (
-              <div className="tl__bit" key={bit}>
-                <span
-                  className="tl__bit-dot"
-                  aria-hidden="true"
-                  ref={(el) => (bitDotRefs.current[i] = el)}
-                />
-                <div className="tl__bit-body">
-                  {bit === "desc" && <p className="tl__desc">{entry.desc}</p>}
-                  {bit === "specs" && <SpecList items={entry.specs} />}
-                  {bit === "link" && (
-                    <Link className="link-arrow" to={to} tabIndex={open ? 0 : -1}>
-                      <Letters text={linkLabel} /> <span className="arr">&rarr;</span>
-                    </Link>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ExpandingCard
+          entry={entry}
+          to={`${basePath}/${entry.slug}`}
+          open={open}
+          live={live}
+          side={side}
+          linkLabel={linkLabel}
+          viewerTag={viewerTag}
+          kindLabel={entry.kind === "education" ? "School" : undefined}
+        />
       </div>
     </li>
   );
 }
 
-export default function Timeline({ entries, basePath, linkLabel = "Full details", viewerTag }) {
+export default function Timeline({
+  entries,
+  basePath,
+  linkLabel = "Full details",
+  viewerTag,
+  stacked: forceStacked = false,
+  variant,
+}) {
   const wrapRef = useRef(null);
   const svgRef = useRef(null);
   const pathRefs = useRef([]);
@@ -272,6 +171,17 @@ export default function Timeline({ entries, basePath, linkLabel = "Full details"
   const scrolled = useActiveIndex(entries.length, wrapRef);
   const canHover = useCanHover();
   const [hovered, setHovered] = useState(null);
+
+  // Which arrangement is on screen is decided here rather than in CSS,
+  // and this is a reversal of how the trunk position used to be settled.
+  // The reason is that the arrangement is not only a matter of style: an
+  // entry's side determines which edge its detail branches off, so the
+  // markup has to know it too. Splitting that decision between a media
+  // query and a custom property read back out of the computed style left
+  // two places that had to agree; one place that both the layout and the
+  // markup read cannot disagree with itself.
+  const narrow = useMediaQuery("(max-width: 860px)");
+  const isStacked = forceStacked || narrow;
 
   // Hover wins while the pointer is on an entry; scroll decides the rest
   // of the time, and all of the time on a touch screen.
@@ -294,15 +204,7 @@ export default function Timeline({ entries, basePath, linkLabel = "Full details"
       if (!first) return;
       const firstRect = first.getBoundingClientRect();
 
-      // Whether entries alternate around a centred trunk or stack to the
-      // right of a left one is a breakpoint decision, and CSS owns
-      // breakpoints. Reading the flag back out of the computed style keeps
-      // the drawing and the layout from disagreeing about which
-      // arrangement is on screen, which a matching media query in here
-      // would eventually get wrong.
-      const split = getComputedStyle(wrap).getPropertyValue("--tl-split").trim() === "1";
-
-      const x0 = split ? w / 2 : px(firstRect.left + firstRect.width / 2 - base.left);
+      const x0 = isStacked ? px(firstRect.left + firstRect.width / 2 - base.left) : w / 2;
       const y0 = px(firstRect.top + firstRect.height / 2 - base.top);
 
       entries.forEach((_, i) => {
@@ -326,10 +228,14 @@ export default function Timeline({ entries, basePath, linkLabel = "Full details"
       ro.disconnect();
       cancelAnimationFrame(raf);
     };
-  }, [entries, active]);
+  }, [entries, active, isStacked]);
 
   return (
-    <div className="timeline" ref={wrapRef} onMouseLeave={() => setHovered(null)}>
+    <div
+      className={`timeline${isStacked ? " is-stacked" : ""}${variant ? ` timeline--${variant}` : ""}`}
+      ref={wrapRef}
+      onMouseLeave={() => setHovered(null)}
+    >
       <svg className="timeline__wires" ref={svgRef} aria-hidden="true">
         <g>
           {entries.map((e, i) => (
@@ -346,7 +252,7 @@ export default function Timeline({ entries, basePath, linkLabel = "Full details"
             index={i}
             open={i === active}
             live={Math.abs(i - active) <= LIVE_RADIUS}
-            side={i % 2 === 0 ? "is-left" : "is-right"}
+            side={isStacked || i % 2 !== 0 ? "is-right" : "is-left"}
             basePath={basePath}
             linkLabel={linkLabel}
             viewerTag={viewerTag}

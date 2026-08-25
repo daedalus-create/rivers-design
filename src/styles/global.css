@@ -1053,11 +1053,12 @@ a.pill:hover .pill__inner { color: var(--accent); }
      does not collapse into a corner. */
   --tl-gutter: clamp(72px, 9vw, 150px);
   --tl-dot: 11px;
-  /* 1 while entries alternate around a centred trunk, 0 once they stack
-     to the right of a left-hand one. Timeline.jsx reads this back rather
-     than repeating the breakpoint in JS. */
-  --tl-split: 1;
 }
+/* Stacked: one column with the trunk down its left, either because the
+   screen is narrow or because the caller asked for it. Timeline.jsx adds
+   the class, since an entry's side also decides which edge its detail
+   branches off and so the markup has to know too. */
+.timeline.is-stacked { --tl-gutter: 30px; }
 
 .timeline__wires {
   position: absolute;
@@ -1099,12 +1100,13 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .tl.is-left  > .tl__body { grid-column: 1; text-align: right; }
 .tl.is-right > .tl__body { grid-column: 3; }
 
+
 /* Right-aligning the head is what makes a left-hand entry hug the trunk.
    The detail underneath stays left-aligned: a paragraph and a key/value
    table set flush right are harder to read, and the alignment has
    already done its job by the time the eye gets there. */
-.tl.is-left .tl__more-inner { text-align: left; }
-.tl.is-left .tl__when { justify-content: flex-end; }
+.xcard.is-left .xcard__more-inner { text-align: left; }
+.xcard.is-left .xcard__when { justify-content: flex-end; }
 
 /* The elbow's landing point, same role the dot plays in the menu. */
 .tl__dot {
@@ -1125,6 +1127,19 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .tl.is-left  .tl__dot { right: calc(50% + (var(--tl-gutter) / 2) - (var(--tl-dot) / 2)); }
 .tl.is-right .tl__dot { left:  calc(50% + (var(--tl-gutter) / 2) - (var(--tl-dot) / 2)); }
 
+/* Stacked overrides. After the split rules and one class heavier than
+   them on purpose: `.tl.is-right .tl__dot` and a bare `.is-stacked ...`
+   descendant selector carry the same specificity, so the tie would go to
+   whichever came last and the trunk would end up centred with the dots
+   still out at the half-way mark. */
+.timeline.is-stacked .tl {
+  grid-template-columns: var(--tl-gutter) minmax(0, 1fr);
+  column-gap: var(--space-4);
+}
+.timeline.is-stacked .tl > .tl__body { grid-column: 2; text-align: left; }
+.timeline.is-stacked .tl.is-left .tl__dot,
+.timeline.is-stacked .tl.is-right .tl__dot { left: 0; right: auto; }
+
 .tl.is-open .tl__dot {
   background: var(--accent);
   border-color: var(--accent);
@@ -1136,7 +1151,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
 /* Condensed: the model beside the name. Open: the name across the top and
    the model grown to fill the width beneath it. One flex container turning
    its corner, rather than two layouts swapped between. */
-.tl__card {
+.xcard__top {
   display: flex;
   align-items: center;
   gap: clamp(var(--space-3), 1.4vw, var(--space-5));
@@ -1144,24 +1159,24 @@ a.pill:hover .pill__inner { color: var(--accent); }
 }
 /* The name sits nearest the trunk on both sides, so the wire always
    arrives at the title rather than at the back of the model. */
-.tl.is-left  .tl__card { flex-direction: row; }
-.tl.is-right .tl__card { flex-direction: row-reverse; }
-.tl.is-open .tl__card {
+.xcard.is-left  .xcard__top { flex-direction: row; }
+.xcard.is-right .xcard__top { flex-direction: row-reverse; }
+.xcard.is-open .xcard__top {
   display: block;
 }
 
 /* The thumbnail. Small and square while condensed; on open it stops being
    a fixed box and fills the width under the name. */
-.tl__thumb {
+.xcard__thumb {
   flex: none;
   width: clamp(84px, 9vw, 132px);
   transition: width var(--dur-3) var(--ease-out);
 }
-.tl.is-open .tl__thumb {
+.xcard.is-open .xcard__thumb {
   width: 100%;
   order: 2;
 }
-.tl__thumb .model-frame {
+.xcard__thumb .model-frame {
   margin-top: 0;
   height: clamp(84px, 9vw, 132px);
   border-width: 1px;
@@ -1170,16 +1185,16 @@ a.pill:hover .pill__inner { color: var(--accent); }
     height var(--dur-3) var(--ease-out),
     border-width var(--dur-3) var(--ease-out);
 }
-.tl.is-open .tl__thumb .model-frame {
+.xcard.is-open .xcard__thumb .model-frame {
   height: clamp(200px, 26vw, 360px);
   border-width: 2px;
   border-radius: var(--radius-xl);
   margin-top: var(--space-4);
 }
 
-.tl__head { min-width: 0; }
+.xcard__head { min-width: 0; }
 
-.tl__title {
+.xcard__title {
   font-family: var(--font-display);
   font-size: clamp(19px, 1.9vw, 30px);
   line-height: 1.1;
@@ -1189,13 +1204,13 @@ a.pill:hover .pill__inner { color: var(--accent); }
 }
 /* Open, the name extends across the whole entry, over the model rather
    than beside it. */
-.tl.is-open .tl__title { font-size: clamp(28px, 3.2vw, 54px); }
-.tl__title a { color: var(--ink-a65); text-decoration: none; transition: color var(--t-hover); }
-.tl.is-open .tl__title a { color: var(--ink); }
-.tl__title a:hover { color: var(--accent); }
+.xcard.is-open .xcard__title { font-size: clamp(28px, 3.2vw, 54px); }
+.xcard__title a { color: var(--ink-a65); text-decoration: none; transition: color var(--t-hover); }
+.xcard.is-open .xcard__title a { color: var(--ink); }
+.xcard__title a:hover { color: var(--accent); }
 
 /* Dates under the name. */
-.tl__when {
+.xcard__when {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1203,12 +1218,12 @@ a.pill:hover .pill__inner { color: var(--accent); }
   color: var(--ink-a65);
   margin-top: var(--space-2);
 }
-.tl__date { color: var(--ink-a80); }
-.tl__place { color: var(--ink-a45); }
+.xcard__date { color: var(--ink-a80); }
+.xcard__place { color: var(--ink-a45); }
 /* Marks the school rows in a list that is otherwise jobs. Uses the state
    colour rather than the yellow, which on this site means "clickable" —
    this is a label, not a link. */
-.tl__kind {
+.xcard__kind {
   color: var(--accent-cool);
   border: 1px solid currentColor;
   border-radius: var(--radius-pill);
@@ -1217,7 +1232,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
 }
 
 /* Only worth the room once the entry is open. */
-.tl__sub {
+.xcard__sub {
   color: var(--ink-a65);
   margin-top: var(--space-2);
   max-height: 0;
@@ -1227,7 +1242,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
     max-height var(--dur-3) var(--ease-out),
     opacity var(--dur-2) var(--ease-out);
 }
-.tl.is-open .tl__sub { max-height: 4em; opacity: 1; }
+.xcard.is-open .xcard__sub { max-height: 4em; opacity: 1; }
 
 /* Collapsed with a 0fr/1fr grid row rather than a max-height. The usual
    max-height trick needs a ceiling guessed high enough for the tallest
@@ -1235,11 +1250,11 @@ a.pill:hover .pill__inner { color: var(--accent); }
    to 1fr animates to the content's real height, so an entry with four
    spec rows and one with two both open at the same speed. The inner
    wrapper carries the overflow and min-height:0 the fr unit needs. */
-.tl__more {
+.xcard__more {
   position: relative;
   /* The channel the detail's own branch runs down, on the same side the
      main wire arrived from. */
-  --tl-branch: clamp(22px, 2.4vw, 40px);
+  --xc-branch: clamp(22px, 2.4vw, 40px);
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
@@ -1247,11 +1262,11 @@ a.pill:hover .pill__inner { color: var(--accent); }
     grid-template-rows var(--dur-3) var(--ease-out),
     opacity var(--dur-2) var(--ease-out);
 }
-.tl.is-open .tl__more {
+.xcard.is-open .xcard__more {
   grid-template-rows: 1fr;
   opacity: 1;
 }
-.tl__more-inner {
+.xcard__more-inner {
   overflow: hidden;
   min-height: 0;
 }
@@ -1259,15 +1274,15 @@ a.pill:hover .pill__inner { color: var(--accent); }
 /* The detail's branch: same trunk-and-elbow figure as the timeline
    itself, one level down. Opacity on the group for the same reason —
    every bit's path redraws the shared sub-trunk. */
-.tl__branch {
+.xcard__branch {
   position: absolute;
   inset: 0;
   overflow: visible;
   pointer-events: none;
   z-index: 0;
 }
-.tl__branch g { opacity: 0.34; }
-.tl__branch path {
+.xcard__branch g { opacity: 0.34; }
+.xcard__branch path {
   fill: none;
   stroke: var(--ink);
   stroke-width: 1.1;
@@ -1275,19 +1290,19 @@ a.pill:hover .pill__inner { color: var(--accent); }
 }
 
 /* Each block of detail hangs off the branch on its own dot. */
-.tl__bit {
+.xcard__bit {
   position: relative;
   display: grid;
   align-items: start;
   padding-top: var(--space-5);
   z-index: 1;
 }
-.tl.is-left  .tl__bit { grid-template-columns: minmax(0, 1fr) var(--tl-branch); }
-.tl.is-right .tl__bit { grid-template-columns: var(--tl-branch) minmax(0, 1fr); }
-.tl.is-left  .tl__bit-body { grid-column: 1; }
-.tl.is-right .tl__bit-body { grid-column: 2; }
+.xcard.is-left  .xcard__bit { grid-template-columns: minmax(0, 1fr) var(--xc-branch); }
+.xcard.is-right .xcard__bit { grid-template-columns: var(--xc-branch) minmax(0, 1fr); }
+.xcard.is-left  .xcard__bit-body { grid-column: 1; }
+.xcard.is-right .xcard__bit-body { grid-column: 2; }
 
-.tl__bit-dot {
+.xcard__bit-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -1295,40 +1310,205 @@ a.pill:hover .pill__inner { color: var(--accent); }
   margin-top: 0.7em;
   align-self: start;
 }
-.tl.is-left  .tl__bit-dot { grid-column: 2; justify-self: start; }
-.tl.is-right .tl__bit-dot { grid-column: 1; justify-self: end; }
+.xcard.is-left  .xcard__bit-dot { grid-column: 2; justify-self: start; }
+.xcard.is-right .xcard__bit-dot { grid-column: 1; justify-self: end; }
 
-.tl__desc { color: var(--ink-a80); max-width: 62ch; margin: 0; }
-.tl.is-left .tl__bit-body { text-align: left; }
+.xcard__desc { color: var(--ink-a80); max-width: 62ch; margin: 0; }
+.xcard.is-left .xcard__bit-body { text-align: left; }
 
 @media (prefers-reduced-motion: reduce) {
-  .tl__more,
-  .tl__card,
-  .tl__thumb,
-  .tl__thumb .model-frame,
-  .tl__title,
-  .tl__sub,
+  .xcard__more,
+  .xcard__top,
+  .xcard__thumb,
+  .xcard__thumb .model-frame,
+  .xcard__title,
+  .xcard__sub,
   .tl__dot { transition: none; }
 }
 
-/* Two columns of prose do not fit a phone, so below this the entries
-   stop alternating and stack to the right of a left-hand trunk — the
-   arrangement the menu uses. --tl-split tells Timeline.jsx to move the
-   trunk with them. */
+/* The board variant: the same left-hand trunk, but the cards carry the
+   Projects page's chrome instead of sitting bare on the page, and the
+   circuit ground shows through behind them. Used on the home page, where
+   the projects and the experience sit one above the other and need to
+   read as two different kinds of thing. */
+.timeline--board .tl__body > .xcard {
+  background: var(--bg);
+  border: 1px solid var(--ink-a14);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  transition: border-color var(--t-hover);
+}
+.timeline--board .tl__body > .xcard.is-open { border-color: var(--accent); }
+.timeline--board .timeline__list {
+  --pcb: 44px;
+  position: relative;
+}
+.timeline--board .timeline__list::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--pcb) * -1) 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--ink);
+  opacity: 0.13;
+  -webkit-mask-image: url('/assets/circuit.svg');
+  mask-image: url('/assets/circuit.svg');
+  -webkit-mask-size: calc(var(--pcb) * 6);
+  mask-size: calc(var(--pcb) * 6);
+}
+
+/* ---------- Projects board ---------- */
+/* Cards laid on the same pitch the circuit ground is drawn on. Alignment
+   is arithmetic, not correction: columns are a whole number of pitches
+   wide, the gap is one pitch, rows are one pitch tall and every card
+   spans a whole number of them. Nothing measures anything. */
+.board {
+  --pcb: 44px;
+  --pcb-col: calc(var(--pcb) * 6);
+}
+
+.board__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-meta);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--ink-a65);
+  background: none;
+  border: 1px solid var(--ink-a25);
+  border-radius: var(--radius-pill);
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: color var(--t-hover), border-color var(--t-hover), background-color var(--t-hover);
+}
+.chip:hover { color: var(--ink); border-color: var(--ink-a45); }
+.chip.is-on {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.chip__count {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-sm);
+  letter-spacing: 0;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.board__count { color: var(--ink-a45); margin-bottom: var(--space-5); }
+
+.board__field { position: relative; }
+
+/* The ground. A mask rather than an image, so the trace colour comes
+   from here and follows the palette; the SVG itself is flat black. The
+   fine grid underneath it is drawn in CSS, since a two-line grid does
+   not need a file. Both are anchored to this box's own origin, which is
+   also the grid's, so the two share one coordinate space. */
+.board__pcb {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-color: var(--ink);
+  opacity: 0.16;
+  -webkit-mask-image:
+    url('/assets/circuit.svg'),
+    repeating-linear-gradient(to right, #000 0 1px, transparent 1px var(--pcb)),
+    repeating-linear-gradient(to bottom, #000 0 1px, transparent 1px var(--pcb));
+  mask-image:
+    url('/assets/circuit.svg'),
+    repeating-linear-gradient(to right, #000 0 1px, transparent 1px var(--pcb)),
+    repeating-linear-gradient(to bottom, #000 0 1px, transparent 1px var(--pcb));
+  -webkit-mask-size: calc(var(--pcb) * 6) calc(var(--pcb) * 6), auto, auto;
+  mask-size: calc(var(--pcb) * 6) calc(var(--pcb) * 6), auto, auto;
+  -webkit-mask-position: 0 0;
+  mask-position: 0 0;
+  -webkit-mask-composite: source-over;
+  mask-composite: add;
+}
+/* The fine grid should read as underneath the traces, not equal to them. */
+.board__pcb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(to right, var(--bg) 0 1px, transparent 1px var(--pcb)),
+    repeating-linear-gradient(to bottom, var(--bg) 0 1px, transparent 1px var(--pcb));
+  opacity: 0.5;
+}
+
+.board__grid {
+  position: relative;
+  z-index: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  /* Fixed columns rather than fractions: a fraction of an arbitrary
+     container width is not a whole number of pitches, and a card whose
+     left edge lands mid-trace is the one thing this layout is for. */
+  grid-template-columns: repeat(auto-fill, var(--pcb-col));
+  grid-auto-rows: var(--pcb);
+  /* Column gap only. A row gap would make "span N" mean 2N-1 pitches
+     tall, which still lands on the grid but turns the span into a number
+     nobody can reason about. The breathing room between rows is a margin
+     on the card instead, inside the cell, where it cannot move the cell
+     off the grid. */
+  column-gap: var(--pcb);
+  row-gap: 0;
+  justify-content: start;
+}
+
+.board__cell {
+  grid-row: span var(--span, 4);
+  min-width: 0;
+  transition: grid-row var(--dur-3) var(--ease-out);
+}
+.board__cell > .xcard {
+  height: calc(100% - var(--pcb));
+  margin-bottom: var(--pcb);
+  background: var(--bg);
+  border: 1px solid var(--ink-a14);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  overflow: hidden;
+  transition: border-color var(--t-hover), background-color var(--t-hover);
+}
+.board__cell > .xcard.is-open {
+  border-color: var(--accent);
+}
+
+/* On the board the card sits in its own box rather than hanging off a
+   trunk, so the branch channel tightens and the head stays left. */
+.board .xcard__more { --xc-branch: 20px; }
+.board .xcard__title { font-size: clamp(17px, 1.5vw, 24px); }
+.board .xcard.is-open .xcard__title { font-size: clamp(21px, 2vw, 34px); }
+.board .xcard__thumb { width: calc(var(--pcb) * 2); }
+.board .xcard__thumb .model-frame { height: calc(var(--pcb) * 2); }
+.board .xcard.is-open .xcard__thumb { width: 100%; }
+.board .xcard.is-open .xcard__thumb .model-frame { height: calc(var(--pcb) * 4); }
+
 @media (max-width: 860px) {
-  .timeline {
-    --tl-split: 0;
-    --tl-gutter: 30px;
-  }
-  .tl {
-    grid-template-columns: var(--tl-gutter) minmax(0, 1fr);
-    column-gap: var(--space-4);
-  }
-  .tl.is-left > .tl__body,
-  .tl.is-right > .tl__body { grid-column: 2; text-align: left; }
-  .tl.is-left .tl__when { justify-content: flex-start; }
-  .tl.is-left .tl__dot,
-  .tl.is-right .tl__dot { left: 0; right: auto; }
+  .board { --pcb: 36px; --pcb-col: calc(var(--pcb) * 5); }
+}
+@media (max-width: 520px) {
+  /* One column, and it takes the width it is given rather than a fixed
+     number of pitches, because a fixed column wider than the screen is
+     worse than a card that sits a pixel off a trace. */
+  .board__grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board__cell, .chip { transition: none; }
 }
 
 /* ---------- Footer ---------- */
