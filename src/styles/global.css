@@ -1133,12 +1133,75 @@ a.pill:hover .pill__inner { color: var(--accent); }
 
 .tl__body { min-width: 0; }
 
+/* Condensed: the model beside the name. Open: the name across the top and
+   the model grown to fill the width beneath it. One flex container turning
+   its corner, rather than two layouts swapped between. */
+.tl__card {
+  display: flex;
+  align-items: center;
+  gap: clamp(var(--space-3), 1.4vw, var(--space-5));
+  transition: gap var(--dur-3) var(--ease-out);
+}
+/* The name sits nearest the trunk on both sides, so the wire always
+   arrives at the title rather than at the back of the model. */
+.tl.is-left  .tl__card { flex-direction: row; }
+.tl.is-right .tl__card { flex-direction: row-reverse; }
+.tl.is-open .tl__card {
+  display: block;
+}
+
+/* The thumbnail. Small and square while condensed; on open it stops being
+   a fixed box and fills the width under the name. */
+.tl__thumb {
+  flex: none;
+  width: clamp(84px, 9vw, 132px);
+  transition: width var(--dur-3) var(--ease-out);
+}
+.tl.is-open .tl__thumb {
+  width: 100%;
+  order: 2;
+}
+.tl__thumb .model-frame {
+  margin-top: 0;
+  height: clamp(84px, 9vw, 132px);
+  border-width: 1px;
+  border-radius: var(--radius-lg);
+  transition:
+    height var(--dur-3) var(--ease-out),
+    border-width var(--dur-3) var(--ease-out);
+}
+.tl.is-open .tl__thumb .model-frame {
+  height: clamp(200px, 26vw, 360px);
+  border-width: 2px;
+  border-radius: var(--radius-xl);
+  margin-top: var(--space-4);
+}
+
+.tl__head { min-width: 0; }
+
+.tl__title {
+  font-family: var(--font-display);
+  font-size: clamp(19px, 1.9vw, 30px);
+  line-height: 1.1;
+  letter-spacing: var(--ls-nav);
+  margin: 0;
+  transition: font-size var(--dur-3) var(--ease-out);
+}
+/* Open, the name extends across the whole entry, over the model rather
+   than beside it. */
+.tl.is-open .tl__title { font-size: clamp(28px, 3.2vw, 54px); }
+.tl__title a { color: var(--ink-a65); text-decoration: none; transition: color var(--t-hover); }
+.tl.is-open .tl__title a { color: var(--ink); }
+.tl__title a:hover { color: var(--accent); }
+
+/* Dates under the name. */
 .tl__when {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 var(--space-4);
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
   color: var(--ink-a65);
-  margin-bottom: var(--space-2);
+  margin-top: var(--space-2);
 }
 .tl__date { color: var(--ink-a80); }
 .tl__place { color: var(--ink-a45); }
@@ -1153,30 +1216,30 @@ a.pill:hover .pill__inner { color: var(--accent); }
   font-size: var(--fs-meta-sm);
 }
 
-.tl__title {
-  font-family: var(--font-display);
-  font-size: clamp(24px, 2.6vw, 44px);
-  line-height: 1.08;
-  letter-spacing: var(--ls-nav);
-  margin: 0;
-  transition: color var(--t-hover);
-}
-.tl__title a { color: var(--ink-a65); text-decoration: none; }
-.tl.is-open .tl__title a { color: var(--ink); }
-.tl__title a:hover { color: var(--accent); }
-
+/* Only worth the room once the entry is open. */
 .tl__sub {
   color: var(--ink-a65);
   margin-top: var(--space-2);
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height var(--dur-3) var(--ease-out),
+    opacity var(--dur-2) var(--ease-out);
 }
+.tl.is-open .tl__sub { max-height: 4em; opacity: 1; }
 
 /* Collapsed with a 0fr/1fr grid row rather than a max-height. The usual
    max-height trick needs a ceiling guessed high enough for the tallest
-   entry, which then makes every shorter one ease at the wrong rate;
-   0fr to 1fr animates to the content's real height, so an entry with
-   four spec rows and one with two both open at the same speed. The inner
+   entry, which then makes every shorter one ease at the wrong rate; 0fr
+   to 1fr animates to the content's real height, so an entry with four
+   spec rows and one with two both open at the same speed. The inner
    wrapper carries the overflow and min-height:0 the fr unit needs. */
 .tl__more {
+  position: relative;
+  /* The channel the detail's own branch runs down, on the same side the
+     main wire arrived from. */
+  --tl-branch: clamp(22px, 2.4vw, 40px);
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
@@ -1192,17 +1255,59 @@ a.pill:hover .pill__inner { color: var(--accent); }
   overflow: hidden;
   min-height: 0;
 }
-.tl__desc {
-  color: var(--ink-a80);
-  max-width: 62ch;
-  padding-top: var(--space-4);
+
+/* The detail's branch: same trunk-and-elbow figure as the timeline
+   itself, one level down. Opacity on the group for the same reason —
+   every bit's path redraws the shared sub-trunk. */
+.tl__branch {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 0;
 }
-.tl__more .model-frame { margin-top: var(--space-5); }
-.tl__more .specs { margin-top: var(--space-5); }
-.tl__more .link-arrow { margin-top: var(--space-5); }
+.tl__branch g { opacity: 0.34; }
+.tl__branch path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Each block of detail hangs off the branch on its own dot. */
+.tl__bit {
+  position: relative;
+  display: grid;
+  align-items: start;
+  padding-top: var(--space-5);
+  z-index: 1;
+}
+.tl.is-left  .tl__bit { grid-template-columns: minmax(0, 1fr) var(--tl-branch); }
+.tl.is-right .tl__bit { grid-template-columns: var(--tl-branch) minmax(0, 1fr); }
+.tl.is-left  .tl__bit-body { grid-column: 1; }
+.tl.is-right .tl__bit-body { grid-column: 2; }
+
+.tl__bit-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-a45);
+  margin-top: 0.7em;
+  align-self: start;
+}
+.tl.is-left  .tl__bit-dot { grid-column: 2; justify-self: start; }
+.tl.is-right .tl__bit-dot { grid-column: 1; justify-self: end; }
+
+.tl__desc { color: var(--ink-a80); max-width: 62ch; margin: 0; }
+.tl.is-left .tl__bit-body { text-align: left; }
 
 @media (prefers-reduced-motion: reduce) {
   .tl__more,
+  .tl__card,
+  .tl__thumb,
+  .tl__thumb .model-frame,
+  .tl__title,
+  .tl__sub,
   .tl__dot { transition: none; }
 }
 
