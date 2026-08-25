@@ -1,12 +1,16 @@
 import Reveal from "../components/Reveal";
+import Letters from "../components/Letters";
 
-// The summary sheet. The rows below are transcribed from the current resume
-// and have to move with it whenever it changes.
+// The summary sheet, kept in step with the PDF in public/assets. The rows
+// below are transcribed from it and have to move with it whenever it
+// changes.
 //
-// No PDF is linked yet on purpose: the copy on file carries a home address,
-// and this repo is public and deploys straight to the live site. Once an
-// address-free version lands in public/assets, the Download row becomes a
-// link to it.
+// The linked copy is deliberately the address-free one: this repo is
+// public and deploys straight to the live site, so whatever sits at that
+// path is downloadable by anyone. Phone and email are in it by choice,
+// matching what the Contact page already publishes.
+const RESUME_PDF = "/assets/deon-rivers-resume.pdf";
+
 const ROWS = [
   { k: "Education", v: "B.S. Mechanical and Aerospace Engineering, RPI, May 2026" },
   { k: "Skills", v: "CAD Modeling / Project Management / Rapid Prototyping / Additive Manufacturing" },
@@ -20,7 +24,6 @@ const ROWS = [
     k: "Achievements",
     v: "Summa Cum Laude at Waynflete / Founded the Room Manager Union at The Forge / Stage Manager for three years",
   },
-  { k: "Full resume", v: "On request, see Contact for email" },
 ];
 
 export default function Resume() {
@@ -47,6 +50,12 @@ export default function Resume() {
               <span className="v">{row.v}</span>
             </li>
           ))}
+        </Reveal>
+
+        <Reveal stagger={1}>
+          <a className="link-arrow" href={RESUME_PDF} target="_blank" rel="noreferrer">
+            <Letters text="Download the resume" /> <span className="arr">&rarr;</span>
+          </a>
         </Reveal>
       </section>
     </>
