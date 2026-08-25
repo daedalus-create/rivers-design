@@ -7,6 +7,9 @@ export const education = [
     num: "01",
     title: "Rensselaer Polytechnic Institute",
     sub: "B.S. Mechanical and Aerospace Engineering, Troy, NY",
+    date: "Aug 2022 – May 2026",
+    place: "Troy, NY",
+    start: "2022-08",
     model: "campus",
     desc: "Bachelor of Science in Mechanical and Aerospace Engineering at Rensselaer Polytechnic Institute, completed May 2026.",
     body: [
@@ -31,6 +34,9 @@ export const education = [
     num: "02",
     title: "Waynflete",
     sub: "Secondary school, Portland, ME",
+    date: "2009 – 2022",
+    place: "Portland, ME",
+    start: "2009-09",
     model: "schoolhouse",
     desc: "Secondary school at Waynflete in Portland, Maine, from 2009 to 2022, graduating Summa Cum Laude, with Astrophysics and Advanced Biology as the standout courses.",
     body: [

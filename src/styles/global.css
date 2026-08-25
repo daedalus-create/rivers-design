@@ -1122,6 +1122,16 @@ a.pill:hover .pill__inner { color: var(--accent); }
 }
 .tl__date { color: var(--ink-a80); }
 .tl__place { color: var(--ink-a45); }
+/* Marks the school rows in a list that is otherwise jobs. Uses the state
+   colour rather than the yellow, which on this site means "clickable" —
+   this is a label, not a link. */
+.tl__kind {
+  color: var(--accent-cool);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-pill);
+  padding: 1px 9px;
+  font-size: var(--fs-meta-sm);
+}
 
 .tl__title {
   font-family: var(--font-display);
@@ -1167,6 +1177,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
   max-width: 62ch;
   padding-top: var(--space-4);
 }
+.tl__more .model-frame { margin-top: var(--space-5); }
 .tl__more .specs { margin-top: var(--space-5); }
 .tl__more .link-arrow { margin-top: var(--space-5); }
 

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Letters from "./Letters";
 import SpecList from "./SpecList";
+import ModelViewer from "./LazyModelViewer";
 import { elbow, unscale } from "./connectors";
 
 // The work history as a timeline: one trunk down the page, a curved elbow
@@ -17,6 +18,14 @@ import { elbow, unscale } from "./connectors";
 // Entries open as they reach the reading band rather than on a click.
 // Scrolling is the only input, so the page reads as one continuous
 // movement instead of a list of things to go and poke at.
+//
+// The open entry's 3D viewer is mounted only while it is open, and this
+// is not an optimisation to skip. Each viewer builds its own
+// WebGLRenderer, and browsers cap live WebGL contexts somewhere around a
+// dozen; ten of them mounted at once on this page would sit on that
+// limit with ten animation loops running to draw nine things nobody is
+// looking at. One at a time costs a rebuild on each change, which is
+// cheap here because the geometry is generated rather than loaded.
 
 // Where "being read" is, as a fraction of viewport height. Entries are
 // ranked by distance from this line and the closest one opens. Above
@@ -90,7 +99,7 @@ function useActiveIndex(count, containerRef) {
   return active;
 }
 
-export default function Timeline({ entries, basePath, linkLabel = "Full role details" }) {
+export default function Timeline({ entries, basePath, linkLabel = "Full details", viewerTag }) {
   const wrapRef = useRef(null);
   const svgRef = useRef(null);
   const pathRefs = useRef([]);
@@ -170,6 +179,7 @@ export default function Timeline({ entries, basePath, linkLabel = "Full role det
                   <p className="tl__when meta">
                     <span className="tl__date">{entry.date}</span>
                     {entry.place && <span className="tl__place">{entry.place}</span>}
+                    {entry.kind === "education" && <span className="tl__kind">School</span>}
                   </p>
                   <h3 className="tl__title">
                     <Link to={`${basePath}/${entry.slug}`}>
@@ -190,6 +200,11 @@ export default function Timeline({ entries, basePath, linkLabel = "Full role det
                 <div className="tl__more" aria-hidden={!open}>
                   <div className="tl__more-inner">
                     {entry.desc && <p className="tl__desc">{entry.desc}</p>}
+
+                    {/* Mounted only while open — see the note at the top
+                        about WebGL contexts. */}
+                    {open && entry.model && <ModelViewer kind={entry.model} tag={viewerTag} height="clamp(240px, 34vw, 420px)" />}
+
                     <SpecList items={entry.specs} />
                     {linkLabel && (
                       <Link className="link-arrow" to={`${basePath}/${entry.slug}`} tabIndex={open ? 0 : -1}>

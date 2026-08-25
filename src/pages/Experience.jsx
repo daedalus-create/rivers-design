@@ -2,19 +2,20 @@ import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
 import Divider from "../components/Divider";
 import Letters from "../components/Letters";
-import EntryCard from "../components/EntryCard";
+import SpecList from "../components/SpecList";
 import Timeline from "../components/Timeline";
-import { roles } from "../data/roles";
-import { educationHighlights } from "../data/education";
+import { timelineEntries } from "../data/timeline";
+import { education } from "../data/education";
 
-// The work history is a timeline rather than a preview of the first two
-// roles: eight jobs in reverse-chronological order is a shape, and a
-// shape is worth drawing. Each one opens as it reaches the reading band,
-// so scrolling the page is what reads it.
+// The page is the timeline. Work and school are one chronology rather
+// than two lists, which is the only way the overlap shows: RPI runs
+// underneath four of the jobs, and Waynflete underneath the stage crew.
 //
-// Education keeps the two-entry preview it had, because two schools are
-// not a chronology worth drawing a trunk down. Resume stays last and
-// stays a link-through, being a summary page rather than a list.
+// After it, the two things a chronology cannot carry: the courses that
+// mattered, which belong to a degree rather than to a point in time, and
+// the resume, which is the whole thing on one page.
+const rpi = education.find((e) => e.slug === "rpi");
+
 export default function Experience() {
   return (
     <>
@@ -26,43 +27,35 @@ export default function Experience() {
           Experience
         </Reveal>
         <Reveal as="p" className="lede" stagger={2}>
-          Eight years of work, from a school stage crew to a manufacturing floor. Newest first: each entry
-          opens as you reach it.
+          Every job and every school, newest first, from a manufacturing floor back to a school stage crew.
+          Each one opens as you reach it.
         </Reveal>
       </section>
 
-      <section className="section--tight wrap" aria-label="Work history">
-        <Timeline entries={roles} basePath="/experience" />
-
-        <Reveal>
-          <Link className="link-arrow" to="/experience/work-excerpts">
-            <Letters text="All Work Excerpts" /> <span className="arr">&rarr;</span>
-          </Link>
-        </Reveal>
+      <section className="section--tight wrap" aria-label="Work and education history">
+        <Timeline
+          entries={timelineEntries}
+          basePath="/experience"
+          viewerTag="3D Placeholder / Info &amp; pics pending"
+        />
       </section>
 
       <Divider
-        to="/experience/education"
-        label="Education"
+        to="/experience/classes"
+        label="Classes"
         iconLeft="/assets/divider-icon-3.svg"
         iconRight="/assets/divider-icon-2.svg"
         flip
       />
 
-      <section className="section--tight wrap" aria-label="Education highlights">
-        {educationHighlights.map((entry) => (
-          <EntryCard
-            key={entry.slug}
-            entry={entry}
-            to={`/experience/${entry.slug}`}
-            viewerTag="3D Placeholder / Info & pics pending"
-            headingLevel={3}
-          />
-        ))}
-
+      <section className="section--tight wrap" aria-label="Highlighted classes">
         <Reveal>
-          <Link className="link-arrow" to="/experience/education">
-            <Letters text="All Education" /> <span className="arr">&rarr;</span>
+          <SpecList items={rpi?.highlights} label="Highlighted classes" />
+        </Reveal>
+
+        <Reveal stagger={1}>
+          <Link className="link-arrow" to="/experience/classes">
+            <Letters text="Every class" /> <span className="arr">&rarr;</span>
           </Link>
         </Reveal>
       </section>

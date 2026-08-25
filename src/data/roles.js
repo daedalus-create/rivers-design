@@ -9,6 +9,7 @@ export const roles = [
     sub: "Engineering Intern, Schenectady, NY",
     date: "May – Aug 2026",
     place: "Schenectady, NY",
+    start: "2026-05",
     model: "panel",
     desc: "Engineering Intern at SunThru in 2026, upgrading research equipment, building out PLC based automation, and retrofitting an industrial machine for commercial use.",
     body: [
@@ -30,6 +31,7 @@ export const roles = [
     sub: "Junior Design Engineer, Tysons Corner, VA",
     date: "May – Aug 2025",
     place: "Tysons Corner, VA",
+    start: "2025-05",
     model: "drone",
     desc: "Junior Design Engineer at Dreki Systems in 2025, establishing manufacturing systems for rapid prototyping and designing components in CAD.",
     body: [
@@ -48,6 +50,7 @@ export const roles = [
     sub: "Work Study, Troy, NY",
     date: "Sept 2024 – Present",
     place: "Troy, NY",
+    start: "2024-09",
     model: "desk",
     desc: "Supporting RPI's Assistant Deans with day-to-day operations and fielding parent questions about students' time on campus.",
     body: [
@@ -67,6 +70,7 @@ export const roles = [
     sub: "Engineering Shop Intern, Castleton, NY",
     date: "Jun – Aug 2024",
     place: "Castleton, NY",
+    start: "2024-06",
     model: "weldment",
     desc: "Engineering Shop Intern at Piasecki Steel in 2024, developing machining templates and helping fabricate safety equipment for bridge-repair work.",
     body: [
@@ -85,6 +89,7 @@ export const roles = [
     sub: "Sales Advisor, Portland, ME",
     date: "Summer – Fall 2023",
     place: "Portland, ME",
+    start: "2023-06",
     model: "storefront",
     desc: "Sales Advisor at Best Buy store #531 in 2023, matching customers to the right product and walking them through protection plans and payment options.",
     body: [
@@ -103,6 +108,7 @@ export const roles = [
     sub: "Room Manager, Troy, NY",
     date: "Fall 2022 – Present",
     place: "Troy, NY",
+    start: "2022-09",
     model: "makerspace",
     desc: "Room Manager at RPI's student makerspace since 2022, helping students through rapid prototyping and DFM, and keeping the machines running.",
     body: [
@@ -124,6 +130,7 @@ export const roles = [
     sub: "Instructor, Cape Elizabeth, ME",
     date: "Fall 2021 – Summer 2022",
     place: "Cape Elizabeth, ME",
+    start: "2021-09",
     model: "classroom",
     desc: "Kumon instructor from 2021 to 2022, building study plans and curriculums for up to fifteen students at a time.",
     body: [
@@ -143,6 +150,7 @@ export const roles = [
     sub: "Stage Manager, Portland, ME",
     date: "Spring 2018 – Summer 2023",
     place: "Portland, ME",
+    start: "2018-03",
     model: "stage",
     desc: "Stage Manager for Waynflete's productions, running the schedule and production plan for casts and crews of up to sixty people.",
     body: [

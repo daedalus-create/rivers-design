@@ -101,13 +101,23 @@ function readSheet(sheet) {
       specs: pairs("spec", SPECS),
     };
 
-    // The Experience timeline needs a date and a place it can put in its
-    // rail. Both are optional: sheets that do not use them (projects,
-    // classes) simply leave the columns empty.
+    // The Experience timeline needs a date and a place for its rail, and
+    // a sortable key to merge work and school into one chronology. `date`
+    // is what a reader sees ("May – Aug 2026"); `start` is YYYY-MM and
+    // exists only to sort by, because display dates cannot be compared.
+    // All three are optional: sheets that do not use them (projects,
+    // classes) leave the columns empty.
     const date = get("date");
     const place = get("place");
+    const start = get("start");
     if (date) entry.date = date;
     if (place) entry.place = place;
+    if (start) {
+      if (!/^\d{4}-\d{2}$/.test(start)) fail(at, `"${slug}" start must be YYYY-MM, got "${start}"`);
+      entry.start = start;
+    } else if (date) {
+      fail(at, `"${slug}" has a date but no start, so it cannot be placed on the timeline`);
+    }
 
     const status = get("status");
     if (sheet.needsStatus) {
@@ -149,6 +159,7 @@ function renderEntry(e, num, indent = "  ") {
   put("sub", q(e.sub));
   if (e.date) put("date", q(e.date));
   if (e.place) put("place", q(e.place));
+  if (e.start) put("start", q(e.start));
   if (e.model) put("model", q(e.model));
   if (e.desc) put("desc", q(e.desc));
   if (e.body) {
