@@ -1042,6 +1042,144 @@ a.pill:hover .pill__inner { color: var(--accent); }
   .menu-tree__roots { gap: clamp(var(--space-4), 5vw, 56px); }
 }
 
+/* ---------- Experience timeline ---------- */
+/* One trunk down the page with a curved elbow out to each role, drawn by
+   the same module the site menu uses (see connectors.js). The rail on the
+   left is the trunk's column; everything else hangs to the right of it. */
+.timeline {
+  position: relative;
+  /* Distance from the trunk to an entry's dot. Wide enough for the elbow
+     to turn through without the curve collapsing into a corner. */
+  --tl-run: clamp(34px, 4vw, 72px);
+  --tl-dot: 11px;
+}
+
+.timeline__wires {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Opacity on the group, not the stroke: every entry's path redraws the
+   shared trunk, so per-stroke alpha would stack the overlapping runs into
+   a line that darkens down the page. */
+.timeline__wires g { opacity: 0.4; }
+.timeline__wires path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+
+.timeline__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.tl {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--tl-run) minmax(0, 1fr);
+  align-items: start;
+  column-gap: clamp(var(--space-4), 2vw, var(--space-6));
+  padding-bottom: clamp(var(--space-6), 4vh, var(--space-8));
+}
+
+/* The elbow's landing point, same role the dot plays in the menu. */
+.tl__dot {
+  width: var(--tl-dot);
+  height: var(--tl-dot);
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--ink-a45);
+  /* Nudged onto the first line of the date rather than the top of the
+     row, so the wire lands level with the text it belongs to. */
+  margin-top: 0.42em;
+  justify-self: end;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-out);
+}
+.tl.is-open .tl__dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.35);
+}
+
+.tl__body { min-width: 0; }
+
+.tl__when {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-4);
+  color: var(--ink-a65);
+  margin-bottom: var(--space-2);
+}
+.tl__date { color: var(--ink-a80); }
+.tl__place { color: var(--ink-a45); }
+
+.tl__title {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 2.6vw, 44px);
+  line-height: 1.08;
+  letter-spacing: var(--ls-nav);
+  margin: 0;
+  transition: color var(--t-hover);
+}
+.tl__title a { color: var(--ink-a65); text-decoration: none; }
+.tl.is-open .tl__title a { color: var(--ink); }
+.tl__title a:hover { color: var(--accent); }
+
+.tl__sub {
+  color: var(--ink-a65);
+  margin-top: var(--space-2);
+}
+
+/* Collapsed with a 0fr/1fr grid row rather than a max-height. The usual
+   max-height trick needs a ceiling guessed high enough for the tallest
+   entry, which then makes every shorter one ease at the wrong rate;
+   0fr to 1fr animates to the content's real height, so an entry with
+   four spec rows and one with two both open at the same speed. The inner
+   wrapper carries the overflow and min-height:0 the fr unit needs. */
+.tl__more {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--dur-3) var(--ease-out),
+    opacity var(--dur-2) var(--ease-out);
+}
+.tl.is-open .tl__more {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.tl__more-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+.tl__desc {
+  color: var(--ink-a80);
+  max-width: 62ch;
+  padding-top: var(--space-4);
+}
+.tl__more .specs { margin-top: var(--space-5); }
+.tl__more .link-arrow { margin-top: var(--space-5); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tl__more,
+  .tl__dot { transition: none; }
+}
+
+@media (max-width: 860px) {
+  .timeline { --tl-run: 26px; }
+  .tl { column-gap: var(--space-4); }
+}
+
 /* ---------- Footer ---------- */
 .site-footer {
   border-top: 1px solid var(--line-hair);

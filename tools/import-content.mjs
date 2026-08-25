@@ -101,6 +101,14 @@ function readSheet(sheet) {
       specs: pairs("spec", SPECS),
     };
 
+    // The Experience timeline needs a date and a place it can put in its
+    // rail. Both are optional: sheets that do not use them (projects,
+    // classes) simply leave the columns empty.
+    const date = get("date");
+    const place = get("place");
+    if (date) entry.date = date;
+    if (place) entry.place = place;
+
     const status = get("status");
     if (sheet.needsStatus) {
       if (!STATUSES.includes(status)) fail(at, `"${slug}" status must be one of ${STATUSES.join(", ")}, got "${status}"`);
@@ -139,6 +147,8 @@ function renderEntry(e, num, indent = "  ") {
   put("num", q(num));
   put("title", q(e.title));
   put("sub", q(e.sub));
+  if (e.date) put("date", q(e.date));
+  if (e.place) put("place", q(e.place));
   if (e.model) put("model", q(e.model));
   if (e.desc) put("desc", q(e.desc));
   if (e.body) {

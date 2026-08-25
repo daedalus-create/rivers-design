@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { Link, useLocation } from "react-router-dom";
 import { ancestorsOf, childrenOf, nodeForPath, rootSections } from "../data/siteTree";
 import Letters from "./Letters";
+import { elbow, unscale } from "./connectors";
 
 // Branching site menu. Opens as a row of root sections; clicking one drops
 // its pages in a list below it, and each of those can expand again the
@@ -28,32 +29,9 @@ const MIN_FIT = 0.5;
 const FIT_MARGIN = 0.98; // the field's own padding is the breathing room
 const REFIT_EVENT = "menu-refit";
 
-// Radius of the elbow where a connector turns out of the trunk. Clamped
-// against the actual run below, so a generous value here just means "as
-// round as there is room for".
-const CORNER = 18;
-
 // How far in from the parent label's left edge the trunk descends, in
 // layout pixels, so the wire reads as growing out of the label.
 const TRUNK_INSET = 10;
-
-/**
- * Trunk down from under the parent label, then a curved elbow out to one
- * child's dot. Every child's path redraws the whole trunk rather than
- * sharing one: the strokes are opaque and the group is faded as a whole
- * (see .tnode__wires in global.css), so overlapping runs composite to the
- * same value instead of stacking into a darker line.
- */
-function connectorPath(x0, y0, x1, y1) {
-  if (Math.abs(x1 - x0) < 0.5) return `M${x0} ${y0} L${x0} ${y1}`;
-  const r = Math.min(CORNER, Math.abs(y1 - y0), Math.abs(x1 - x0));
-  return [
-    `M${x0} ${y0}`,
-    `L${x0} ${y1 - r}`,
-    `Q${x0} ${y1} ${x0 + r} ${y1}`,
-    `L${x1} ${y1}`,
-  ].join(" ");
-}
 
 function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode }) {
   const kids = childrenOf(node.node);
@@ -79,14 +57,7 @@ function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode
       const svg = svgRef.current;
       if (!wrap || !label || !svg) return;
 
-      const base = wrap.getBoundingClientRect();
-      // The tree sits inside a scaled ancestor, so getBoundingClientRect
-      // reports screen pixels while the SVG draws in layout pixels.
-      // Recover the factor from this element rather than threading it
-      // down as a prop: offsetWidth is the untransformed box, so the
-      // ratio is exactly the scale in force here.
-      const k = wrap.offsetWidth ? base.width / wrap.offsetWidth : 1;
-      const px = (v) => v / k;
+      const { rect: base, px } = unscale(wrap);
 
       const from = label.getBoundingClientRect();
       const x0 = px(from.left - base.left) + TRUNK_INSET;
@@ -105,7 +76,7 @@ function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode
         const to = el.getBoundingClientRect();
         path.setAttribute(
           "d",
-          connectorPath(x0, y0, px(to.left - base.left), px(to.top + to.height / 2 - base.top)),
+          elbow(x0, y0, px(to.left - base.left), px(to.top + to.height / 2 - base.top)),
         );
       });
     };

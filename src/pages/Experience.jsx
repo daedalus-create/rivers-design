@@ -3,41 +3,18 @@ import Reveal from "../components/Reveal";
 import Divider from "../components/Divider";
 import Letters from "../components/Letters";
 import EntryCard from "../components/EntryCard";
-import { roleHighlights } from "../data/roles";
+import Timeline from "../components/Timeline";
+import { roles } from "../data/roles";
 import { educationHighlights } from "../data/education";
 
-// Same shape as the Projects hub: each section previews its first two
-// entries rather than being a bare divider, so the page shows the work
-// instead of only linking to it. The "first two" rule lives with the
-// data — see roleHighlights / educationHighlights.
+// The work history is a timeline rather than a preview of the first two
+// roles: eight jobs in reverse-chronological order is a shape, and a
+// shape is worth drawing. Each one opens as it reaches the reading band,
+// so scrolling the page is what reads it.
 //
-// Resume sits last and stays a link-through: it is a single page of
-// summary, not a list, so it has no first-two to preview.
-const SECTIONS = [
-  {
-    key: "work",
-    label: "Work Excerpts",
-    href: "/experience/work-excerpts",
-    basePath: "/experience",
-    entries: roleHighlights,
-    allLabel: "All Work Excerpts",
-    divider: {},
-  },
-  {
-    key: "education",
-    label: "Education",
-    href: "/experience/education",
-    basePath: "/experience",
-    entries: educationHighlights,
-    allLabel: "All Education",
-    divider: {
-      iconLeft: "/assets/divider-icon-3.svg",
-      iconRight: "/assets/divider-icon-2.svg",
-      flip: true,
-    },
-  },
-];
-
+// Education keeps the two-entry preview it had, because two schools are
+// not a chronology worth drawing a trunk down. Resume stays last and
+// stays a link-through, being a summary page rather than a list.
 export default function Experience() {
   return (
     <>
@@ -49,34 +26,46 @@ export default function Experience() {
           Experience
         </Reveal>
         <Reveal as="p" className="lede" stagger={2}>
-          Hands-on engineering roles across manufacturing and design. Placeholder: swap in the real story for
-          each role.
+          Eight years of work, from a school stage crew to a manufacturing floor. Newest first: each entry
+          opens as you reach it.
         </Reveal>
       </section>
 
-      {SECTIONS.map(({ key, label, href, basePath, entries, allLabel, divider }) => (
-        <div key={key}>
-          <Divider to={href} label={label} {...divider} />
+      <section className="section--tight wrap" aria-label="Work history">
+        <Timeline entries={roles} basePath="/experience" />
 
-          <section className="section--tight wrap" aria-label={`${label} highlights`}>
-            {entries.map((entry) => (
-              <EntryCard
-                key={entry.slug}
-                entry={entry}
-                to={`${basePath}/${entry.slug}`}
-                viewerTag="3D Placeholder / Info & pics pending"
-                headingLevel={3}
-              />
-            ))}
+        <Reveal>
+          <Link className="link-arrow" to="/experience/work-excerpts">
+            <Letters text="All Work Excerpts" /> <span className="arr">&rarr;</span>
+          </Link>
+        </Reveal>
+      </section>
 
-            <Reveal>
-              <Link className="link-arrow" to={href}>
-                <Letters text={allLabel} /> <span className="arr">&rarr;</span>
-              </Link>
-            </Reveal>
-          </section>
-        </div>
-      ))}
+      <Divider
+        to="/experience/education"
+        label="Education"
+        iconLeft="/assets/divider-icon-3.svg"
+        iconRight="/assets/divider-icon-2.svg"
+        flip
+      />
+
+      <section className="section--tight wrap" aria-label="Education highlights">
+        {educationHighlights.map((entry) => (
+          <EntryCard
+            key={entry.slug}
+            entry={entry}
+            to={`/experience/${entry.slug}`}
+            viewerTag="3D Placeholder / Info & pics pending"
+            headingLevel={3}
+          />
+        ))}
+
+        <Reveal>
+          <Link className="link-arrow" to="/experience/education">
+            <Letters text="All Education" /> <span className="arr">&rarr;</span>
+          </Link>
+        </Reveal>
+      </section>
 
       <Divider to="/experience/resume" label="Resume" />
     </>
