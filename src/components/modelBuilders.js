@@ -645,6 +645,135 @@ function buildSchoolhouse() {
   return g;
 }
 
+// The Forge — RPI's makerspace: a bench of small machines rather than one
+// big gantry, so it doesn't read as the G.A.S. printer above
+function buildMakerspace() {
+  const g = new THREE.Group();
+  const bench = edges(new THREE.BoxGeometry(3.0, 0.1, 1.1), INK, 0.8);
+  g.add(bench);
+  for (const sx of [1, -1]) {
+    g.add(poly([[sx * 1.4, -0.05, 0.45], [sx * 1.4, -0.85, 0.45]], INK, 0.5));
+    g.add(poly([[sx * 1.4, -0.05, -0.45], [sx * 1.4, -0.85, -0.45]], INK, 0.5));
+  }
+
+  // desktop printer, bed rising through the print
+  const printer = edges(new THREE.BoxGeometry(0.8, 0.85, 0.8), INK, 0.6);
+  printer.position.set(-0.95, 0.52, 0);
+  g.add(printer);
+  const bed = edges(new THREE.BoxGeometry(0.6, 0.04, 0.6), ACCENT, 0.9);
+  bed.position.set(-0.95, 0.3, 0);
+  g.add(bed);
+
+  // laser cutter, head tracking across the lid
+  const laser = edges(new THREE.BoxGeometry(1.2, 0.42, 0.9), INK, 0.6);
+  laser.position.set(0.75, 0.31, 0);
+  g.add(laser);
+  const head = edges(new THREE.BoxGeometry(0.14, 0.14, 0.14), ACCENT);
+  head.position.set(0.75, 0.55, 0);
+  g.add(head);
+
+  // roll of vinyl stood on end at the far side of the bench
+  const roll = edges(new THREE.CylinderGeometry(0.16, 0.16, 0.7, 12), INK, 0.55);
+  roll.rotation.z = Math.PI / 2;
+  roll.position.set(1.55, 0.25, 0);
+  g.add(roll);
+
+  g.userData.anims = [shuttle(bed, "y", 0.5, 0.5), shuttle(head, "x", 0.9, 1.1)];
+  return g;
+}
+
+// Best Buy — retail floor: a signed fascia over shelving and a counter
+function buildStorefront() {
+  const g = new THREE.Group();
+
+  const fascia = edges(new THREE.BoxGeometry(2.6, 0.5, 0.12), ACCENT, 0.9);
+  fascia.position.set(0, 1.15, -0.6);
+  g.add(fascia);
+  g.add(poly([[-1.3, 0.9, -0.6], [1.3, 0.9, -0.6]], ACCENT, 0.6));
+
+  // two shelf bays against the back wall
+  for (const x of [-0.8, 0.8]) {
+    g.add(edges(new THREE.BoxGeometry(1.0, 1.5, 0.4), INK, 0.55).translateX(x).translateY(0.1).translateZ(-0.6));
+    for (let i = 0; i < 3; i++) {
+      g.add(poly([[x - 0.5, -0.45 + i * 0.45, -0.4], [x + 0.5, -0.45 + i * 0.45, -0.4]], INK, 0.45));
+    }
+  }
+
+  const counter = edges(new THREE.BoxGeometry(1.6, 0.6, 0.55), INK, 0.75);
+  counter.position.set(0, -0.35, 0.55);
+  g.add(counter);
+
+  const terminal = edges(new THREE.BoxGeometry(0.34, 0.26, 0.03), ACCENT, 0.85);
+  terminal.position.set(0.35, 0.1, 0.45);
+  terminal.rotation.x = -0.3;
+  g.add(terminal);
+  return g;
+}
+
+// Kumon — the learning centre: a board at the front and the worksheets
+// that move across the desks in front of it
+function buildClassroom() {
+  const g = new THREE.Group();
+
+  const board = edges(new THREE.BoxGeometry(2.0, 0.95, 0.06), INK, 0.75);
+  board.position.set(0, 0.7, -0.9);
+  g.add(board);
+  g.add(poly([[-0.8, 0.85, -0.86], [0.55, 0.85, -0.86]], ACCENT, 0.7));
+  g.add(poly([[-0.8, 0.6, -0.86], [0.25, 0.6, -0.86]], ACCENT, 0.5));
+
+  // a short row of desks, each with a worksheet on it
+  for (const x of [-0.85, 0, 0.85]) {
+    const top = edges(new THREE.BoxGeometry(0.7, 0.05, 0.5), INK, 0.6);
+    top.position.set(x, -0.3, 0.35);
+    g.add(top);
+    for (const sx of [1, -1]) {
+      g.add(poly([[x + sx * 0.3, -0.33, 0.35], [x + sx * 0.3, -0.8, 0.35]], INK, 0.4));
+    }
+    const sheet = edges(new THREE.BoxGeometry(0.3, 0.012, 0.22), ACCENT, 0.8);
+    sheet.position.set(x, -0.26, 0.35);
+    g.add(sheet);
+  }
+  return g;
+}
+
+// Waynflete stage crew — the view from the booth: proscenium, curtain
+// split, and the lighting bar the crew actually flies
+function buildStage() {
+  const g = new THREE.Group();
+
+  // proscenium arch
+  g.add(poly([[-1.5, -0.9, 0], [-1.5, 1.1, 0], [1.5, 1.1, 0], [1.5, -0.9, 0]], INK, 0.8));
+  g.add(poly([[-1.5, -0.9, 0], [1.5, -0.9, 0]], INK, 0.8));
+
+  // curtains, drawn back either side
+  for (const sx of [1, -1]) {
+    for (let i = 0; i < 3; i++) {
+      const x = sx * (1.42 - i * 0.16);
+      g.add(poly([[x, 1.05, -0.12], [x, -0.85, -0.12]], ACCENT, 0.6 - i * 0.12));
+    }
+  }
+
+  // lighting bar with lamps hung off it
+  const bar = new THREE.Group();
+  bar.add(poly([[-1.35, 0, 0], [1.35, 0, 0]], INK, 0.7));
+  for (const x of [-1.0, -0.35, 0.35, 1.0]) {
+    const lamp = edges(new THREE.CylinderGeometry(0.09, 0.13, 0.24, 10), ACCENT, 0.85);
+    lamp.position.set(x, -0.16, 0);
+    lamp.rotation.x = 0.4;
+    bar.add(lamp);
+  }
+  bar.position.set(0, 0.85, -0.35);
+  g.add(bar);
+
+  // deck
+  const deck = edges(new THREE.BoxGeometry(2.9, 0.08, 1.3), INK, 0.5);
+  deck.position.set(0, -0.94, -0.5);
+  g.add(deck);
+
+  g.userData.anims = [shuttle(bar, "y", 0.16, 0.35)];
+  return g;
+}
+
 // Fallback for a new entry that hasn't been given its own shape yet.
 export function buildConcept() {
   const g = new THREE.Group();
@@ -676,6 +805,10 @@ export const BUILDERS = {
   drone: buildDrone,
   weldment: buildWeldment,
   desk: buildDesk,
+  makerspace: buildMakerspace,
+  storefront: buildStorefront,
+  classroom: buildClassroom,
+  stage: buildStage,
   campus: buildCampus,
   schoolhouse: buildSchoolhouse,
   // fallback

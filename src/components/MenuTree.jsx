@@ -9,6 +9,13 @@ import Letters from "./Letters";
 // is [label] over [children] in a flex column, so expanding anywhere just
 // grows that node's own height — flexbox reflows the rest of the tree
 // around it, with nothing measured or absolutely positioned.
+//
+// The one thing flexbox cannot give us is the connectors: a trunk
+// descending from the parent label with a curved elbow peeling off to
+// each child's dot. Those are measured after layout and written straight
+// onto the <path> elements. Doing it imperatively rather than through
+// state keeps a resize or an expansion from causing a second render pass
+// just to draw a line.
 
 // The tree is scaled to fill the screen. A fixed type size cannot do
 // this: the collapsed root row uses a fraction of the width, while a
@@ -19,6 +26,34 @@ import Letters from "./Letters";
 const MAX_FIT = 2.2;
 const MIN_FIT = 0.5;
 const FIT_MARGIN = 0.98; // the field's own padding is the breathing room
+const REFIT_EVENT = "menu-refit";
+
+// Radius of the elbow where a connector turns out of the trunk. Clamped
+// against the actual run below, so a generous value here just means "as
+// round as there is room for".
+const CORNER = 18;
+
+// How far in from the parent label's left edge the trunk descends, in
+// layout pixels, so the wire reads as growing out of the label.
+const TRUNK_INSET = 10;
+
+/**
+ * Trunk down from under the parent label, then a curved elbow out to one
+ * child's dot. Every child's path redraws the whole trunk rather than
+ * sharing one: the strokes are opaque and the group is faded as a whole
+ * (see .tnode__wires in global.css), so overlapping runs composite to the
+ * same value instead of stacking into a darker line.
+ */
+function connectorPath(x0, y0, x1, y1) {
+  if (Math.abs(x1 - x0) < 0.5) return `M${x0} ${y0} L${x0} ${y1}`;
+  const r = Math.min(CORNER, Math.abs(y1 - y0), Math.abs(x1 - x0));
+  return [
+    `M${x0} ${y0}`,
+    `L${x0} ${y1 - r}`,
+    `Q${x0} ${y1} ${x0 + r} ${y1}`,
+    `L${x1} ${y1}`,
+  ].join(" ");
+}
 
 function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode }) {
   const kids = childrenOf(node.node);
@@ -29,12 +64,84 @@ function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode
   // left bright, since those are the destinations being offered.
   const dimmed = depth < expandedPath.length && expandedPath[depth] !== node.node;
 
+  const wrapRef = useRef(null);
   const labelRef = useRef(null);
+  const childRefs = useRef([]);
+  const pathRefs = useRef([]);
+  const svgRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (!isOpen || !kids.length) return undefined;
+
+    const draw = () => {
+      const wrap = wrapRef.current;
+      const label = labelRef.current;
+      const svg = svgRef.current;
+      if (!wrap || !label || !svg) return;
+
+      const base = wrap.getBoundingClientRect();
+      // The tree sits inside a scaled ancestor, so getBoundingClientRect
+      // reports screen pixels while the SVG draws in layout pixels.
+      // Recover the factor from this element rather than threading it
+      // down as a prop: offsetWidth is the untransformed box, so the
+      // ratio is exactly the scale in force here.
+      const k = wrap.offsetWidth ? base.width / wrap.offsetWidth : 1;
+      const px = (v) => v / k;
+
+      const from = label.getBoundingClientRect();
+      const x0 = px(from.left - base.left) + TRUNK_INSET;
+      const y0 = px(from.bottom - base.top);
+      const w = px(base.width);
+      const h = px(base.height);
+
+      svg.setAttribute("width", String(w));
+      svg.setAttribute("height", String(h));
+      svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+
+      kids.forEach((_, i) => {
+        const el = childRefs.current[i];
+        const path = pathRefs.current[i];
+        if (!el || !path) return;
+        const to = el.getBoundingClientRect();
+        path.setAttribute(
+          "d",
+          connectorPath(x0, y0, px(to.left - base.left), px(to.top + to.height / 2 - base.top)),
+        );
+      });
+    };
+
+    draw();
+    // Redraw whenever anything reflows: a deeper expansion, a window
+    // resize, or the reveal transition settling. A change of scale does
+    // NOT change any layout box, so ResizeObserver cannot see it — hence
+    // the explicit refit event from the parent.
+    const ro = new ResizeObserver(draw);
+    if (wrapRef.current) ro.observe(wrapRef.current);
+    childRefs.current.forEach((el) => el && ro.observe(el));
+    window.addEventListener(REFIT_EVENT, draw);
+    const raf = requestAnimationFrame(draw);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener(REFIT_EVENT, draw);
+      cancelAnimationFrame(raf);
+    };
+  }, [isOpen, kids, expandedPath]);
+
   const isLeaf = kids.length === 0;
   const isCurrent = currentNode === node.node;
 
   return (
-    <div className={`tnode${isOpen ? " is-open" : ""}${dimmed ? " is-dim" : ""}`}>
+    <div className={`tnode${isOpen ? " is-open" : ""}${dimmed ? " is-dim" : ""}`} ref={wrapRef}>
+      {isOpen && kids.length > 0 && (
+        <svg className="tnode__wires" ref={svgRef} aria-hidden="true">
+          <g>
+            {kids.map((k, i) => (
+              <path key={k.node} ref={(el) => (pathRefs.current[i] = el)} />
+            ))}
+          </g>
+        </svg>
+      )}
+
       <Link
         ref={labelRef}
         className={`tnode__label${isCurrent ? " is-current" : ""}`}
@@ -71,8 +178,8 @@ function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode
 
       {isOpen && kids.length > 0 && (
         <div className="tnode__kids">
-          {kids.map((k) => (
-            <div className="tnode__kid" key={k.node}>
+          {kids.map((k, i) => (
+            <div className="tnode__kid" key={k.node} ref={(el) => (childRefs.current[i] = el)}>
               <TreeNode
                 node={k}
                 expandedPath={expandedPath}
@@ -151,9 +258,20 @@ export default function MenuTree({ open, onClose }) {
       // the observer fired for the new layout, so the scale animation
       // was interrupted and re-launched mid-flight. Only write a real
       // change, and only once per frame.
-      if (applied !== null && Math.abs(applied - fit) < 0.004) return;
-      applied = fit;
-      tree.style.setProperty("--fit", String(fit));
+      if (applied === null || Math.abs(applied - fit) >= 0.004) {
+        applied = fit;
+        tree.style.setProperty("--fit", String(fit));
+      }
+
+      // Told on every pass, not only when the scale moved. Whether to
+      // rewrite --fit and whether the connectors are stale are separate
+      // questions, and the early return above answers the first one: a
+      // pass that decides the scale is unchanged would otherwise also
+      // suppress the redraw. The wires measure screen pixels, and a
+      // transform changes no layout box, so this event is the only thing
+      // that can tell them a rescale happened. Coalesced to one pass per
+      // frame already, so the extra draw is cheap.
+      window.dispatchEvent(new Event(REFIT_EVENT));
     };
 
     // Coalesce: an expansion changes the layout and the observer and the

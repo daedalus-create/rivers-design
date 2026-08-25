@@ -1,5 +1,28 @@
 import Reveal from "../components/Reveal";
 
+// The summary sheet. The rows below are transcribed from the current resume
+// and have to move with it whenever it changes.
+//
+// No PDF is linked yet on purpose: the copy on file carries a home address,
+// and this repo is public and deploys straight to the live site. Once an
+// address-free version lands in public/assets, the Download row becomes a
+// link to it.
+const ROWS = [
+  { k: "Education", v: "B.S. Mechanical and Aerospace Engineering, RPI, May 2026" },
+  { k: "Skills", v: "CAD Modeling / Project Management / Rapid Prototyping / Additive Manufacturing" },
+  { k: "Software", v: "Siemens NX / Fusion 360 / Autodesk Inventor / Mastercam / MATLAB / Microsoft Suite / Google Suite" },
+  { k: "Shop", v: "3D printing / Manual machining / Wood working / Blacksmithing / Gem cutting" },
+  {
+    k: "Coursework",
+    v: "Manufacturing Processes / Systems Laboratory 1 / Space Vehicle Design Capstone / Numerical Design Optimization / Propulsion Systems",
+  },
+  {
+    k: "Achievements",
+    v: "Summa Cum Laude at Waynflete / Founded the Room Manager Union at The Forge / Stage Manager for three years",
+  },
+  { k: "Full resume", v: "On request, see Contact for email" },
+];
+
 export default function Resume() {
   return (
     <>
@@ -18,22 +41,12 @@ export default function Resume() {
 
       <section className="section--tight wrap">
         <Reveal as="ul" className="specs">
-          <li>
-            <span className="k">Education</span>
-            <span className="v">B.S. Mechanical and Aerospace Engineering, RPI, May 2026</span>
-          </li>
-          <li>
-            <span className="k">Skills</span>
-            <span className="v">CAD Modeling / Project Management / Rapid Prototyping / Additive Manufacturing</span>
-          </li>
-          <li>
-            <span className="k">Software</span>
-            <span className="v">Siemens NX / Fusion 360 / Autodesk Inventor / Mastercam / MATLAB</span>
-          </li>
-          <li>
-            <span className="k">Download</span>
-            <span className="v">Available on request, see Contact for email</span>
-          </li>
+          {ROWS.map((row) => (
+            <li key={row.k}>
+              <span className="k">{row.k}</span>
+              <span className="v">{row.v}</span>
+            </li>
+          ))}
         </Reveal>
       </section>
     </>

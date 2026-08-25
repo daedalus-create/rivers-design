@@ -187,9 +187,24 @@ export const highlightsFor = (status) =>
 `,
   "roles.js": `
 export const getRole = (slug) => roles.find((r) => r.slug === slug);
+
+// The Experience hub previews the first two roles.
+export const HIGHLIGHT_COUNT = 2;
+export const roleHighlights = roles.slice(0, HIGHLIGHT_COUNT);
+
+// The home page carries three, matching the three completed projects in
+// the section above it so the two blocks balance. Both counts live here
+// rather than in the pages, so re-ordering the spreadsheet is the only
+// thing needed to change which roles get the front page.
+export const HOME_ROLE_COUNT = 3;
+export const homeRoles = roles.slice(0, HOME_ROLE_COUNT);
 `,
   "education.js": `
 export const getEducationEntry = (slug) => education.find((e) => e.slug === slug);
+
+// The Experience hub previews the first two schools.
+export const HIGHLIGHT_COUNT = 2;
+export const educationHighlights = education.slice(0, HIGHLIGHT_COUNT);
 `,
   "classes.js": "",
 };

@@ -43,13 +43,10 @@ export default function Header() {
       </div>
 
       {/* Static group — lives in the header's normal flow, scrolls away with the page.
-          The date badge is positioned independently, matching how Figma places it —
-          under/left of the slogan, not stacked under it. */}
+          The date badge is all that remains here: the bulb/text/alert row this used
+          to carry was dropped, and the header band was shrunk to suit, so the badge
+          is now the only thing the band has to make room for. */}
       <div className="site-header__static">
-        <p className="site-header__tagline">
-          <span className="site-header__tagline-text">Dream to Build</span>
-        </p>
-
         <div className="pill pill--date">
           <span className="pill__inner">
             {mm}
