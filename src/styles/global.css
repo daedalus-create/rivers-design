@@ -100,7 +100,17 @@
   --section-y: clamp(96px, 14vh, 192px);
   --max-width: 1680px;
   --max-text: 720px;
-  --header-h: clamp(164px, 16.5vw, 330px);
+  /* Header band. Sized to clear the fixed corner logo with margin either
+     side, and no taller: the band used to carry a slogan row, and once
+     that went there was nothing left holding the extra height open. */
+  --header-h: clamp(124px, 10vw, 164px);
+
+  /* Corner logo metrics. Up here rather than on .logo because the date
+     badge has to know how wide the logo box is to clear it. */
+  --logo-mark: clamp(52px, 5.5vw, 76px);
+  --logo-pad: clamp(7px, .7vw, 10px);
+  --logo-box: calc(var(--logo-mark) + (2 * var(--logo-pad)) + 6px);
+  --logo-clear: 32px;
 
   /* The column projected down from the date badge — big display
      text left-aligns to it, exactly as in the Figma comp */
@@ -206,18 +216,33 @@ body::after {
   height: var(--header-h);
 }
 
+/* Corner logo — boxed with the same ring, fill, and radius as the
+   hamburger opposite it, so the two fixed corners read as a matched
+   pair instead of a bare mark on one side and a button on the other.
+   Sizing, hover, and radius all track .menu-btn below; the mark is
+   inset by its padding so it doesn't crowd the border. */
+/* The mark keeps the size it had before the box existed; the box is sized
+   from it (see --logo-box above), so the padding stays even on all four
+   sides and the mark sits dead centre. Square like the hamburger, which
+   means the taller-than-wide mark centres horizontally within it. */
 .logo {
-  display: block;
   position: fixed;
   top: calc(var(--header-h) / 2);
   left: var(--page-margin);
   transform: translateY(-50%);
   z-index: 310;
-  height: clamp(52px, 5.5vw, 76px);
-  transition: opacity var(--t-hover);
+  width: var(--logo-box);
+  height: var(--logo-box);
+  background: var(--bg);
+  border: 3px solid var(--line-strong);
+  border-radius: clamp(12px, 1.2vw, 16px);
+  display: grid;
+  place-items: center;
+  padding: var(--logo-pad);
+  transition: border-color var(--t-hover);
 }
-.logo:hover { opacity: .8; }
-.logo img { height: 100%; width: auto; }
+.logo:hover { border-color: var(--accent); }
+.logo img { height: var(--logo-mark); width: auto; display: block; }
 
 /* Hamburger button — styled like the badges (white ring, dark fill) */
 .menu-btn {
@@ -425,53 +450,26 @@ button:focus-visible .ch {
   padding-bottom: clamp(52px, 4.9vw, 88px);
 }
 
-/* Static group — slogan/icons and the date badge, both left in the
-   header's normal flow (see .site-header__fixed above for the group
-   that stays put in the viewport instead). Left unpositioned on
-   purpose: its children are absolutely positioned against
-   .site-header itself, not this wrapper. */
-
-/* Lightbulb + centered slogan + alert mark. Spans the same safe zone
-   the rest of the page uses (page-margin + indent) to stay clear of
-   the fixed corner logo/hamburger — Figma's own frame has no separate
-   corner logo, so its 40px edge margins would otherwise collide with
-   ours. 1fr/auto/1fr keeps "Dream to Build" centered between the
-   icons regardless of their rendered width, which matters here since
-   the icons are sized to match the fixed corner logo rather than
-   Figma's own (much larger) icon size — a fixed pixel position for
-   the text would only be correct at one icon size. */
-.site-header__tagline {
-  position: absolute;
-  left: calc(var(--page-margin) + var(--indent));
-  right: calc(var(--page-margin) + var(--indent));
-  top: calc(var(--header-h) / 2);
-  transform: translateY(-50%);
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  font-family: var(--font-body);
-  color: var(--ink);
-  white-space: nowrap;
-}
-.site-header__tagline-icon {
-  height: clamp(52px, 5.5vw, 76px);
-  width: auto;
-}
-.site-header__tagline-icon--bulb { justify-self: start; }
-.site-header__tagline-icon--alert { justify-self: end; }
-.site-header__tagline-text {
-  justify-self: center;
-  font-size: clamp(41px, 4.1vw, 81px);
-}
+/* Static group — now just the date badge, left in the header's normal
+   flow (see .site-header__fixed above for the group that stays put in
+   the viewport instead). Left unpositioned on purpose: its child is
+   absolutely positioned against .site-header itself, not this wrapper. */
 
 /* Date badge — stays in normal flow, scrolls away with the page
-   (unlike the fixed logo/hamburger). Left-aligned in the same column
-   as the lightbulb (matching the Figma layout, where the badge sits
-   under/left of the slogan, not centered with it), straddling the
-   header rule below the icon/text row. */
+   (unlike the fixed logo/hamburger). Sits at the page's text indent
+   rather than the page margin, so it lines up with the copy below
+   instead of with the fixed corner logo, and straddles the header
+   rule: half above, half below. The header's padding-bottom is what
+   reserves room for the half that hangs below. */
 .pill.pill--date {
   position: absolute;
-  left: calc(var(--page-margin) + var(--indent));
+  /* Normally the text indent, so the badge lines up with the display copy
+     below it. But shrinking the band brought the badge up alongside the
+     fixed logo instead of below it, and between roughly 860px and 1500px
+     the indent is narrower than the logo box, so the two would collide.
+     max() hands over to a plain logo-box clearance in exactly that range
+     and returns to the indent once the indent is the wider of the two. */
+  left: calc(var(--page-margin) + max(var(--indent), var(--logo-box) + var(--logo-clear)));
   top: var(--header-h);
   transform: translateY(-50%);
 }
@@ -759,7 +757,6 @@ a.pill:hover .pill__inner { color: var(--accent); }
 /* Spacing comes from .page-hero, which every other page's header uses,
    so the opening block sits in exactly the same slot as the rest of the
    site. Only the name's treatment is local. */
-.intro__eyebrow { display: block; max-width: 46ch; }
 .intro__name {
   font-family: var(--font-display);
   font-size: var(--fs-display-1);
@@ -809,6 +806,9 @@ a.pill:hover .pill__inner { color: var(--accent); }
    <img>: there is no photo in the repo yet, and an empty box that says so
    is more useful than a missing-image icon. Drop the file in
    public/assets/ and swap this for an <img> when there is one. */
+/* The hatch stays as the ground the photo sits on, so the frame still
+   reads as a frame while the image is loading (or if it 404s) rather
+   than collapsing to a bare border. */
 .portrait {
   position: relative;
   aspect-ratio: 4 / 5;
@@ -821,9 +821,18 @@ a.pill:hover .pill__inner { color: var(--accent); }
     );
   display: grid;
   place-items: center;
+  overflow: hidden;
 }
-.portrait__note { color: var(--ink-a65); text-align: center; padding: 0 var(--space-5); }
-.about-split__name { margin-bottom: var(--space-5); }
+/* The source is square and the frame is 4:5, so cover crops the sides.
+   Biased above centre because the crop should take the shirt, not the
+   top of the head. */
+.portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 42%;
+  display: block;
+}
 .about-split__body { margin-top: var(--space-5); max-width: 62ch; }
 .about-split .specs { margin-top: var(--space-6); }
 
@@ -1041,14 +1050,20 @@ a.pill:hover .pill__inner { color: var(--accent); }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 860px) {
-  :root { --indent: 0px; }
+  :root {
+    --indent: 0px;
+    /* The badge is wider than the space left beside the logo here, so it
+       goes back under it, and the band goes back to full height to make
+       room. Nothing is lost by that: the slogan the band used to hold
+       was already hidden at this width. */
+    --header-h: 164px;
+  }
+  /* back under the logo, sharing its left edge */
+  .pill.pill--date { left: var(--page-margin); }
   .statement { grid-template-columns: 1fr; }
   .statement__text { padding-top: 0; }
   .divider__row { flex-wrap: wrap; justify-content: center; row-gap: var(--space-4); }
   .entry__sub { margin-left: 0; }
-  /* not enough room next to the fixed logo + hamburger for the
-     slogan on narrow screens — hide it rather than wrap/collide */
-  .site-header__tagline { display: none; }
 }
 
 /* Keyboard focus is a state, so it uses the cool accent rather than the
