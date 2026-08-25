@@ -2,41 +2,19 @@ import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
 import Divider from "../components/Divider";
 import Letters from "../components/Letters";
-import EntryCard from "../components/EntryCard";
-import { roleHighlights } from "../data/roles";
-import { educationHighlights } from "../data/education";
+import SpecList from "../components/SpecList";
+import Timeline from "../components/Timeline";
+import { timelineEntries } from "../data/timeline";
+import { education } from "../data/education";
 
-// Same shape as the Projects hub: each section previews its first two
-// entries rather than being a bare divider, so the page shows the work
-// instead of only linking to it. The "first two" rule lives with the
-// data — see roleHighlights / educationHighlights.
+// The page is the timeline. Work and school are one chronology rather
+// than two lists, which is the only way the overlap shows: RPI runs
+// underneath four of the jobs, and Waynflete underneath the stage crew.
 //
-// Resume sits last and stays a link-through: it is a single page of
-// summary, not a list, so it has no first-two to preview.
-const SECTIONS = [
-  {
-    key: "work",
-    label: "Work Excerpts",
-    href: "/experience/work-excerpts",
-    basePath: "/experience",
-    entries: roleHighlights,
-    allLabel: "All Work Excerpts",
-    divider: {},
-  },
-  {
-    key: "education",
-    label: "Education",
-    href: "/experience/education",
-    basePath: "/experience",
-    entries: educationHighlights,
-    allLabel: "All Education",
-    divider: {
-      iconLeft: "/assets/divider-icon-3.svg",
-      iconRight: "/assets/divider-icon-2.svg",
-      flip: true,
-    },
-  },
-];
+// After it, the two things a chronology cannot carry: the courses that
+// mattered, which belong to a degree rather than to a point in time, and
+// the resume, which is the whole thing on one page.
+const rpi = education.find((e) => e.slug === "rpi");
 
 export default function Experience() {
   return (
@@ -49,34 +27,38 @@ export default function Experience() {
           Experience
         </Reveal>
         <Reveal as="p" className="lede" stagger={2}>
-          Hands-on engineering roles across manufacturing and design. Placeholder: swap in the real story for
-          each role.
+          Every job and every school, newest first, from a manufacturing floor back to a school stage crew.
+          Each one opens as you reach it.
         </Reveal>
       </section>
 
-      {SECTIONS.map(({ key, label, href, basePath, entries, allLabel, divider }) => (
-        <div key={key}>
-          <Divider to={href} label={label} {...divider} />
+      <section className="section--tight wrap" aria-label="Work and education history">
+        <Timeline
+          entries={timelineEntries}
+          basePath="/experience"
+          viewerTag="3D Placeholder / Info &amp; pics pending"
+        />
+      </section>
 
-          <section className="section--tight wrap" aria-label={`${label} highlights`}>
-            {entries.map((entry) => (
-              <EntryCard
-                key={entry.slug}
-                entry={entry}
-                to={`${basePath}/${entry.slug}`}
-                viewerTag="3D Placeholder / Info & pics pending"
-                headingLevel={3}
-              />
-            ))}
+      <Divider
+        to="/experience/classes"
+        label="Classes"
+        iconLeft="/assets/divider-icon-3.svg"
+        iconRight="/assets/divider-icon-2.svg"
+        flip
+      />
 
-            <Reveal>
-              <Link className="link-arrow" to={href}>
-                <Letters text={allLabel} /> <span className="arr">&rarr;</span>
-              </Link>
-            </Reveal>
-          </section>
-        </div>
-      ))}
+      <section className="section--tight wrap" aria-label="Highlighted classes">
+        <Reveal>
+          <SpecList items={rpi?.highlights} label="Highlighted classes" />
+        </Reveal>
+
+        <Reveal stagger={1}>
+          <Link className="link-arrow" to="/experience/classes">
+            <Letters text="Every class" /> <span className="arr">&rarr;</span>
+          </Link>
+        </Reveal>
+      </section>
 
       <Divider to="/experience/resume" label="Resume" />
     </>

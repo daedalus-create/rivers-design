@@ -1042,6 +1042,295 @@ a.pill:hover .pill__inner { color: var(--accent); }
   .menu-tree__roots { gap: clamp(var(--space-4), 5vw, 56px); }
 }
 
+/* ---------- Experience timeline ---------- */
+/* One trunk down the page with a curved elbow out to each role, drawn by
+   the same module the site menu uses (see connectors.js). The rail on the
+   left is the trunk's column; everything else hangs to the right of it. */
+.timeline {
+  position: relative;
+  /* The channel the trunk runs down, and therefore the run each elbow
+     turns through: half of it either side. Wide enough that the curve
+     does not collapse into a corner. */
+  --tl-gutter: clamp(72px, 9vw, 150px);
+  --tl-dot: 11px;
+  /* 1 while entries alternate around a centred trunk, 0 once they stack
+     to the right of a left-hand one. Timeline.jsx reads this back rather
+     than repeating the breakpoint in JS. */
+  --tl-split: 1;
+}
+
+.timeline__wires {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Opacity on the group, not the stroke: every entry's path redraws the
+   shared trunk, so per-stroke alpha would stack the overlapping runs into
+   a line that darkens down the page. */
+.timeline__wires g { opacity: 0.4; }
+.timeline__wires path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+
+.timeline__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* Alternating: content in the outer columns, the trunk down the middle
+   one. The dot is positioned rather than placed in the grid because it
+   belongs to the inner edge of whichever column the entry is in, which
+   is a different cell each row. */
+.tl {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--tl-gutter) minmax(0, 1fr);
+  align-items: start;
+  padding-bottom: clamp(var(--space-7), 5vh, var(--space-9));
+}
+.tl.is-left  > .tl__body { grid-column: 1; text-align: right; }
+.tl.is-right > .tl__body { grid-column: 3; }
+
+/* Right-aligning the head is what makes a left-hand entry hug the trunk.
+   The detail underneath stays left-aligned: a paragraph and a key/value
+   table set flush right are harder to read, and the alignment has
+   already done its job by the time the eye gets there. */
+.tl.is-left .tl__more-inner { text-align: left; }
+.tl.is-left .tl__when { justify-content: flex-end; }
+
+/* The elbow's landing point, same role the dot plays in the menu. */
+.tl__dot {
+  position: absolute;
+  /* On the first line of the date rather than the top of the row, so the
+     wire lands level with the text it belongs to. */
+  top: 0.42em;
+  width: var(--tl-dot);
+  height: var(--tl-dot);
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--ink-a45);
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-out);
+}
+.tl.is-left  .tl__dot { right: calc(50% + (var(--tl-gutter) / 2) - (var(--tl-dot) / 2)); }
+.tl.is-right .tl__dot { left:  calc(50% + (var(--tl-gutter) / 2) - (var(--tl-dot) / 2)); }
+
+.tl.is-open .tl__dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.35);
+}
+
+.tl__body { min-width: 0; }
+
+/* Condensed: the model beside the name. Open: the name across the top and
+   the model grown to fill the width beneath it. One flex container turning
+   its corner, rather than two layouts swapped between. */
+.tl__card {
+  display: flex;
+  align-items: center;
+  gap: clamp(var(--space-3), 1.4vw, var(--space-5));
+  transition: gap var(--dur-3) var(--ease-out);
+}
+/* The name sits nearest the trunk on both sides, so the wire always
+   arrives at the title rather than at the back of the model. */
+.tl.is-left  .tl__card { flex-direction: row; }
+.tl.is-right .tl__card { flex-direction: row-reverse; }
+.tl.is-open .tl__card {
+  display: block;
+}
+
+/* The thumbnail. Small and square while condensed; on open it stops being
+   a fixed box and fills the width under the name. */
+.tl__thumb {
+  flex: none;
+  width: clamp(84px, 9vw, 132px);
+  transition: width var(--dur-3) var(--ease-out);
+}
+.tl.is-open .tl__thumb {
+  width: 100%;
+  order: 2;
+}
+.tl__thumb .model-frame {
+  margin-top: 0;
+  height: clamp(84px, 9vw, 132px);
+  border-width: 1px;
+  border-radius: var(--radius-lg);
+  transition:
+    height var(--dur-3) var(--ease-out),
+    border-width var(--dur-3) var(--ease-out);
+}
+.tl.is-open .tl__thumb .model-frame {
+  height: clamp(200px, 26vw, 360px);
+  border-width: 2px;
+  border-radius: var(--radius-xl);
+  margin-top: var(--space-4);
+}
+
+.tl__head { min-width: 0; }
+
+.tl__title {
+  font-family: var(--font-display);
+  font-size: clamp(19px, 1.9vw, 30px);
+  line-height: 1.1;
+  letter-spacing: var(--ls-nav);
+  margin: 0;
+  transition: font-size var(--dur-3) var(--ease-out);
+}
+/* Open, the name extends across the whole entry, over the model rather
+   than beside it. */
+.tl.is-open .tl__title { font-size: clamp(28px, 3.2vw, 54px); }
+.tl__title a { color: var(--ink-a65); text-decoration: none; transition: color var(--t-hover); }
+.tl.is-open .tl__title a { color: var(--ink); }
+.tl__title a:hover { color: var(--accent); }
+
+/* Dates under the name. */
+.tl__when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  color: var(--ink-a65);
+  margin-top: var(--space-2);
+}
+.tl__date { color: var(--ink-a80); }
+.tl__place { color: var(--ink-a45); }
+/* Marks the school rows in a list that is otherwise jobs. Uses the state
+   colour rather than the yellow, which on this site means "clickable" —
+   this is a label, not a link. */
+.tl__kind {
+  color: var(--accent-cool);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-pill);
+  padding: 1px 9px;
+  font-size: var(--fs-meta-sm);
+}
+
+/* Only worth the room once the entry is open. */
+.tl__sub {
+  color: var(--ink-a65);
+  margin-top: var(--space-2);
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height var(--dur-3) var(--ease-out),
+    opacity var(--dur-2) var(--ease-out);
+}
+.tl.is-open .tl__sub { max-height: 4em; opacity: 1; }
+
+/* Collapsed with a 0fr/1fr grid row rather than a max-height. The usual
+   max-height trick needs a ceiling guessed high enough for the tallest
+   entry, which then makes every shorter one ease at the wrong rate; 0fr
+   to 1fr animates to the content's real height, so an entry with four
+   spec rows and one with two both open at the same speed. The inner
+   wrapper carries the overflow and min-height:0 the fr unit needs. */
+.tl__more {
+  position: relative;
+  /* The channel the detail's own branch runs down, on the same side the
+     main wire arrived from. */
+  --tl-branch: clamp(22px, 2.4vw, 40px);
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--dur-3) var(--ease-out),
+    opacity var(--dur-2) var(--ease-out);
+}
+.tl.is-open .tl__more {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.tl__more-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* The detail's branch: same trunk-and-elbow figure as the timeline
+   itself, one level down. Opacity on the group for the same reason —
+   every bit's path redraws the shared sub-trunk. */
+.tl__branch {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 0;
+}
+.tl__branch g { opacity: 0.34; }
+.tl__branch path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Each block of detail hangs off the branch on its own dot. */
+.tl__bit {
+  position: relative;
+  display: grid;
+  align-items: start;
+  padding-top: var(--space-5);
+  z-index: 1;
+}
+.tl.is-left  .tl__bit { grid-template-columns: minmax(0, 1fr) var(--tl-branch); }
+.tl.is-right .tl__bit { grid-template-columns: var(--tl-branch) minmax(0, 1fr); }
+.tl.is-left  .tl__bit-body { grid-column: 1; }
+.tl.is-right .tl__bit-body { grid-column: 2; }
+
+.tl__bit-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-a45);
+  margin-top: 0.7em;
+  align-self: start;
+}
+.tl.is-left  .tl__bit-dot { grid-column: 2; justify-self: start; }
+.tl.is-right .tl__bit-dot { grid-column: 1; justify-self: end; }
+
+.tl__desc { color: var(--ink-a80); max-width: 62ch; margin: 0; }
+.tl.is-left .tl__bit-body { text-align: left; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tl__more,
+  .tl__card,
+  .tl__thumb,
+  .tl__thumb .model-frame,
+  .tl__title,
+  .tl__sub,
+  .tl__dot { transition: none; }
+}
+
+/* Two columns of prose do not fit a phone, so below this the entries
+   stop alternating and stack to the right of a left-hand trunk — the
+   arrangement the menu uses. --tl-split tells Timeline.jsx to move the
+   trunk with them. */
+@media (max-width: 860px) {
+  .timeline {
+    --tl-split: 0;
+    --tl-gutter: 30px;
+  }
+  .tl {
+    grid-template-columns: var(--tl-gutter) minmax(0, 1fr);
+    column-gap: var(--space-4);
+  }
+  .tl.is-left > .tl__body,
+  .tl.is-right > .tl__body { grid-column: 2; text-align: left; }
+  .tl.is-left .tl__when { justify-content: flex-start; }
+  .tl.is-left .tl__dot,
+  .tl.is-right .tl__dot { left: 0; right: auto; }
+}
+
 /* ---------- Footer ---------- */
 .site-footer {
   border-top: 1px solid var(--line-hair);
