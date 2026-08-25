@@ -26,7 +26,16 @@ const FOCUS = 0.38;
 // below it. Re-ranking on that reflow is what makes two neighbours trade
 // the open state back and forth, so an entry has to beat the open one by
 // this much (in pixels) to take it.
-const HYSTERESIS = 64;
+const HYSTERESIS = 140;
+
+// And for this long after a change, nothing may take over at all. The
+// margin above stops two entries swapping when they are near each other;
+// this stops the swap that the growth itself causes. An entry opening
+// moves every row under it by hundreds of pixels while the transition
+// runs, and a pick taken mid-flight is ranking rows against positions
+// they are still travelling through. Roughly the length of the growth,
+// so the ranking resumes once the page has stopped moving.
+const SETTLE_MS = 420;
 
 // How far either side of the open entry a model is actually built. Each
 // viewer is its own WebGLRenderer and browsers start discarding contexts
@@ -46,9 +55,11 @@ function useActiveIndex(count, containerRef) {
     if (!container) return undefined;
 
     let queued = 0;
+    let changedAt = 0;
 
     const pick = () => {
       queued = 0;
+      if (performance.now() - changedAt < SETTLE_MS) return;
       const rows = container.querySelectorAll("[data-tl-row]");
       if (!rows.length) return;
 
@@ -73,6 +84,7 @@ function useActiveIndex(count, containerRef) {
 
       if (best !== activeRef.current) {
         activeRef.current = best;
+        changedAt = performance.now();
         setActive(best);
       }
     };
