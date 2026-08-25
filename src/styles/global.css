@@ -1048,10 +1048,15 @@ a.pill:hover .pill__inner { color: var(--accent); }
    left is the trunk's column; everything else hangs to the right of it. */
 .timeline {
   position: relative;
-  /* Distance from the trunk to an entry's dot. Wide enough for the elbow
-     to turn through without the curve collapsing into a corner. */
-  --tl-run: clamp(34px, 4vw, 72px);
+  /* The channel the trunk runs down, and therefore the run each elbow
+     turns through: half of it either side. Wide enough that the curve
+     does not collapse into a corner. */
+  --tl-gutter: clamp(72px, 9vw, 150px);
   --tl-dot: 11px;
+  /* 1 while entries alternate around a centred trunk, 0 once they stack
+     to the right of a left-hand one. Timeline.jsx reads this back rather
+     than repeating the breakpoint in JS. */
+  --tl-split: 1;
 }
 
 .timeline__wires {
@@ -1080,31 +1085,46 @@ a.pill:hover .pill__inner { color: var(--accent); }
   z-index: 1;
 }
 
+/* Alternating: content in the outer columns, the trunk down the middle
+   one. The dot is positioned rather than placed in the grid because it
+   belongs to the inner edge of whichever column the entry is in, which
+   is a different cell each row. */
 .tl {
   position: relative;
   display: grid;
-  grid-template-columns: var(--tl-run) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) var(--tl-gutter) minmax(0, 1fr);
   align-items: start;
-  column-gap: clamp(var(--space-4), 2vw, var(--space-6));
-  padding-bottom: clamp(var(--space-6), 4vh, var(--space-8));
+  padding-bottom: clamp(var(--space-7), 5vh, var(--space-9));
 }
+.tl.is-left  > .tl__body { grid-column: 1; text-align: right; }
+.tl.is-right > .tl__body { grid-column: 3; }
+
+/* Right-aligning the head is what makes a left-hand entry hug the trunk.
+   The detail underneath stays left-aligned: a paragraph and a key/value
+   table set flush right are harder to read, and the alignment has
+   already done its job by the time the eye gets there. */
+.tl.is-left .tl__more-inner { text-align: left; }
+.tl.is-left .tl__when { justify-content: flex-end; }
 
 /* The elbow's landing point, same role the dot plays in the menu. */
 .tl__dot {
+  position: absolute;
+  /* On the first line of the date rather than the top of the row, so the
+     wire lands level with the text it belongs to. */
+  top: 0.42em;
   width: var(--tl-dot);
   height: var(--tl-dot);
   border-radius: 50%;
   background: var(--bg);
   border: 2px solid var(--ink-a45);
-  /* Nudged onto the first line of the date rather than the top of the
-     row, so the wire lands level with the text it belongs to. */
-  margin-top: 0.42em;
-  justify-self: end;
   transition:
     background-color var(--dur-2) var(--ease-out),
     border-color var(--dur-2) var(--ease-out),
     transform var(--dur-2) var(--ease-out);
 }
+.tl.is-left  .tl__dot { right: calc(50% + (var(--tl-gutter) / 2) - (var(--tl-dot) / 2)); }
+.tl.is-right .tl__dot { left:  calc(50% + (var(--tl-gutter) / 2) - (var(--tl-dot) / 2)); }
+
 .tl.is-open .tl__dot {
   background: var(--accent);
   border-color: var(--accent);
@@ -1186,9 +1206,24 @@ a.pill:hover .pill__inner { color: var(--accent); }
   .tl__dot { transition: none; }
 }
 
+/* Two columns of prose do not fit a phone, so below this the entries
+   stop alternating and stack to the right of a left-hand trunk — the
+   arrangement the menu uses. --tl-split tells Timeline.jsx to move the
+   trunk with them. */
 @media (max-width: 860px) {
-  .timeline { --tl-run: 26px; }
-  .tl { column-gap: var(--space-4); }
+  .timeline {
+    --tl-split: 0;
+    --tl-gutter: 30px;
+  }
+  .tl {
+    grid-template-columns: var(--tl-gutter) minmax(0, 1fr);
+    column-gap: var(--space-4);
+  }
+  .tl.is-left > .tl__body,
+  .tl.is-right > .tl__body { grid-column: 2; text-align: left; }
+  .tl.is-left .tl__when { justify-content: flex-start; }
+  .tl.is-left .tl__dot,
+  .tl.is-right .tl__dot { left: 0; right: auto; }
 }
 
 /* ---------- Footer ---------- */

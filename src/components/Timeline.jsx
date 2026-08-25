@@ -124,9 +124,18 @@ export default function Timeline({ entries, basePath, linkLabel = "Full details"
       const first = dotRefs.current[0];
       if (!first) return;
       const firstRect = first.getBoundingClientRect();
-      // The trunk hangs from the first dot rather than the top of the
-      // box, so it starts on the timeline instead of above it.
-      const x0 = px(firstRect.left + firstRect.width / 2 - base.left);
+
+      // Whether the entries alternate around a centred trunk or all hang
+      // to the right of a left one is a breakpoint decision, and CSS owns
+      // breakpoints. Reading the flag back out of the computed style
+      // keeps the drawing and the layout from disagreeing about which
+      // arrangement is on screen, which is what a matching media query in
+      // here would eventually get wrong.
+      const split = getComputedStyle(wrap).getPropertyValue("--tl-split").trim() === "1";
+
+      const x0 = split ? w / 2 : px(firstRect.left + firstRect.width / 2 - base.left);
+      // The trunk starts level with the first dot rather than at the top
+      // of the box, so it begins on the timeline instead of above it.
       const y0 = px(firstRect.top + firstRect.height / 2 - base.top);
 
       entries.forEach((_, i) => {
@@ -165,9 +174,12 @@ export default function Timeline({ entries, basePath, linkLabel = "Full details"
       <ol className="timeline__list">
         {entries.map((entry, i) => {
           const open = i === active;
+          // Alternating is a class rather than a :nth-child rule so the
+          // side is available to the markup too, not only to the stylesheet.
+          const side = i % 2 === 0 ? "is-left" : "is-right";
           return (
             <li
-              className={`tl${open ? " is-open" : ""}`}
+              className={`tl ${side}${open ? " is-open" : ""}`}
               key={entry.slug}
               data-tl-row
               aria-current={open ? "true" : undefined}

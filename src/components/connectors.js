@@ -18,6 +18,11 @@ export const CORNER = 18;
 /**
  * Trunk down from (x0, y0), then a curved turn out to (x1, y1).
  *
+ * Turns either way. The menu only ever branches right, but the timeline
+ * alternates around a centred trunk, so the direction comes from the
+ * sign of the run rather than being assumed — which is the whole reason
+ * this is one function and not two.
+ *
  * Callers draw one of these per branch and let them share the trunk
  * rather than drawing the trunk once separately. That only looks right
  * if the overlapping runs do not compound, so the stroke must be opaque
@@ -25,12 +30,14 @@ export const CORNER = 18;
  * `.timeline__wires g` in global.css.
  */
 export function elbow(x0, y0, x1, y1) {
-  if (Math.abs(x1 - x0) < 0.5) return `M${x0} ${y0} L${x0} ${y1}`;
-  const r = Math.min(CORNER, Math.abs(y1 - y0), Math.abs(x1 - x0));
+  const run = x1 - x0;
+  if (Math.abs(run) < 0.5) return `M${x0} ${y0} L${x0} ${y1}`;
+  const dir = run > 0 ? 1 : -1;
+  const r = Math.min(CORNER, Math.abs(y1 - y0), Math.abs(run));
   return [
     `M${x0} ${y0}`,
     `L${x0} ${y1 - r}`,
-    `Q${x0} ${y1} ${x0 + r} ${y1}`,
+    `Q${x0} ${y1} ${x0 + dir * r} ${y1}`,
     `L${x1} ${y1}`,
   ].join(" ");
 }
