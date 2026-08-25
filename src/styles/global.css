@@ -43,17 +43,19 @@
   --ink: #ffffff;
   --accent: #ffcc40;
   /* Cool accent, used VERY sparingly: reserved for state, never
-     decoration. Right now that is exactly two things — the menu's
-     "you are here" marker and the keyboard focus ring — so its presence
-     always means "this is where you are", distinct from the yellow that
+     decoration. That is exactly three things — the menu's "you are
+     here" marker, the keyboard focus ring, and the headshot frame's
+     border — so its presence always means "this is where you are" or
+     "this is the one photo on the site", distinct from the yellow that
      means "this is what you can click".
 
-     Darkened as far as it can go while staying readable: 4.9:1 against
-     the sheet, which clears AA for text at any size. It labels the
-     current page, and the menu shrinks that label to about 16px on a
-     deep branch, so it cannot rely on the large-text allowance. Going
-     further drops below 4.5:1. */
-  --accent-cool: #5b96ae;
+     Darker than the first pass at this navy (which cleared AA at any
+     size, 4.8:1): 3.5:1 against the sheet, which clears AA's large-text
+     allowance but not small body copy. Acceptable here because none of
+     its three uses is body copy — a state marker, a focus ring, and a
+     decorative border — and a richer navy read as more deliberate than
+     a paler one that cleared the stricter ratio. */
+  --accent-cool: #5a72b5;
 
   --ink-a80: rgba(255, 255, 255, .80);
   --ink-a65: rgba(255, 255, 255, .65);
@@ -502,6 +504,27 @@ button:focus-visible .ch {
 a.pill { text-decoration: none; }
 a.pill:hover .pill__inner { color: var(--accent); }
 
+/* Every clamp() above bottoms out well before a phone-width viewport
+   (the 3.54vw term only clears its own floor past ~988px), so the badge
+   sits at a constant pixel width no matter how narrow the screen gets.
+   The fixed-position date badge in the header had nothing to shrink
+   against and ran past the right edge on a 320-360px phone; a Divider's
+   pill carries a page label instead of a fixed-length date, and
+   "Work in Progress" ran off both edges at the same width, with
+   `white-space: nowrap` leaving it nowhere to go but off-screen. */
+@media (max-width: 480px) {
+  .pill__inner {
+    font-size: clamp(24px, 3.54vw, 70px);
+    padding: clamp(10px, 1.52vw, 30px) clamp(12px, 1.72vw, 34px);
+  }
+  /* The date keeps its single line — MM/DD/YYYY never benefits from
+     wrapping — but a longer label wraps instead of overflowing. */
+  .divider .pill__inner {
+    white-space: normal;
+    text-align: center;
+  }
+}
+
 /* ---------- Sections ---------- */
 .section { padding-top: var(--section-y); padding-bottom: var(--section-y); }
 .section--tight { padding-top: var(--space-9); padding-bottom: var(--space-9); }
@@ -812,7 +835,8 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .portrait {
   position: relative;
   aspect-ratio: 4 / 5;
-  border: 1px solid var(--ink-a25);
+  border: 1px solid var(--accent-cool);
+  border-radius: var(--radius-xl);
   background:
     repeating-linear-gradient(
       -45deg,
@@ -842,12 +866,14 @@ a.pill:hover .pill__inner { color: var(--accent); }
 }
 
 /* ---------- Branching site menu ----------
-   Three sections in a row; clicking one expands its pages to the right on
-   curved connectors, and each of those expands again down to individual
-   pages. A node is [label][children] in a flex row with children stacked
-   and centred against the parent, so the tree grows rightward and the
-   whole thing stays centred without absolute positioning. Connectors are
-   measured and drawn by MenuTree.jsx, which flexbox cannot do. */
+   The root row (Home, Experience, Projects, About) sits across the top;
+   clicking one drops its pages in a list below it, and each of those can
+   expand again the same way, down to individual project and role pages.
+   A node is [label] over [children] in a flex column, so opening
+   anywhere just grows that node's own height — flexbox reflows the rest
+   of the tree around it, with nothing measured or absolutely positioned.
+   A left guide line marks a list of children as a group; there is
+   nothing to draw. */
 .menu-tree {
   position: absolute;
   inset: 0;
@@ -858,11 +884,6 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .menu-tree__field {
   position: relative;
   z-index: 1;
-  /* The gutter each level of the tree branches across. Lives here rather
-     than as a constant in MenuTree.jsx so it can scale with the viewport;
-     the connector drawing measures real geometry and follows whatever
-     this resolves to. */
-  --gutter: clamp(40px, 5.5vw, 120px);
   width: 100%;
   height: 100%;
   display: flex;
@@ -870,19 +891,19 @@ a.pill:hover .pill__inner { color: var(--accent); }
   justify-content: center;
   /* Hidden, not auto: the tree is scaled to fit, but scaling does not
      shrink its layout box, so an `auto` container would keep offering a
-     scrollbar for overflow that is no longer visible. Mobile re-enables
-     it below, where the type is left legible instead of scaled down. */
+     scrollbar for overflow that is no longer visible. */
   overflow: hidden;
   padding: clamp(var(--space-7), 6vh, var(--space-9)) var(--page-margin);
 }
 .menu-tree__roots {
   display: flex;
-  align-items: center;
-  gap: clamp(var(--space-8), 11vw, 260px);
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: clamp(var(--space-5), 6vw, 96px);
   margin: auto;
   /* --fit is measured and written by MenuTree.jsx so the tree fills the
-     screen: scaled up when only the three sections are showing, down when
-     a deep branch would otherwise run off the edge. */
+     screen: scaled up when only the root row is showing, down when an
+     open branch would otherwise overflow. */
   transform: scale(var(--fit, 1));
   transform-origin: center center;
   transition: transform 420ms var(--ease-out);
@@ -895,7 +916,8 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .tnode {
   position: relative;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   transition: opacity 320ms var(--ease-out);
 }
 .tnode.is-dim { opacity: 0.38; }
@@ -929,8 +951,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
 
 .tnode__text { display: inline-flex; }
 
-/* The dot is the connector's landing point, so it only shows where a wire
-   actually arrives — the three root sections have nothing feeding them. */
+/* A bullet marking a child entry, as opposed to a root section. */
 .tnode__dot {
   width: 0.28em;
   height: 0.28em;
@@ -944,19 +965,16 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .tnode__kid > .tnode > .tnode__label .tnode__dot { opacity: 0.9; }
 
 @keyframes tnode-in {
-  from { opacity: 0; transform: translateX(-10px); }
+  from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: none; }
-}
-@keyframes wires-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
 }
 .tnode__kids {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: clamp(var(--space-3), 2.2vh, 40px);
-  margin-left: var(--gutter);
+  margin-top: var(--space-2);
+  padding-left: var(--space-5);
+  border-left: 1px solid var(--ink-a14);
+  gap: clamp(var(--space-2), 1.8vh, 28px);
 }
 .tnode__kid {
   display: flex;
@@ -971,22 +989,6 @@ a.pill:hover .pill__inner { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   .tnode__kid { animation: none; }
 }
-
-.tnode__wires {
-  position: absolute;
-  inset: 0;
-  animation: wires-in 320ms var(--ease-out) both;
-  overflow: visible;
-  pointer-events: none;
-  z-index: 0;
-}
-.tnode__wires path {
-  fill: none;
-  stroke: var(--ink-a45);
-  stroke-width: 1.25;
-  vector-effect: non-scaling-stroke;
-}
-.tnode.is-dim .tnode__wires path { stroke: var(--ink-a25); }
 
 .menu-tree__back {
   position: absolute;
@@ -1004,16 +1006,11 @@ a.pill:hover .pill__inner { color: var(--accent); }
 }
 .menu-tree__back:hover { color: var(--accent); }
 
+/* Tighter than the base gap on .menu-tree__roots above — there is less
+   room to give each root section here, though --fit still does most of
+   the work of keeping the row on screen. */
 @media (max-width: 720px) {
-  .menu-tree__roots {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: clamp(var(--space-5), 3.5vh, 44px);
-  }
-  .menu-tree__field { justify-content: flex-start; overflow: auto; }
-  /* Tighter branches so a deep path needs less sideways scrolling on a
-     narrow screen. The field scrolls rather than the page. */
-  .tnode__kids { gap: clamp(var(--space-2), 1.6vh, 18px); margin-left: 30px; }
+  .menu-tree__roots { gap: clamp(var(--space-4), 5vw, 56px); }
 }
 
 /* ---------- Footer ---------- */

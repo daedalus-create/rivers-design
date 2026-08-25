@@ -9,7 +9,7 @@ export default function Education() {
       <PageHero
         eyebrow="Rivers Design / Experience"
         title="Education"
-        lede="A B.S. in Mechanical Dual Aerospace Engineering from Rensselaer Polytechnic Institute, completed May 2026, and secondary school at Waynflete before it."
+        lede="A B.S. in Mechanical and Aerospace Engineering from Rensselaer Polytechnic Institute, completed May 2026, and secondary school at Waynflete before it."
       />
       <EntryList
         entries={education}

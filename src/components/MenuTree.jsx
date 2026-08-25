@@ -3,51 +3,22 @@ import { Link, useLocation } from "react-router-dom";
 import { ancestorsOf, childrenOf, nodeForPath, rootSections } from "../data/siteTree";
 import Letters from "./Letters";
 
-// Branching site menu. Opens as the three sections in a row; clicking one
-// expands its pages to the right on curved connectors, and each of those
-// can expand again, all the way down to individual project and role
-// pages. Everything is laid out by flexbox — a node is [label][children],
-// children stacked and vertically centred against their parent — so
-// expanding anywhere reflows the rest naturally and the whole tree stays
-// centred without any absolute positioning.
-//
-// The connectors are the one thing flexbox cannot give us, so they are
-// measured after layout and written straight onto the <path> elements.
-// Doing it imperatively rather than through state keeps a resize or an
-// expansion from causing a second render pass just to draw a line.
-
-// Radius of the elbow where a connector turns. The gutter it runs
-// through is a CSS variable so it can scale with the viewport, and this
-// is clamped against the actual run in connectorPath, so a generous
-// value here simply means "as round as there is room for".
-const CORNER = 22;
+// Branching site menu. Opens as a row of root sections; clicking one drops
+// its pages in a list below it, and each of those can expand again the
+// same way, all the way down to individual project and role pages. A node
+// is [label] over [children] in a flex column, so expanding anywhere just
+// grows that node's own height — flexbox reflows the rest of the tree
+// around it, with nothing measured or absolutely positioned.
 
 // The tree is scaled to fill the screen. A fixed type size cannot do
-// this: the three collapsed sections use about 60% of the width, while
-// the deepest branch (Experience > Work Excerpts > four roles) overruns
-// it by 14% and pushes items off the left edge. So the whole thing is
-// measured after layout and scaled to fit — up when it is small, down
-// when a deep branch would otherwise overflow.
+// this: the collapsed root row uses a fraction of the width, while a
+// deep branch (Experience > Work Excerpts > four roles) grows tall
+// enough to run past the bottom. So the whole thing is measured after
+// layout and scaled to fit — up when it is small, down when an open
+// branch would otherwise overflow.
 const MAX_FIT = 2.2;
 const MIN_FIT = 0.5;
 const FIT_MARGIN = 0.98; // the field's own padding is the breathing room
-const REFIT_EVENT = "menu-refit";
-
-/** Elbow from a parent's right edge to one child's left edge. */
-function connectorPath(x0, y0, x1, y1) {
-  if (Math.abs(y1 - y0) < 0.5) return `M${x0} ${y0} L${x1} ${y1}`;
-  const midX = x0 + (x1 - x0) / 2;
-  const dir = y1 > y0 ? 1 : -1;
-  const r = Math.min(CORNER, Math.abs(y1 - y0) / 2, Math.abs(midX - x0), Math.abs(x1 - midX));
-  return [
-    `M${x0} ${y0}`,
-    `L${midX - r} ${y0}`,
-    `Q${midX} ${y0} ${midX} ${y0 + dir * r}`,
-    `L${midX} ${y1 - dir * r}`,
-    `Q${midX} ${y1} ${midX + r} ${y1}`,
-    `L${x1} ${y1}`,
-  ].join(" ");
-}
 
 function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode }) {
   const kids = childrenOf(node.node);
@@ -58,82 +29,12 @@ function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode
   // left bright, since those are the destinations being offered.
   const dimmed = depth < expandedPath.length && expandedPath[depth] !== node.node;
 
-  const wrapRef = useRef(null);
   const labelRef = useRef(null);
-  const childRefs = useRef([]);
-  const pathRefs = useRef([]);
-  const svgRef = useRef(null);
-
-  useLayoutEffect(() => {
-    if (!isOpen || !kids.length) return undefined;
-
-    const draw = () => {
-      const wrap = wrapRef.current;
-      const label = labelRef.current;
-      const svg = svgRef.current;
-      if (!wrap || !label || !svg) return;
-
-      const base = wrap.getBoundingClientRect();
-      // The tree is inside a scaled ancestor, so getBoundingClientRect
-      // reports screen pixels while the SVG draws in layout pixels.
-      // Recover the factor from this element rather than threading it
-      // down as a prop: offsetWidth is the untransformed box, so the
-      // ratio is exactly the scale in force here.
-      const k = wrap.offsetWidth ? base.width / wrap.offsetWidth : 1;
-      const px = (v) => v / k;
-
-      const from = label.getBoundingClientRect();
-      const x0 = px(from.right - base.left);
-      const y0 = px(from.top + from.height / 2 - base.top);
-      const w = px(base.width);
-      const h = px(base.height);
-
-      svg.setAttribute("width", String(w));
-      svg.setAttribute("height", String(h));
-      svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
-
-      kids.forEach((_, i) => {
-        const el = childRefs.current[i];
-        const p = pathRefs.current[i];
-        if (!el || !p) return;
-        const to = el.getBoundingClientRect();
-        p.setAttribute(
-          "d",
-          connectorPath(x0, y0, px(to.left - base.left), px(to.top + to.height / 2 - base.top)),
-        );
-      });
-    };
-
-    draw();
-    // Re-draw whenever anything reflows: a deeper expansion, a window
-    // resize, or the reveal transition settling. A change of scale does
-    // NOT change any layout box, so ResizeObserver cannot see it — hence
-    // the explicit refit event from the parent.
-    const ro = new ResizeObserver(draw);
-    if (wrapRef.current) ro.observe(wrapRef.current);
-    childRefs.current.forEach((el) => el && ro.observe(el));
-    window.addEventListener(REFIT_EVENT, draw);
-    const raf = requestAnimationFrame(draw);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener(REFIT_EVENT, draw);
-      cancelAnimationFrame(raf);
-    };
-  }, [isOpen, kids, expandedPath]);
-
   const isLeaf = kids.length === 0;
   const isCurrent = currentNode === node.node;
 
   return (
-    <div className={`tnode${isOpen ? " is-open" : ""}${dimmed ? " is-dim" : ""}`} ref={wrapRef}>
-      {isOpen && kids.length > 0 && (
-        <svg className="tnode__wires" ref={svgRef} aria-hidden="true">
-          {kids.map((k, i) => (
-            <path key={k.node} ref={(el) => (pathRefs.current[i] = el)} />
-          ))}
-        </svg>
-      )}
-
+    <div className={`tnode${isOpen ? " is-open" : ""}${dimmed ? " is-dim" : ""}`}>
       <Link
         ref={labelRef}
         className={`tnode__label${isCurrent ? " is-current" : ""}`}
@@ -147,6 +48,16 @@ function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode
           if (!isLeaf && !isOpen) {
             e.preventDefault();
             onToggle(depth, node.node);
+            // Children land below this label rather than beside it, so
+            // the field's own scroll has to be nudged for them to come
+            // into view. Two rAFs: one for React to commit the newly
+            // expanded kids, one for layout to settle before measuring
+            // where to scroll.
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                labelRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+              });
+            });
             return;
           }
           onNavigate();
@@ -160,8 +71,8 @@ function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode
 
       {isOpen && kids.length > 0 && (
         <div className="tnode__kids">
-          {kids.map((k, i) => (
-            <div className="tnode__kid" key={k.node} ref={(el) => (childRefs.current[i] = el)}>
+          {kids.map((k) => (
+            <div className="tnode__kid" key={k.node}>
               <TreeNode
                 node={k}
                 expandedPath={expandedPath}
@@ -243,10 +154,6 @@ export default function MenuTree({ open, onClose }) {
       if (applied !== null && Math.abs(applied - fit) < 0.004) return;
       applied = fit;
       tree.style.setProperty("--fit", String(fit));
-      // connectors measure screen pixels, so they have to redraw at the
-      // new scale; a transform changes no layout box, so nothing else
-      // would tell them
-      window.dispatchEvent(new Event(REFIT_EVENT));
     };
 
     // Coalesce: an expansion changes the layout and the observer and the
@@ -312,7 +219,7 @@ export default function MenuTree({ open, onClose }) {
 
         {expandedPath.length > 0 && (
           <button className="menu-tree__back meta" type="button" onClick={collapse}>
-            &larr; All sections
+            &larr; <Letters text="All sections" />
           </button>
         )}
       </nav>

@@ -16,7 +16,7 @@ export default function Home() {
           <span className="intro__name--last">Rivers</span>
         </Reveal>
         <Reveal as="p" className="lede intro__lede" stagger={1}>
-          I design hardware for how it will actually get made. A Mechanical Dual Aerospace Engineering graduate of RPI,
+          I design hardware for how it will actually get made. A Mechanical and Aerospace Engineering graduate of RPI,
           class of 2026, with a bias toward DFM and additive manufacturing.
         </Reveal>
         <Reveal className="intro__foot meta" stagger={2}>
@@ -47,7 +47,7 @@ export default function Home() {
 
           <Reveal stagger={1}>
             <p className="lede">
-              A Mechanical Dual Aerospace Engineering graduate of Rensselaer Polytechnic Institute, building
+              A Mechanical and Aerospace Engineering graduate of Rensselaer Polytechnic Institute, building
               toward a career in design, DFM, and additive manufacturing.
             </p>
             <p className="about-split__body">
@@ -71,7 +71,7 @@ export default function Home() {
               </li>
               <li>
                 <span className="k">Degree</span>
-                <span className="v">B.S. Mechanical Dual Aerospace Engineering, RPI, 2026</span>
+                <span className="v">B.S. Mechanical and Aerospace Engineering, RPI, 2026</span>
               </li>
               <li>
                 <span className="k">Next</span>

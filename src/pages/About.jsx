@@ -12,7 +12,7 @@ export default function About() {
           About
         </Reveal>
         <Reveal as="p" className="lede" stagger={2}>
-          Deon Rivers, a Mechanical Dual Aerospace Engineering graduate of Rensselaer Polytechnic Institute,
+          Deon Rivers, a Mechanical and Aerospace Engineering graduate of Rensselaer Polytechnic Institute,
           building toward a career in design, DFM, and additive manufacturing.
         </Reveal>
       </section>
@@ -68,7 +68,7 @@ export default function About() {
           </li>
           <li>
             <span className="k">Degree</span>
-            <span className="v">B.S. Mechanical Dual Aerospace Engineering, RPI, 2026</span>
+            <span className="v">B.S. Mechanical and Aerospace Engineering, RPI, 2026</span>
           </li>
         </Reveal>
       </section>

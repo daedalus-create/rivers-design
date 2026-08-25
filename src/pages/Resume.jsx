@@ -8,7 +8,7 @@ import Reveal from "../components/Reveal";
 // address-free version lands in public/assets, the Download row becomes a
 // link to it.
 const ROWS = [
-  { k: "Education", v: "B.S. Mechanical Dual Aerospace Engineering, RPI, May 2026" },
+  { k: "Education", v: "B.S. Mechanical and Aerospace Engineering, RPI, May 2026" },
   { k: "Skills", v: "CAD Modeling / Project Management / Rapid Prototyping / Additive Manufacturing" },
   { k: "Software", v: "Siemens NX / Fusion 360 / Autodesk Inventor / Mastercam / MATLAB / Microsoft Suite / Google Suite" },
   { k: "Shop", v: "3D printing / Manual machining / Wood working / Blacksmithing / Gem cutting" },
