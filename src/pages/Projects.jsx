@@ -1,42 +1,15 @@
-import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
 import Divider from "../components/Divider";
-import { highlightsFor } from "../data/projects";
-import Letters from "../components/Letters";
-import EntryCard from "../components/EntryCard";
+import ProjectBoard from "../components/ProjectBoard";
+import { projects } from "../data/projects";
 
-// The hub previews the first two entries of each section rather than
-// being three bare dividers, so the page shows actual work instead of
-// only linking to it. `highlightsFor` owns the "first two" rule — see
-// src/data/projects.js.
-const SECTIONS = [
-  {
-    status: "completed",
-    label: "Completed",
-    href: "/projects/completed",
-    tag: "3D Placeholder / Model pending",
-    divider: {},
-  },
-  {
-    status: "in-progress",
-    label: "Work in Progress",
-    href: "/projects/in-progress",
-    tag: "3D Placeholder / In progress",
-    divider: {
-      iconLeft: "/assets/divider-icon-3.svg",
-      iconRight: "/assets/divider-icon-2.svg",
-      flip: true,
-    },
-  },
-  {
-    status: "planned",
-    label: "Planned",
-    href: "/projects/planned",
-    tag: "3D Placeholder / Concept",
-    divider: {},
-  },
-];
-
+// One board rather than three previewed sections. The old page showed the
+// first two of each status and linked onward for the rest, which meant
+// eight of the fourteen projects were only reachable through a second
+// page. Filtering does that job without hiding anything.
+//
+// The per-status pages still exist and are still linked from the menu, so
+// nothing that used to be addressable stopped being addressable.
 export default function Projects() {
   return (
     <>
@@ -53,29 +26,17 @@ export default function Projects() {
         </Reveal>
       </section>
 
-      {SECTIONS.map(({ status, label, href, tag, divider }) => (
-        <div key={status}>
-          <Divider to={href} label={label} {...divider} />
+      <section className="section--tight wrap" aria-label="All projects">
+        <ProjectBoard projects={projects} />
+      </section>
 
-          <section className="section--tight wrap" aria-label={`${label} highlights`}>
-            {highlightsFor(status).map((p) => (
-              <EntryCard
-                key={p.slug}
-                entry={p}
-                to={`/projects/${p.slug}`}
-                viewerTag={tag}
-                headingLevel={3}
-              />
-            ))}
-
-            <Reveal>
-              <Link className="link-arrow" to={href}>
-                <Letters text={`All ${label}`} /> <span className="arr">&rarr;</span>
-              </Link>
-            </Reveal>
-          </section>
-        </div>
-      ))}
+      <Divider
+        to="/projects/completed"
+        label="Completed"
+        iconLeft="/assets/divider-icon-3.svg"
+        iconRight="/assets/divider-icon-2.svg"
+        flip
+      />
     </>
   );
 }

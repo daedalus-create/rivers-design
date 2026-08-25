@@ -1,8 +1,8 @@
 import Reveal from "../components/Reveal";
 import Divider from "../components/Divider";
 import { completedProjects } from "../data/projects";
-import { homeRoles } from "../data/roles";
-import EntryCard from "../components/EntryCard";
+import { homeTimeline } from "../data/timeline";
+import Timeline from "../components/Timeline";
 
 export default function Home() {
   return (
@@ -84,25 +84,33 @@ export default function Home() {
 
       <Divider to="/projects" label="Projects" />
 
+      {/* Same arrangement as the experience section below, in the
+          Projects page's own chrome: the two need to read as two kinds of
+          thing, not one list that changed subject halfway down. */}
       <section className="section wrap" id="projects" aria-label="Projects">
-        {completedProjects.map((p) => (
-          <EntryCard key={p.slug} entry={p} to={`/projects/${p.slug}`} headingLevel={3} />
-        ))}
+        <Timeline
+          entries={completedProjects}
+          basePath="/projects"
+          linkLabel="Full write-up"
+          viewerTag="3D Placeholder / Model pending"
+          stacked
+          variant="board"
+        />
       </section>
 
       <Divider to="/experience" label="Experience" iconLeft="/assets/divider-icon-3.svg" iconRight="/assets/divider-icon-2.svg" flip />
 
+      {/* The Experience page's timeline, three entries of it, with the
+          trunk held to the left rather than alternating: at three entries
+          a centred trunk has nothing to alternate around. */}
       <section className="section wrap" id="experience" aria-label="Experience">
-        {homeRoles.map((r) => (
-          <EntryCard
-            key={r.slug}
-            entry={r}
-            to={`/experience/${r.slug}`}
-            viewerTag="3D Placeholder / Info & pics pending"
-            linkLabel="Full role details"
-            headingLevel={3}
-          />
-        ))}
+        <Timeline
+          entries={homeTimeline}
+          basePath="/experience"
+          linkLabel="Full details"
+          viewerTag="3D Placeholder / Info &amp; pics pending"
+          stacked
+        />
       </section>
     </>
   );

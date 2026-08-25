@@ -136,6 +136,16 @@ function readSheet(sheet) {
     const desc = get("desc");
     if (desc) entry.desc = desc;
 
+    // Optional groupings for the Projects board, slash-separated so one
+    // cell can hold several ("Aerospace / Additive"). The board builds a
+    // filter for every tag it finds, so filling this column is all it
+    // takes to add one; nothing lists them anywhere else.
+    const tags = get("tags")
+      .split("/")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    if (tags.length) entry.tags = tags;
+
     const body = Array.from({ length: BODY }, (_, i) => get(`body${i + 1}`)).filter(Boolean);
     if (body.length) entry.body = body;
 
@@ -157,6 +167,7 @@ function renderEntry(e, num, indent = "  ") {
   put("num", q(num));
   put("title", q(e.title));
   put("sub", q(e.sub));
+  if (e.tags) put("tags", `[${e.tags.map(q).join(", ")}]`);
   if (e.date) put("date", q(e.date));
   if (e.place) put("place", q(e.place));
   if (e.start) put("start", q(e.start));
