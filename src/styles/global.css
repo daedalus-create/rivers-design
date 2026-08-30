@@ -124,6 +124,16 @@
   --radius-pill: 999px;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* For boxes that grow and shrink. --ease-out leaves almost all of its
+     travel in the first third, which reads as a snap on a small control
+     and as a lurch on something card-sized.
+     
+     Longer than feels right when read as a number. A card going from a
+     130px strip to a 650px panel is travelling five times its own height,
+     and the eye needs the distance covered at a rate it can follow, not
+     the same duration a button gets for changing colour. */
+  --ease-size: cubic-bezier(0.33, 0, 0.2, 1);
+  --dur-size: 620ms;
   --dur-2: 240ms;
   --dur-3: 480ms;
   --dur-4: 780ms;
@@ -301,8 +311,8 @@ body::after {
   visibility: hidden;
   overflow: hidden;
   transition:
-    opacity var(--dur-3) var(--ease-out),
-    visibility 0s linear var(--dur-3);
+    opacity 560ms var(--ease-size),
+    visibility 0s linear 560ms;
 }
 .menu-overlay.open {
   opacity: 1;
@@ -633,6 +643,16 @@ a.pill:hover .pill__inner { color: var(--accent); }
   max-width: var(--max-text);
 }
 
+/* A frame with no viewer in it. Drawn as an unpopulated pad rather than
+   left blank: a bordered empty box on a card reads as something that
+   failed to load, which is exactly what it was being taken for. */
+.model-frame:empty {
+  background-image:
+    repeating-linear-gradient(-45deg, var(--ink-a08) 0 1px, transparent 1px 9px),
+    radial-gradient(circle at 50% 50%, transparent 0 21%, var(--ink-a25) 21% 23%, transparent 23%),
+    radial-gradient(circle at 50% 50%, var(--ink-a25) 0 5%, transparent 5%);
+}
+
 /* 3D placeholder frame — the Figma bordered box, canvas inside */
 .model-frame {
   position: relative;
@@ -663,14 +683,6 @@ a.pill:hover .pill__inner { color: var(--accent); }
   top: var(--space-4);
   z-index: 2;
   pointer-events: none;
-}
-.model-frame__hint {
-  position: absolute;
-  right: var(--space-5);
-  bottom: var(--space-4);
-  z-index: 2;
-  pointer-events: none;
-  color: var(--ink-a45);
 }
 
 /* Spec strip under a project — reference-site style rows */
@@ -906,7 +918,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
      open branch would otherwise overflow. */
   transform: scale(var(--fit, 1));
   transform-origin: center center;
-  transition: transform 420ms var(--ease-out);
+  transition: transform 760ms var(--ease-size);
   will-change: transform;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -924,8 +936,19 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .tnode.is-dim:hover { opacity: 0.7; }
 /* Out of focus reads as further away: dimmer and smaller, not just
    fainter. Applied to the node's own label only, so a dim parent does
-   not shrink the branch still open beneath it. */
-.tnode.is-dim > .tnode__label { font-size: calc(var(--label-fs) * 0.68); }
+   not shrink the branch still open beneath it.
+   
+   Scaled rather than re-sized. Animating font-size relaid the whole tree
+   on every frame for the length of the transition, and the tree's size is
+   precisely what the --fit scale measures — so each frame produced a new
+   fit, which restarted the transform transition mid-flight. That feedback
+   between a size transition and a measurement of that size was the jitter
+   when opening a branch. A transform changes no layout box, so nothing
+   re-measures and the fit is written once. */
+.tnode.is-dim > .tnode__label {
+  transform: scale(0.72);
+  transform-origin: left center;
+}
 
 .tnode__label {
   position: relative;
@@ -939,7 +962,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
   --label-fs: clamp(17px, 1.6vw, 30px);
   font-size: var(--label-fs);
   line-height: 1.15;
-  transition: color var(--t-hover), font-size 320ms var(--ease-out);
+  transition: color var(--t-hover), transform var(--dur-size) var(--ease-size);
   letter-spacing: var(--ls-nav);
   color: var(--ink-a80);
   padding: 0.35em 2px;
@@ -991,7 +1014,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .tnode.is-dim .tnode__wires g { opacity: 0.22; }
 
 @keyframes tnode-in {
-  from { opacity: 0; transform: translateY(-8px); }
+  from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: none; }
 }
 .tnode__kids {
@@ -1008,13 +1031,13 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .tnode__kid {
   display: flex;
   align-items: center;
-  animation: tnode-in 300ms var(--ease-out) both;
+  animation: tnode-in 460ms var(--ease-size) both;
 }
 /* stagger so a branch unfurls rather than all of it arriving at once */
-.tnode__kid:nth-child(2) { animation-delay: 40ms; }
-.tnode__kid:nth-child(3) { animation-delay: 80ms; }
-.tnode__kid:nth-child(4) { animation-delay: 120ms; }
-.tnode__kid:nth-child(n + 5) { animation-delay: 160ms; }
+.tnode__kid:nth-child(2) { animation-delay: 45ms; }
+.tnode__kid:nth-child(3) { animation-delay: 90ms; }
+.tnode__kid:nth-child(4) { animation-delay: 135ms; }
+.tnode__kid:nth-child(n + 5) { animation-delay: 180ms; }
 @media (prefers-reduced-motion: reduce) {
   .tnode__kid { animation: none; }
 }
@@ -1120,9 +1143,9 @@ a.pill:hover .pill__inner { color: var(--accent); }
   background: var(--bg);
   border: 2px solid var(--ink-a45);
   transition:
-    background-color var(--dur-2) var(--ease-out),
-    border-color var(--dur-2) var(--ease-out),
-    transform var(--dur-2) var(--ease-out);
+    background-color var(--dur-size) var(--ease-size),
+    border-color var(--dur-size) var(--ease-size),
+    transform var(--dur-size) var(--ease-size);
 }
 .tl.is-left  .tl__dot { right: calc(50% + (var(--tl-gutter) / 2) - (var(--tl-dot) / 2)); }
 .tl.is-right .tl__dot { left:  calc(50% + (var(--tl-gutter) / 2) - (var(--tl-dot) / 2)); }
@@ -1155,7 +1178,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
   display: flex;
   align-items: center;
   gap: clamp(var(--space-3), 1.4vw, var(--space-5));
-  transition: gap var(--dur-3) var(--ease-out);
+  transition: gap var(--dur-size) var(--ease-size);
 }
 /* The name sits nearest the trunk on both sides, so the wire always
    arrives at the title rather than at the back of the model. */
@@ -1170,7 +1193,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .xcard__thumb {
   flex: none;
   width: clamp(84px, 9vw, 132px);
-  transition: width var(--dur-3) var(--ease-out);
+  transition: width var(--dur-size) var(--ease-size);
 }
 .xcard.is-open .xcard__thumb {
   width: 100%;
@@ -1182,8 +1205,8 @@ a.pill:hover .pill__inner { color: var(--accent); }
   border-width: 1px;
   border-radius: var(--radius-lg);
   transition:
-    height var(--dur-3) var(--ease-out),
-    border-width var(--dur-3) var(--ease-out);
+    height var(--dur-size) var(--ease-size),
+    border-width var(--dur-size) var(--ease-out);
 }
 .xcard.is-open .xcard__thumb .model-frame {
   height: clamp(200px, 26vw, 360px);
@@ -1200,7 +1223,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
   line-height: 1.1;
   letter-spacing: var(--ls-nav);
   margin: 0;
-  transition: font-size var(--dur-3) var(--ease-out);
+  transition: font-size var(--dur-size) var(--ease-size);
 }
 /* Open, the name extends across the whole entry, over the model rather
    than beside it. */
@@ -1239,7 +1262,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
   opacity: 0;
   overflow: hidden;
   transition:
-    max-height var(--dur-3) var(--ease-out),
+    max-height var(--dur-size) var(--ease-size),
     opacity var(--dur-2) var(--ease-out);
 }
 .xcard.is-open .xcard__sub { max-height: 4em; opacity: 1; }
@@ -1259,7 +1282,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
   grid-template-rows: 0fr;
   opacity: 0;
   transition:
-    grid-template-rows var(--dur-3) var(--ease-out),
+    grid-template-rows var(--dur-size) var(--ease-size),
     opacity var(--dur-2) var(--ease-out);
 }
 .xcard.is-open .xcard__more {
@@ -1353,8 +1376,8 @@ a.pill:hover .pill__inner { color: var(--accent); }
   opacity: 0.13;
   -webkit-mask-image: url('/assets/circuit.svg');
   mask-image: url('/assets/circuit.svg');
-  -webkit-mask-size: calc(var(--pcb) * 6);
-  mask-size: calc(var(--pcb) * 6);
+  -webkit-mask-size: calc(var(--pcb) * 12);
+  mask-size: calc(var(--pcb) * 12);
 }
 
 /* ---------- Projects board ---------- */
@@ -1419,7 +1442,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
   pointer-events: none;
   z-index: 0;
   background-color: var(--ink);
-  opacity: 0.16;
+  opacity: 0.2;
   -webkit-mask-image:
     url('/assets/circuit.svg'),
     repeating-linear-gradient(to right, #000 0 1px, transparent 1px var(--pcb)),
@@ -1428,8 +1451,8 @@ a.pill:hover .pill__inner { color: var(--accent); }
     url('/assets/circuit.svg'),
     repeating-linear-gradient(to right, #000 0 1px, transparent 1px var(--pcb)),
     repeating-linear-gradient(to bottom, #000 0 1px, transparent 1px var(--pcb));
-  -webkit-mask-size: calc(var(--pcb) * 6) calc(var(--pcb) * 6), auto, auto;
-  mask-size: calc(var(--pcb) * 6) calc(var(--pcb) * 6), auto, auto;
+  -webkit-mask-size: calc(var(--pcb) * 12) calc(var(--pcb) * 12), auto, auto;
+  mask-size: calc(var(--pcb) * 12) calc(var(--pcb) * 12), auto, auto;
   -webkit-mask-position: 0 0;
   mask-position: 0 0;
   -webkit-mask-composite: source-over;
@@ -1449,6 +1472,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .board__grid {
   position: relative;
   z-index: 1;
+  isolation: isolate;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1468,24 +1492,44 @@ a.pill:hover .pill__inner { color: var(--accent); }
   justify-content: start;
 }
 
+/* Every cell is the same whole number of pitch-rows, so the grid is fixed
+   and nothing about opening a card can move it. The card inside is
+   absolutely placed and sized by its own content, which is what lets it
+   grow without a height on it to fight — and without a span derived from
+   a measurement that its own height then feeds back into. */
 .board__cell {
-  grid-row: span var(--span, 4);
+  grid-row: span 4;
   min-width: 0;
-  transition: grid-row var(--dur-3) var(--ease-out);
+  position: relative;
 }
 .board__cell > .xcard {
-  height: calc(100% - var(--pcb));
-  margin-bottom: var(--pcb);
+  position: absolute;
+  inset: 0 0 auto 0;
   background: var(--bg);
   border: 1px solid var(--ink-a14);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
-  overflow: hidden;
-  transition: border-color var(--t-hover), background-color var(--t-hover);
+  transition:
+    border-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
 }
-.board__cell > .xcard.is-open {
+/* Open, it lifts over its neighbours rather than pushing them down. The
+   shadow is what says it is above them; without it the overlap reads as
+   a rendering fault. */
+.board__cell.is-open { z-index: 5; }
+.board__cell.is-open > .xcard {
+  /* Two columns wide, not one. A card that only grew downward left the
+     spec values wrapping in a 264px column, which turned four rows of
+     detail into seven hundred pixels of card — taller than the board and
+     unreadable with it. Widening is what actually makes room. */
+  width: calc(200% + var(--pcb));
   border-color: var(--accent);
+  box-shadow: 0 18px 50px -18px rgba(0, 0, 0, .75);
 }
+/* A card in the last column has no second column to grow into, so it
+   grows back over the one before it instead. Which cards those are
+   depends on how many columns fit, so the board works it out. */
+.board__cell.is-open.is-flipped > .xcard { inset: 0 0 auto auto; }
 
 /* On the board the card sits in its own box rather than hanging off a
    trunk, so the branch channel tightens and the head stays left. */

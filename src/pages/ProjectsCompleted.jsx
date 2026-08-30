@@ -9,7 +9,6 @@ export default function ProjectsCompleted() {
       <EntryList
         entries={completedProjects}
         basePath="/projects"
-        viewerTag="3D Placeholder / Model pending"
         linkLabel="Full write-up"
         ariaLabel="Completed"
       />

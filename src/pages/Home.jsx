@@ -92,7 +92,6 @@ export default function Home() {
           entries={completedProjects}
           basePath="/projects"
           linkLabel="Full write-up"
-          viewerTag="3D Placeholder / Model pending"
           stacked
           variant="board"
         />
@@ -108,7 +107,6 @@ export default function Home() {
           entries={homeTimeline}
           basePath="/experience"
           linkLabel="Full details"
-          viewerTag="3D Placeholder / Info &amp; pics pending"
           stacked
         />
       </section>

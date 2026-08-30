@@ -9,7 +9,6 @@ export default function ProjectsPlanned() {
       <EntryList
         entries={plannedProjects}
         basePath="/projects"
-        viewerTag="3D Placeholder / Concept"
         linkLabel="Full write-up"
         ariaLabel="Planned"
       />

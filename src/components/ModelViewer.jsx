@@ -6,8 +6,13 @@ import { BUILDERS, buildConcept } from "./modelBuilders";
 // 3D placeholder viewers. Each `kind` names a builder in
 // modelBuilders.js. Swap a builder's output for a GLTF load (three's
 // GLTFLoader) as real CAD exports arrive — see README.
+//
+// No caption. These used to carry a "3D Placeholder / ..." label and a
+// "Drag to orbit" hint on every viewer on the site, which between them
+// said the same two things twenty-four times over. The forge keeps its
+// own label because that one names what is actually playing.
 
-export default function ModelViewer({ kind = "concept", tag = "3D Placeholder / Model pending", height }) {
+export default function ModelViewer({ kind = "concept", height }) {
   const frameRef = useRef(null);
 
   useEffect(() => {
@@ -101,7 +106,6 @@ export default function ModelViewer({ kind = "concept", tag = "3D Placeholder / 
     return (
       <div className="model-frame" style={height ? { height } : undefined}>
         <span className="model-frame__tag meta meta--accent">Assembly animation</span>
-        <span className="model-frame__hint meta">Drag to orbit</span>
         <iframe
           src="/assets/hephaestus-forge-animation.html"
           title="G.A.S. [Core XY System] assembly animation"
@@ -113,8 +117,6 @@ export default function ModelViewer({ kind = "concept", tag = "3D Placeholder / 
 
   return (
     <div className="model-frame" style={height ? { height } : undefined}>
-      <span className="model-frame__tag meta meta--accent">{tag}</span>
-      <span className="model-frame__hint meta">Drag to orbit</span>
       <div ref={frameRef} style={{ width: "100%", height: "100%" }} />
     </div>
   );

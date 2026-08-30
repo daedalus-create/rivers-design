@@ -27,7 +27,6 @@ export default function ExpandingCard({
   live,
   side = "is-right",
   linkLabel = "Full details",
-  viewerTag,
   kindLabel,
 }) {
   const moreRef = useRef(null);
@@ -109,7 +108,7 @@ export default function ExpandingCard({
       <div className="xcard__top">
         <div className="xcard__thumb">
           {live && entry.model ? (
-            <ModelViewer kind={entry.model} tag={viewerTag} />
+            <ModelViewer kind={entry.model} />
           ) : (
             <div className="model-frame" />
           )}

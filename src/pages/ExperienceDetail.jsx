@@ -40,7 +40,7 @@ export default function ExperienceDetail() {
 
       <section className="section--tight wrap">
         <Reveal>
-          <ModelViewer kind={item.model} tag="3D Placeholder / Info & pics pending" height="clamp(320px, 48vw, 600px)" />
+          <ModelViewer kind={item.model} height="clamp(320px, 48vw, 600px)" />
         </Reveal>
         <Reveal as="ul" className="specs" stagger={1}>
           {item.specs.map((s) => (

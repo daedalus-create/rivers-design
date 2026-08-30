@@ -1,62 +1,139 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
-  <!-- Circuit board ground for the Projects page.
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
+  <!-- Motherboard ground for the Projects page.
 
-       Drawn on a 40px pitch and tiled at a multiple of it, so the cards
-       laid out on the same pitch always land on the board rather than
-       across it. Every trace turns on a pad, and every diagonal is 45
-       degrees, because those are the two rules real board layout follows
-       and breaking them is what makes drawn circuitry look wrong.
+       Laid out on a 40px pitch and tiled at a multiple of it, so the
+       cards on the same pitch land on the board rather than across it.
 
-       Deliberately sparse: this sits behind text, so it reads as ground
-       rather than pattern.
+       What makes a board read as a board is not the traces, it is the
+       components they run between: a processor socket with its pin
+       field, memory slots as long ranks of contacts, a chipset under a
+       square of silkscreen, headers, and electrolytics. Traces here
+       leave a component and arrive at another one, they do not wander.
+       Every corner is 45 degrees, and buses run as parallel bundles at
+       a fixed spacing, because that is what routing software produces
+       and it is the thing loose hand-drawn lines never look like.
 
        Painted solid black on purpose. The stylesheet uses this as a
        mask rather than an image, so only the alpha matters and the
-       colour comes from CSS — currentColor would not have worked, since
-       an SVG referenced from background-image or mask-image has no
-       parent to inherit a colour from. -->
-  <g fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <!-- horizontal runs -->
-    <path d="M0 40 H60 L80 20 H140 L160 40 H240" />
-    <path d="M0 120 H40 L60 140 H100" />
-    <path d="M140 200 H180 L200 180 H240" />
+       colour comes from CSS — currentColor would not work, since an SVG
+       referenced from mask-image has no parent to inherit from. -->
 
-    <!-- vertical runs -->
-    <path d="M40 0 V20 L60 40 V80 L40 100 V240" />
-    <path d="M200 0 V60 L180 80 V140 L200 160 V240" />
-    <path d="M120 80 V160" />
+  <g fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round">
 
-    <!-- short stubs, the bits that go off to something not drawn -->
-    <path d="M100 140 L120 160" />
-    <path d="M160 40 L160 60 L140 80" />
-    <path d="M60 180 H100 L120 160" />
-  </g>
+    <!-- ===== CPU socket: a square of pins with a keyed corner ===== -->
+    <g stroke-width="1.6">
+      <rect x="150" y="70" width="140" height="140" rx="3" />
+      <rect x="162" y="82" width="116" height="116" rx="2" opacity="0.5" />
+      <!-- the chamfer that marks pin 1 -->
+      <path d="M150 86 L166 70" />
+    </g>
+    <g fill="#000" stroke="none" opacity="0.55">
+      <!-- pin field, on a 12px sub-grid inside the socket -->
+      <g id="pins">
+        <circle cx="174" cy="94" r="1.5" /><circle cx="198" cy="94" r="1.5" /><circle cx="222" cy="94" r="1.5" /><circle cx="246" cy="94" r="1.5" /><circle cx="266" cy="94" r="1.5" />
+        <circle cx="174" cy="118" r="1.5" /><circle cx="198" cy="118" r="1.5" /><circle cx="222" cy="118" r="1.5" /><circle cx="246" cy="118" r="1.5" /><circle cx="266" cy="118" r="1.5" />
+        <circle cx="174" cy="142" r="1.5" /><circle cx="198" cy="142" r="1.5" /><circle cx="222" cy="142" r="1.5" /><circle cx="246" cy="142" r="1.5" /><circle cx="266" cy="142" r="1.5" />
+        <circle cx="174" cy="166" r="1.5" /><circle cx="198" cy="166" r="1.5" /><circle cx="222" cy="166" r="1.5" /><circle cx="246" cy="166" r="1.5" /><circle cx="266" cy="166" r="1.5" />
+        <circle cx="174" cy="186" r="1.5" /><circle cx="198" cy="186" r="1.5" /><circle cx="222" cy="186" r="1.5" /><circle cx="246" cy="186" r="1.5" /><circle cx="266" cy="186" r="1.5" />
+      </g>
+    </g>
+    <!-- socket mounting holes -->
+    <g stroke-width="1.4">
+      <circle cx="142" cy="62" r="4" /><circle cx="298" cy="62" r="4" />
+      <circle cx="142" cy="218" r="4" /><circle cx="298" cy="218" r="4" />
+    </g>
 
-  <!-- pads: a ring with a drilled centre, at the junctions the traces meet -->
-  <g fill="none" stroke="#000" stroke-width="1.5">
-    <circle cx="40" cy="40" r="5" />
-    <circle cx="40" cy="120" r="5" />
-    <circle cx="120" cy="80" r="5" />
-    <circle cx="120" cy="160" r="5" />
-    <circle cx="200" cy="80" r="5" />
-    <circle cx="200" cy="160" r="5" />
-    <circle cx="160" cy="40" r="4" />
-    <circle cx="60" cy="180" r="4" />
-  </g>
-  <g fill="#000">
-    <circle cx="40" cy="40" r="1.6" />
-    <circle cx="40" cy="120" r="1.6" />
-    <circle cx="120" cy="80" r="1.6" />
-    <circle cx="120" cy="160" r="1.6" />
-    <circle cx="200" cy="80" r="1.6" />
-    <circle cx="200" cy="160" r="1.6" />
-  </g>
+    <!-- ===== memory slots: two long ranks of contacts ===== -->
+    <g stroke-width="1.6">
+      <rect x="350" y="60" width="18" height="180" rx="2" />
+      <rect x="382" y="60" width="18" height="180" rx="2" />
+    </g>
+    <g stroke="#000" stroke-width="1" opacity="0.45">
+      <path d="M354 72 H364 M354 84 H364 M354 96 H364 M354 108 H364 M354 120 H364 M354 132 H364 M354 144 H364 M354 156 H364 M354 168 H364 M354 180 H364 M354 192 H364 M354 204 H364 M354 216 H364 M354 228 H364" />
+      <path d="M386 72 H396 M386 84 H396 M386 96 H396 M386 108 H396 M386 120 H396 M386 132 H396 M386 144 H396 M386 156 H396 M386 168 H396 M386 180 H396 M386 192 H396 M386 204 H396 M386 216 H396 M386 228 H396" />
+    </g>
+    <!-- the retaining clip at each end -->
+    <g stroke-width="1.4" opacity="0.7">
+      <path d="M350 60 L346 54 M368 60 L372 54 M382 60 L378 54 M400 60 L404 54" />
+    </g>
 
-  <!-- surface-mount pads, the small rectangles a component would sit on -->
-  <g fill="#000" opacity="0.55">
-    <rect x="76" y="16" width="9" height="8" rx="1.5" />
-    <rect x="135" y="16" width="9" height="8" rx="1.5" />
-    <rect x="196" y="196" width="8" height="9" rx="1.5" />
-    <rect x="36" y="196" width="8" height="9" rx="1.5" />
+    <!-- ===== the memory bus: a parallel bundle, socket to slots ===== -->
+    <g stroke-width="1.2" opacity="0.75">
+      <path d="M290 96 H316 L332 80 H350" />
+      <path d="M290 104 H312 L328 88 H350" />
+      <path d="M290 112 H308 L324 96 H350" />
+      <path d="M290 120 H304 L320 104 H350" />
+    </g>
+
+    <!-- ===== chipset: a smaller square under silkscreen ===== -->
+    <g stroke-width="1.6">
+      <rect x="150" y="300" width="90" height="90" rx="3" />
+      <rect x="160" y="310" width="70" height="70" rx="2" opacity="0.45" />
+      <circle cx="168" cy="318" r="3" opacity="0.6" />
+    </g>
+
+    <!-- ===== the chipset link: another bundle, running down ===== -->
+    <g stroke-width="1.2" opacity="0.75">
+      <path d="M186 210 V282 L178 292 V300" />
+      <path d="M198 210 V274 L190 284 V300" />
+      <path d="M210 210 V266 L202 276 V300" />
+      <path d="M222 210 V258 L214 268 V300" />
+    </g>
+
+    <!-- ===== power section: electrolytics and chokes ===== -->
+    <g stroke-width="1.6">
+      <circle cx="60" cy="90" r="14" /><circle cx="60" cy="90" r="5" opacity="0.5" />
+      <circle cx="60" cy="140" r="14" /><circle cx="60" cy="140" r="5" opacity="0.5" />
+      <circle cx="60" cy="190" r="14" /><circle cx="60" cy="190" r="5" opacity="0.5" />
+      <rect x="34" y="228" width="52" height="26" rx="3" />
+    </g>
+    <!-- the wide rails that carry power, deliberately heavier -->
+    <g stroke-width="3" opacity="0.5">
+      <path d="M78 90 H110 L126 106 V150" />
+      <path d="M78 140 H100 L116 156 V190" />
+    </g>
+
+    <!-- ===== expansion header: a double row of pads ===== -->
+    <g stroke-width="1.5">
+      <rect x="300" y="330" width="130" height="30" rx="2" />
+    </g>
+    <g fill="#000" stroke="none" opacity="0.5">
+      <rect x="308" y="336" width="5" height="5" /><rect x="322" y="336" width="5" height="5" /><rect x="336" y="336" width="5" height="5" /><rect x="350" y="336" width="5" height="5" /><rect x="364" y="336" width="5" height="5" /><rect x="378" y="336" width="5" height="5" /><rect x="392" y="336" width="5" height="5" /><rect x="406" y="336" width="5" height="5" /><rect x="418" y="336" width="5" height="5" />
+      <rect x="308" y="349" width="5" height="5" /><rect x="322" y="349" width="5" height="5" /><rect x="336" y="349" width="5" height="5" /><rect x="350" y="349" width="5" height="5" /><rect x="364" y="349" width="5" height="5" /><rect x="378" y="349" width="5" height="5" /><rect x="392" y="349" width="5" height="5" /><rect x="406" y="349" width="5" height="5" /><rect x="418" y="349" width="5" height="5" />
+    </g>
+
+    <!-- ===== chipset to header: one more short bundle ===== -->
+    <g stroke-width="1.2" opacity="0.7">
+      <path d="M240 340 H272 L284 328 H300" />
+      <path d="M240 352 H268 L280 340 H300" />
+    </g>
+
+    <!-- ===== small passives, the two-pad components ===== -->
+    <g stroke-width="1.3" opacity="0.65">
+      <rect x="108" y="268" width="16" height="7" rx="1" />
+      <rect x="108" y="286" width="16" height="7" rx="1" />
+      <rect x="270" y="248" width="7" height="16" rx="1" />
+      <rect x="288" y="248" width="7" height="16" rx="1" />
+      <rect x="330" y="272" width="16" height="7" rx="1" />
+    </g>
+
+    <!-- ===== board mounting holes, at the pitch corners ===== -->
+    <g stroke-width="1.5" opacity="0.8">
+      <circle cx="40" cy="40" r="6" /><circle cx="440" cy="40" r="6" />
+      <circle cx="40" cy="440" r="6" /><circle cx="440" cy="440" r="6" />
+    </g>
+
+    <!-- ===== edge routing: buses running out of frame, so the tile
+             continues into the next one instead of stopping dead ===== -->
+    <g stroke-width="1.2" opacity="0.6">
+      <path d="M0 260 H80 L96 276 H132" />
+      <path d="M0 272 H72 L88 288 H132" />
+      <path d="M0 284 H64 L80 300 H108" />
+      <path d="M348 400 H420 L436 416 H480" />
+      <path d="M348 412 H412 L428 428 H480" />
+      <path d="M150 440 H260 L276 424 H348" />
+      <path d="M40 340 V400 L56 416 V480" />
+      <path d="M440 120 V240 L424 256 V300" />
+    </g>
   </g>
 </svg>

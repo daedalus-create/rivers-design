@@ -36,7 +36,6 @@ export default function Experience() {
         <Timeline
           entries={timelineEntries}
           basePath="/experience"
-          viewerTag="3D Placeholder / Info &amp; pics pending"
         />
       </section>
 

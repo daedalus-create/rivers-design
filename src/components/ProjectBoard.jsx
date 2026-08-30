@@ -8,34 +8,31 @@ import ExpandingCard from "./ExpandingCard";
 //
 // Alignment is structural rather than something measured and corrected.
 // Columns are a whole number of pitches wide, the gap is one pitch, and
-// rows are one pitch tall with each card spanning a whole number of them,
-// so every card edge lands on the grid by construction. There is no code
-// here keeping the cards and the board in step; the arithmetic does it.
+// rows are one pitch tall with every cell the same whole number of them,
+// so every card edge lands on the grid by construction.
+//
+// Opening lifts a card out of the flow rather than growing its cell. The
+// first attempt grew the cell, and it was wrong three ways at once: the
+// span was derived from the card's scrollHeight while the card's height
+// came from the span, and since scrollHeight never reports less than
+// clientHeight that loop could only ratchet upward — which is why a card
+// never shrank again once opened. Growing the cell also reflowed every
+// card after it on each frame of the transition, and grid-row cannot be
+// transitioned, so the cell snapped while its contents eased. Out of
+// flow, the grid never changes: nothing below moves, nothing is measured,
+// and the only thing animating is the card itself.
 
-// Fallback span, used for the frame before a card has been measured.
-const SPAN_FALLBACK = 4;
-
-// How many pitch-rows a card of this height needs, always rounded up so
-// the content never meets the bottom edge, and always a whole number so
-// the cell lands on the grid. Measuring rather than assuming a fixed
-// span: cards carry different numbers of spec rows, and a span guessed
-// high enough for the tallest would leave a hole under every other one,
-// while a span guessed for the average would clip the rest.
-function spanFor(height, pitch) {
-  if (!height || !pitch) return SPAN_FALLBACK;
-  return Math.max(SPAN_FALLBACK, Math.ceil((height + pitch) / pitch));
-}
+// How many condensed cards build a real model, on top of whichever one is
+// open. Every viewer is its own WebGLRenderer and browsers start
+// discarding contexts past a dozen or so; the cards past this show the
+// drawn footprint in .model-frame:empty instead, which is meant to look
+// like an unpopulated pad rather than a hole.
+const LIVE_CARDS = 6;
 
 const STATUS_LABEL = {
   completed: "Completed",
   "in-progress": "In Progress",
   planned: "Planned",
-};
-
-const STATUS_TAG = {
-  completed: "3D Placeholder / Model pending",
-  "in-progress": "3D Placeholder / In progress",
-  planned: "3D Placeholder / Concept",
 };
 
 function useCanHover() {
@@ -54,8 +51,7 @@ export default function ProjectBoard({ projects }) {
   const [filter, setFilter] = useState("all");
   const [openSlug, setOpenSlug] = useState(null);
   const canHover = useCanHover();
-  const gridRef = useRef(null);
-  const cellRefs = useRef(new Map());
+  const fieldRef = useRef(null);
 
   // Filters are built from the data rather than listed here, so a status
   // or tag that exists in the sheet shows up without anyone remembering
@@ -98,35 +94,21 @@ export default function ProjectBoard({ projects }) {
   // this question already has an answer in what is on screen.
   const activeSlug = openSlug && shown.some((p) => p.slug === openSlug) ? openSlug : null;
 
-  // Each cell spans as many whole pitch-rows as its card actually needs.
-  // Written straight to the element rather than held in state: this runs
-  // on every open, close, filter and resize, and none of it should cause
-  // a React render of its own.
+  // An open card grows to the right, so one near the right edge has to
+  // grow the other way instead. Measured, but not the way the span was:
+  // this reads the cell's place in a grid that opening does not change,
+  // so there is no loop back into the thing being measured.
   useLayoutEffect(() => {
-    const measure = () => {
-      const grid = gridRef.current;
-      if (!grid) return;
-      const pitch = parseFloat(getComputedStyle(grid).gridAutoRows) || 44;
-      cellRefs.current.forEach((cell) => {
-        if (!cell || !cell.isConnected) return;
-        const card = cell.firstElementChild;
-        if (!card) return;
-        cell.style.setProperty("--span", String(spanFor(card.scrollHeight, pitch)));
-      });
-    };
-
-    measure();
-    const ro = new ResizeObserver(measure);
-    cellRefs.current.forEach((cell) => {
-      const card = cell?.firstElementChild;
-      if (card) ro.observe(card);
-    });
-    const raf = requestAnimationFrame(measure);
-    return () => {
-      ro.disconnect();
-      cancelAnimationFrame(raf);
-    };
-  }, [shown, activeSlug]);
+    const field = fieldRef.current;
+    if (!field) return;
+    const open = field.querySelector(".board__cell.is-open");
+    field.querySelectorAll(".is-flipped").forEach((el) => el.classList.remove("is-flipped"));
+    if (!open) return;
+    const cell = open.getBoundingClientRect();
+    const bounds = field.getBoundingClientRect();
+    const grown = cell.width * 2 + (parseFloat(getComputedStyle(field.querySelector(".board")?.parentElement || field).columnGap) || 0);
+    if (cell.left + Math.max(grown, cell.width * 2) > bounds.right + 1) open.classList.add("is-flipped");
+  }, [activeSlug, shown]);
 
   return (
     <div className="board">
@@ -149,7 +131,7 @@ export default function ProjectBoard({ projects }) {
         {shown.length} {shown.length === 1 ? "project" : "projects"}
       </p>
 
-      <div className="board__field" ref={gridRef} onMouseLeave={() => canHover && setOpenSlug(null)}>
+      <div className="board__field" ref={fieldRef} onMouseLeave={() => canHover && setOpenSlug(null)}>
         <div className="board__pcb" aria-hidden="true" />
 
         <ul className="board__grid">
@@ -158,11 +140,7 @@ export default function ProjectBoard({ projects }) {
             return (
               <li
                 key={p.slug}
-                className="board__cell"
-                ref={(el) => {
-                  if (el) cellRefs.current.set(p.slug, el);
-                  else cellRefs.current.delete(p.slug);
-                }}
+                className={`board__cell${open ? " is-open" : ""}`}
                 onMouseEnter={() => canHover && setOpenSlug(p.slug)}
                 onFocus={() => setOpenSlug(p.slug)}
               >
@@ -170,10 +148,9 @@ export default function ProjectBoard({ projects }) {
                   entry={p}
                   to={`/projects/${p.slug}`}
                   open={open}
-                  live={open || i < 2}
+                  live={open || i < LIVE_CARDS}
                   side="is-right"
                   linkLabel="Full write-up"
-                  viewerTag={STATUS_TAG[p.status]}
                   kindLabel={STATUS_LABEL[p.status]}
                 />
               </li>

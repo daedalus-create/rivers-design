@@ -7,7 +7,6 @@ import EntryCard from "./EntryCard";
 export default function EntryList({
   entries,
   basePath,
-  viewerTag,
   linkLabel,
   headingLevel = 2,
   linkable = true,
@@ -21,7 +20,6 @@ export default function EntryList({
           key={entry.slug}
           entry={entry}
           to={linkable ? `${basePath}/${entry.slug}` : undefined}
-          viewerTag={viewerTag}
           linkLabel={linkLabel}
           headingLevel={headingLevel}
         />

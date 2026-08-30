@@ -9,7 +9,6 @@ export default function WorkExcerpts() {
       <EntryList
         entries={roles}
         basePath="/experience"
-        viewerTag="3D Placeholder / Info & pics pending"
         linkLabel="Full role details"
         ariaLabel="Work excerpts"
       />
