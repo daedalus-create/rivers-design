@@ -14,7 +14,6 @@ export default function Education() {
       <EntryList
         entries={education}
         basePath="/experience"
-        viewerTag="3D Placeholder / Info & pics pending"
         linkLabel="Full write-up"
         ariaLabel="Education"
       />

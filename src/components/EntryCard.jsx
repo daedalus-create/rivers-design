@@ -17,7 +17,6 @@ import ModelViewer from "./LazyModelViewer";
 export default function EntryCard({
   entry,
   to,
-  viewerTag,
   linkLabel,
   headingLevel = 2,
   highlightsLabel = "Highlighted classes",
@@ -41,7 +40,7 @@ export default function EntryCard({
       {entry.sub && <p className="entry__sub">{entry.sub}</p>}
       {entry.desc && <p className="entry__desc">{entry.desc}</p>}
 
-      {entry.model && <ModelViewer kind={entry.model} tag={viewerTag} />}
+      {entry.model && <ModelViewer kind={entry.model} />}
 
       <SpecList items={entry.specs} />
       <SpecList items={entry.highlights} label={highlightsLabel} />

@@ -34,8 +34,10 @@ const HYSTERESIS = 140;
 // moves every row under it by hundreds of pixels while the transition
 // runs, and a pick taken mid-flight is ranking rows against positions
 // they are still travelling through. Roughly the length of the growth,
-// so the ranking resumes once the page has stopped moving.
-const SETTLE_MS = 420;
+// so the ranking resumes once the page has stopped moving. Tied to
+// --dur-size in the stylesheet: if the growth is made slower, this has to
+// follow it, or picks resume while the page is still travelling.
+const SETTLE_MS = 660;
 
 // How far either side of the open entry a model is actually built. Each
 // viewer is its own WebGLRenderer and browsers start discarding contexts
@@ -140,7 +142,7 @@ function useCanHover() {
 // the dot element up to the parent, because the trunk is measured across
 // all the rows at once and so the element has to live in the parent's
 // array rather than in a ref this row keeps to itself.
-function Row({ entry, index, open, live, side, basePath, linkLabel, viewerTag, onHover, registerDot }) {
+function Row({ entry, index, open, live, side, basePath, linkLabel, onHover, registerDot }) {
   return (
     <li
       className={`tl ${side}${open ? " is-open" : ""}`}
@@ -159,7 +161,6 @@ function Row({ entry, index, open, live, side, basePath, linkLabel, viewerTag, o
           live={live}
           side={side}
           linkLabel={linkLabel}
-          viewerTag={viewerTag}
           kindLabel={entry.kind === "education" ? "School" : undefined}
         />
       </div>
@@ -171,7 +172,6 @@ export default function Timeline({
   entries,
   basePath,
   linkLabel = "Full details",
-  viewerTag,
   stacked: forceStacked = false,
   variant,
 }) {
@@ -267,7 +267,6 @@ export default function Timeline({
             side={isStacked || i % 2 !== 0 ? "is-right" : "is-left"}
             basePath={basePath}
             linkLabel={linkLabel}
-            viewerTag={viewerTag}
             onHover={setHovered}
             registerDot={(el) => (dotRefs.current[i] = el)}
           />

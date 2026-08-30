@@ -9,7 +9,6 @@ export default function ProjectsInProgress() {
       <EntryList
         entries={inProgressProjects}
         basePath="/projects"
-        viewerTag="3D Placeholder / In progress"
         linkLabel="Full write-up"
         ariaLabel="Work in Progress"
       />

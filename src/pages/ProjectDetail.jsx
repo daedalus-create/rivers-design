@@ -39,13 +39,6 @@ export default function ProjectDetail() {
         <Reveal>
           <ModelViewer
             kind={project.model}
-            tag={
-              project.status === "completed"
-                ? "3D Placeholder / Model pending"
-                : project.status === "in-progress"
-                  ? "3D Placeholder / In progress"
-                  : "3D Placeholder / Concept"
-            }
             height="clamp(320px, 48vw, 600px)"
           />
         </Reveal>

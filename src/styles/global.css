@@ -126,9 +126,14 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   /* For boxes that grow and shrink. --ease-out leaves almost all of its
      travel in the first third, which reads as a snap on a small control
-     and as a lurch on something card-sized. */
+     and as a lurch on something card-sized.
+     
+     Longer than feels right when read as a number. A card going from a
+     130px strip to a 650px panel is travelling five times its own height,
+     and the eye needs the distance covered at a rate it can follow, not
+     the same duration a button gets for changing colour. */
   --ease-size: cubic-bezier(0.33, 0, 0.2, 1);
-  --dur-size: 380ms;
+  --dur-size: 620ms;
   --dur-2: 240ms;
   --dur-3: 480ms;
   --dur-4: 780ms;
@@ -306,8 +311,8 @@ body::after {
   visibility: hidden;
   overflow: hidden;
   transition:
-    opacity var(--dur-3) var(--ease-out),
-    visibility 0s linear var(--dur-3);
+    opacity 560ms var(--ease-size),
+    visibility 0s linear 560ms;
 }
 .menu-overlay.open {
   opacity: 1;
@@ -679,14 +684,6 @@ a.pill:hover .pill__inner { color: var(--accent); }
   z-index: 2;
   pointer-events: none;
 }
-.model-frame__hint {
-  position: absolute;
-  right: var(--space-5);
-  bottom: var(--space-4);
-  z-index: 2;
-  pointer-events: none;
-  color: var(--ink-a45);
-}
 
 /* Spec strip under a project — reference-site style rows */
 .specs {
@@ -921,7 +918,7 @@ a.pill:hover .pill__inner { color: var(--accent); }
      open branch would otherwise overflow. */
   transform: scale(var(--fit, 1));
   transform-origin: center center;
-  transition: transform 520ms var(--ease-size);
+  transition: transform 760ms var(--ease-size);
   will-change: transform;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1034,13 +1031,13 @@ a.pill:hover .pill__inner { color: var(--accent); }
 .tnode__kid {
   display: flex;
   align-items: center;
-  animation: tnode-in 360ms var(--ease-size) both;
+  animation: tnode-in 460ms var(--ease-size) both;
 }
 /* stagger so a branch unfurls rather than all of it arriving at once */
-.tnode__kid:nth-child(2) { animation-delay: 30ms; }
-.tnode__kid:nth-child(3) { animation-delay: 60ms; }
-.tnode__kid:nth-child(4) { animation-delay: 90ms; }
-.tnode__kid:nth-child(n + 5) { animation-delay: 120ms; }
+.tnode__kid:nth-child(2) { animation-delay: 45ms; }
+.tnode__kid:nth-child(3) { animation-delay: 90ms; }
+.tnode__kid:nth-child(4) { animation-delay: 135ms; }
+.tnode__kid:nth-child(n + 5) { animation-delay: 180ms; }
 @media (prefers-reduced-motion: reduce) {
   .tnode__kid { animation: none; }
 }
@@ -1146,9 +1143,9 @@ a.pill:hover .pill__inner { color: var(--accent); }
   background: var(--bg);
   border: 2px solid var(--ink-a45);
   transition:
-    background-color var(--dur-2) var(--ease-out),
-    border-color var(--dur-2) var(--ease-out),
-    transform var(--dur-2) var(--ease-out);
+    background-color var(--dur-size) var(--ease-size),
+    border-color var(--dur-size) var(--ease-size),
+    transform var(--dur-size) var(--ease-size);
 }
 .tl.is-left  .tl__dot { right: calc(50% + (var(--tl-gutter) / 2) - (var(--tl-dot) / 2)); }
 .tl.is-right .tl__dot { left:  calc(50% + (var(--tl-gutter) / 2) - (var(--tl-dot) / 2)); }

@@ -35,12 +35,6 @@ const STATUS_LABEL = {
   planned: "Planned",
 };
 
-const STATUS_TAG = {
-  completed: "3D Placeholder / Model pending",
-  "in-progress": "3D Placeholder / In progress",
-  planned: "3D Placeholder / Concept",
-};
-
 function useCanHover() {
   const [canHover, setCanHover] = useState(false);
   useEffect(() => {
@@ -157,7 +151,6 @@ export default function ProjectBoard({ projects }) {
                   live={open || i < LIVE_CARDS}
                   side="is-right"
                   linkLabel="Full write-up"
-                  viewerTag={STATUS_TAG[p.status]}
                   kindLabel={STATUS_LABEL[p.status]}
                 />
               </li>
