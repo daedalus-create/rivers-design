@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { BUILDERS, buildConcept } from "./modelBuilders";
+import { claimContext } from "./modelBudget";
 
 // 3D placeholder viewers. Each `kind` names a builder in
 // modelBuilders.js. Swap a builder's output for a GLTF load (three's
@@ -14,9 +15,22 @@ import { BUILDERS, buildConcept } from "./modelBuilders";
 
 export default function ModelViewer({ kind = "concept", height }) {
   const frameRef = useRef(null);
+  const hostRef = useRef(null);
+
+  // Whether this viewer currently holds one of the page's WebGL contexts.
+  // See modelBudget.js: there are more viewers on the Projects board than a
+  // browser will give contexts for, so they are handed to whichever viewers
+  // are nearest the middle of the screen and taken back on scroll.
+  const [hasContext, setHasContext] = useState(false);
 
   useEffect(() => {
-    if (kind === "forge") return undefined;
+    const host = hostRef.current;
+    if (kind === "forge" || !host) return undefined;
+    return claimContext(host, setHasContext);
+  }, [kind]);
+
+  useEffect(() => {
+    if (kind === "forge" || !hasContext) return undefined;
     const frame = frameRef.current;
     if (!frame) return undefined;
 
@@ -100,7 +114,7 @@ export default function ModelViewer({ kind = "concept", height }) {
       renderer.dispose();
       if (renderer.domElement.parentNode === frame) frame.removeChild(renderer.domElement);
     };
-  }, [kind]);
+  }, [kind, hasContext]);
 
   if (kind === "forge") {
     return (
@@ -116,8 +130,14 @@ export default function ModelViewer({ kind = "concept", height }) {
   }
 
   return (
-    <div className="model-frame" style={height ? { height } : undefined}>
-      <div ref={frameRef} style={{ width: "100%", height: "100%" }} />
+    // The inner box only exists while this viewer holds a context, so a
+    // waiting frame is genuinely empty and picks up the hatched
+    // .model-frame:empty placeholder. Left in place it would be a bare
+    // bordered box, which reads as a broken viewer rather than a pending
+    // one. The ref is safe: hasContext flips first, the box renders, and
+    // only then does the effect below look for it.
+    <div className="model-frame" ref={hostRef} style={height ? { height } : undefined}>
+      {hasContext && <div ref={frameRef} style={{ width: "100%", height: "100%" }} />}
     </div>
   );
 }

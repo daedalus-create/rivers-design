@@ -1350,10 +1350,14 @@ a.pill:hover .pill__inner { color: var(--accent); }
 }
 
 /* The board variant: the same left-hand trunk, but the cards carry the
-   Projects page's chrome instead of sitting bare on the page, and the
-   circuit ground shows through behind them. Used on the home page, where
-   the projects and the experience sit one above the other and need to
-   read as two different kinds of thing. */
+   Projects page's chrome instead of sitting bare on the page. Used on the
+   home page, where the projects and the experience sit one above the other
+   and need to read as two different kinds of thing.
+
+   This used to have a circuit-board texture behind it, echoing the one on
+   the Projects page. Both are gone: the texture was noise competing with
+   the cards, and the chrome on its own is enough to tell the two sections
+   apart. */
 .timeline--board .tl__body > .xcard {
   background: var(--bg);
   border: 1px solid var(--ink-a14);
@@ -1362,32 +1366,51 @@ a.pill:hover .pill__inner { color: var(--accent); }
   transition: border-color var(--t-hover);
 }
 .timeline--board .tl__body > .xcard.is-open { border-color: var(--accent); }
-.timeline--board .timeline__list {
-  --pcb: 44px;
-  position: relative;
-}
-.timeline--board .timeline__list::before {
-  content: '';
-  position: absolute;
-  inset: calc(var(--pcb) * -1) 0;
-  z-index: -1;
-  pointer-events: none;
-  background-color: var(--ink);
-  opacity: 0.13;
-  -webkit-mask-image: url('/assets/circuit.svg');
-  mask-image: url('/assets/circuit.svg');
-  -webkit-mask-size: calc(var(--pcb) * 12);
-  mask-size: calc(var(--pcb) * 12);
-}
+
+/* These cards run the width of the page, and the shared title size tops out
+   at 30px, which left a project name floating in about a thousand pixels of
+   nothing. Scaled to the card it is actually in: the name is the largest
+   thing on the card, which is what it should be when the card is this
+   wide. The board's own cards keep the smaller size — they are 264px, and
+   this size in that space is not the same idea. */
+.timeline--board .xcard__title { font-size: clamp(26px, 3.6vw, 54px); }
+.timeline--board .xcard.is-open .xcard__title { font-size: clamp(34px, 5vw, 78px); }
+/* Tighter leading, because a name that now wraps at display size wraps with
+   the gap the shared 1.1 leaves looking like a paragraph break. */
+.timeline--board .xcard__title { line-height: 1.02; }
 
 /* ---------- Projects board ---------- */
-/* Cards laid on the same pitch the circuit ground is drawn on. Alignment
-   is arithmetic, not correction: columns are a whole number of pitches
-   wide, the gap is one pitch, rows are one pitch tall and every card
-   spans a whole number of them. Nothing measures anything. */
+/* A grid on a fixed pitch: columns a whole number of pitches wide, the gap
+   one pitch, rows one pitch tall, every cell a whole number of them. So
+   every card edge lands on the grid by construction and nothing measures
+   anything.
+
+   The pitch used to exist to line the cards up with a circuit-board
+   texture drawn behind them. The texture is gone, but the pitch stays on
+   its own merit: it is what keeps fourteen cards of different content
+   reading as one grid rather than fourteen sizes. It is a layout unit now,
+   not a registration mark, which is why it is --pitch and no longer
+   --pcb. */
 .board {
-  --pcb: 44px;
-  --pcb-col: calc(var(--pcb) * 6);
+  --pitch: 44px;
+  /* Seven pitches. At six a card gave its title 230px, and three of the
+     project names contained a single word longer than that -- one of them
+     260px on its own -- so the word could not wrap and hung out over the
+     card's edge. Seven gives 276px, which fits every word in the set with
+     room over, and drops most titles from three lines to two. It also uses the field
+     better: three columns of 308 plus gaps is 1012 of the 1137 available,
+     where three of 264 left 257px of dead space on the right. */
+  --pitch-col: calc(var(--pitch) * 7);
+  /* The model's box when condensed. Square, and small enough that the
+     title above it always gets the card's full width. */
+  --thumb: calc(var(--pitch) * 2);
+  /* Faster than the site's 620ms growth. That duration is tuned for the
+     Experience timeline, where an entry opens because you scrolled to it and
+     the movement wants to feel unhurried. Here it opens because you pointed
+     at it, and the card's contents were still easing long after the cards
+     around it had finished sliding. Matched to the 320ms slide in
+     ProjectBoard so the whole gesture lands at once. */
+  --dur-size: 320ms;
 }
 
 .board__filters {
@@ -1429,131 +1452,177 @@ a.pill:hover .pill__inner { color: var(--accent); }
 
 .board__count { color: var(--ink-a45); margin-bottom: var(--space-5); }
 
+/* Still positioned: the open card is placed against this box to work out
+   whether it has room to grow right and down. */
 .board__field { position: relative; }
 
-/* The ground. A mask rather than an image, so the trace colour comes
-   from here and follows the palette; the SVG itself is flat black. The
-   fine grid underneath it is drawn in CSS, since a two-line grid does
-   not need a file. Both are anchored to this box's own origin, which is
-   also the grid's, so the two share one coordinate space. */
-.board__pcb {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-color: var(--ink);
-  opacity: 0.2;
-  -webkit-mask-image:
-    url('/assets/circuit.svg'),
-    repeating-linear-gradient(to right, #000 0 1px, transparent 1px var(--pcb)),
-    repeating-linear-gradient(to bottom, #000 0 1px, transparent 1px var(--pcb));
-  mask-image:
-    url('/assets/circuit.svg'),
-    repeating-linear-gradient(to right, #000 0 1px, transparent 1px var(--pcb)),
-    repeating-linear-gradient(to bottom, #000 0 1px, transparent 1px var(--pcb));
-  -webkit-mask-size: calc(var(--pcb) * 12) calc(var(--pcb) * 12), auto, auto;
-  mask-size: calc(var(--pcb) * 12) calc(var(--pcb) * 12), auto, auto;
-  -webkit-mask-position: 0 0;
-  mask-position: 0 0;
-  -webkit-mask-composite: source-over;
-  mask-composite: add;
-}
-/* The fine grid should read as underneath the traces, not equal to them. */
-.board__pcb::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    repeating-linear-gradient(to right, var(--bg) 0 1px, transparent 1px var(--pcb)),
-    repeating-linear-gradient(to bottom, var(--bg) 0 1px, transparent 1px var(--pcb));
-  opacity: 0.5;
-}
-
 .board__grid {
-  position: relative;
-  z-index: 1;
-  isolation: isolate;
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
   /* Fixed columns rather than fractions: a fraction of an arbitrary
-     container width is not a whole number of pitches, and a card whose
-     left edge lands mid-trace is the one thing this layout is for. */
-  grid-template-columns: repeat(auto-fill, var(--pcb-col));
-  grid-auto-rows: var(--pcb);
-  /* Column gap only. A row gap would make "span N" mean 2N-1 pitches
-     tall, which still lands on the grid but turns the span into a number
-     nobody can reason about. The breathing room between rows is a margin
-     on the card instead, inside the cell, where it cannot move the cell
-     off the grid. */
-  column-gap: var(--pcb);
-  row-gap: 0;
+     container width is not a whole number of pitches, and cards that each
+     land on a different fraction of a pixel is what this avoids. */
+  grid-template-columns: repeat(auto-fill, var(--pitch-col));
+  /* Rows sized by what is in them, and a real gap between them. Both used
+     to be the other way round -- fixed pitch-tall rows and no row gap --
+     because a card's height was a "span N" and N had to stay a number a
+     person could reason about. Opening a card now takes real space in the
+     grid instead of lifting over it, and an auto row is what makes that
+     safe: the row ends up exactly as tall as the open card, so there is no
+     span constant to get wrong and no way for a card to overrun its row
+     and cover the one below. */
+  grid-auto-rows: auto;
+  column-gap: var(--pitch);
+  row-gap: var(--pitch);
   justify-content: start;
 }
 
-/* Every cell is the same whole number of pitch-rows, so the grid is fixed
-   and nothing about opening a card can move it. The card inside is
-   absolutely placed and sized by its own content, which is what lets it
-   grow without a height on it to fight — and without a span derived from
-   a measurement that its own height then feeds back into. */
+/* A floor, not a height. A grid row is as tall as its tallest card, so the
+   cards in a row already match each other; this only stops a row of short
+   ones dropping below the grid's rhythm. Six pitches, because the longest
+   project name needs three lines, and three lines plus the dates plus the
+   model is 235px. */
 .board__cell {
-  grid-row: span 4;
+  min-height: calc(var(--pitch) * 6);
   min-width: 0;
-  position: relative;
 }
+/* In flow, not absolutely placed. Absolute was how an open card grew
+   without disturbing the grid, which is precisely the behaviour being
+   removed here. In flow it stretches to its row, so `margin-top: auto` on
+   the model still bottom-aligns it, and the row grows when the card does. */
 .board__cell > .xcard {
-  position: absolute;
-  inset: 0 0 auto 0;
   background: var(--bg);
   border: 1px solid var(--ink-a14);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
-  transition:
-    border-color var(--dur-2) var(--ease-out),
-    box-shadow var(--dur-2) var(--ease-out);
+  transition: border-color var(--dur-2) var(--ease-out);
 }
-/* Open, it lifts over its neighbours rather than pushing them down. The
-   shadow is what says it is above them; without it the overlap reads as
-   a rendering fault. */
-.board__cell.is-open { z-index: 5; }
+/* Open, the card takes the full width of the grid and every card after it
+   moves along to make room, instead of being covered by it. Covering them
+   was the whole problem: an expanded card sat on top of its neighbours and
+   cut their titles in half.
+   Full width rather than two columns, for two reasons. It is the widest the
+   detail can be, so it is also the shortest. And it always starts at column
+   one, so there is no longer any such thing as an open card too close to the
+   right edge to have room -- which is what let the flip-and-raise measuring
+   pass be deleted outright. */
+.board__cell.is-open {
+  grid-column: 1 / -1;
+}
 .board__cell.is-open > .xcard {
-  /* Two columns wide, not one. A card that only grew downward left the
-     spec values wrapping in a 264px column, which turned four rows of
-     detail into seven hundred pixels of card — taller than the board and
-     unreadable with it. Widening is what actually makes room. */
-  width: calc(200% + var(--pcb));
   border-color: var(--accent);
-  box-shadow: 0 18px 50px -18px rgba(0, 0, 0, .75);
 }
-/* A card in the last column has no second column to grow into, so it
-   grows back over the one before it instead. Which cards those are
-   depends on how many columns fit, so the board works it out. */
-.board__cell.is-open.is-flipped > .xcard { inset: 0 0 auto auto; }
 
 /* On the board the card sits in its own box rather than hanging off a
    trunk, so the branch channel tightens and the head stays left. */
 .board .xcard__more { --xc-branch: 20px; }
-.board .xcard__title { font-size: clamp(17px, 1.5vw, 24px); }
+.board .xcard__title {
+  font-size: clamp(17px, 1.5vw, 24px);
+  /* Widening the column fits the longest name in today's set, but that is a
+     fact about the content, not a rule the layout can rely on -- and a
+     narrow viewport shrinks the column again regardless. So the title is
+     also allowed to break inside a word. `hyphens` does it properly where
+     the browser knows the word (the document is lang="en"), and
+     `overflow-wrap` is the backstop for where it does not: an ugly break is
+     recoverable, a name hanging off the side of its card is not. */
+  hyphens: auto;
+  overflow-wrap: break-word;
+}
+/* And the reason those two need help here. Letters wraps each word in a
+   .ch-set, which is inline-flex so that a word cannot be split from its own
+   hover animation. An inline-flex box has no break opportunity inside it at
+   all, so neither `hyphens` nor `overflow-wrap` above could act on a word
+   that was wider than the card: "High-Temperature" hung 57px out over the
+   edge at the middle breakpoint even with both set.
+   Inline instead, and only inside a board title, restores the break
+   opportunities between the per-character spans. The hover sweep is
+   unaffected -- it is driven by --i on each .ch, not by the parent's
+   display -- and the rest of the site's hover words keep the inline-flex
+   they were given. */
+.board .xcard__title .ch-set { display: inline; }
 .board .xcard.is-open .xcard__title { font-size: clamp(21px, 2vw, 34px); }
-.board .xcard__thumb { width: calc(var(--pcb) * 2); }
-.board .xcard__thumb .model-frame { height: calc(var(--pcb) * 2); }
-.board .xcard.is-open .xcard__thumb { width: 100%; }
-.board .xcard.is-open .xcard__thumb .model-frame { height: calc(var(--pcb) * 4); }
+
+/* ---- the condensed card: title first, at full width ---- */
+/* `display: contents` on the wrapper so the model, the head and the detail
+   are all children of the card itself. Without it the model and the title
+   are locked into a flex row inside .xcard__top, and the title can only
+   ever have the width the model leaves it — which was the whole problem.
+   DOM order is model-then-name, because the timeline wants the name beside
+   its trunk; `order` puts the name first here without either page having to
+   hold a different tree. */
+.board .xcard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.board .xcard__top { display: contents; }
+.board .xcard__head { order: 1; }
+.board .xcard__thumb {
+  order: 2;
+  width: var(--thumb);
+  /* Pushed to the bottom of the card, so the models line up across a row
+     however many lines each title took. */
+  margin-top: auto;
+}
+.board .xcard__more { order: 3; }
+.board .xcard__thumb .model-frame { height: var(--thumb); }
+
+/* ---- the open card: name across the top, model and detail side by side ---- */
+/* Side by side is the whole fix: the height becomes the taller of the two
+   rather than their sum. */
+.board .xcard.is-open {
+  --thumb-open: calc(var(--pitch) * 4);
+  display: grid;
+  grid-template-columns: var(--thumb-open) minmax(0, 1fr);
+  column-gap: var(--space-5);
+  row-gap: var(--space-4);
+}
+.board .xcard.is-open .xcard__head { grid-column: 1 / -1; }
+.board .xcard.is-open .xcard__thumb { grid-column: 1; width: auto; margin-top: 0; }
+.board .xcard.is-open .xcard__more { grid-column: 2; }
+.board .xcard.is-open .xcard__thumb .model-frame { height: var(--thumb-open); }
+
+/* The specs are the tallest thing in an open card, so they get a key column
+   sized for this width rather than the page-wide 150-250px, which left the
+   values wrapping to three lines each. */
+.board .xcard.is-open .specs { margin-top: 0; }
+.board .xcard.is-open .specs li {
+  grid-template-columns: minmax(84px, 116px) minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: 7px 0;
+}
 
 @media (max-width: 860px) {
-  .board { --pcb: 36px; --pcb-col: calc(var(--pcb) * 5); }
+  .board {
+    --pitch: 36px;
+    --pitch-col: calc(var(--pitch) * 6);
+  }
 }
 @media (max-width: 520px) {
   /* One column, and it takes the width it is given rather than a fixed
      number of pitches, because a fixed column wider than the screen is
-     worse than a card that sits a pixel off a trace. */
+     worse than one that sits a pixel off the grid. */
   .board__grid { grid-template-columns: minmax(0, 1fr); }
+  /* One column means full width is only about 327px, too narrow for the
+     detail to sit beside the model, so here it stacks under it. */
+  .board .xcard.is-open {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-4);
+  }
+  .board .xcard.is-open .xcard__head,
+  .board .xcard.is-open .xcard__thumb,
+  .board .xcard.is-open .xcard__more { grid-column: 1; }
+  .board .xcard.is-open .xcard__thumb { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .board__cell, .chip { transition: none; }
 }
+
+/* The "All Completed" style link that closes a preview section. */
+.section__more { margin-top: var(--space-7); }
 
 /* ---------- Footer ---------- */
 .site-footer {

@@ -39,14 +39,6 @@ const HYSTERESIS = 140;
 // follow it, or picks resume while the page is still travelling.
 const SETTLE_MS = 660;
 
-// How far either side of the open entry a model is actually built. Each
-// viewer is its own WebGLRenderer and browsers start discarding contexts
-// somewhere past a dozen, so ten live at once would sit on that limit
-// running ten animation loops to draw eight models nobody is looking at.
-// One either side means the next is already running by the time it is
-// reached, so the swap is never caught happening.
-const LIVE_RADIUS = 1;
-
 function useActiveIndex(count, containerRef) {
   const [active, setActive] = useState(0);
   const activeRef = useRef(0);
@@ -263,7 +255,15 @@ export default function Timeline({
             entry={entry}
             index={i}
             open={i === active}
-            live={Math.abs(i - active) <= LIVE_RADIUS}
+            /* Every entry builds its model. This was gated to one either
+               side of the open entry to stay under the browser's ceiling on
+               WebGL contexts, but that gate was local to this component, so
+               the Projects board had a second one of its own and neither
+               could see the other. modelBudget.js owns that decision for the
+               whole page now, and it ranks by distance from the viewport
+               rather than distance from a list index, so what gets held back
+               is what you are not looking at. */
+            live
             side={isStacked || i % 2 !== 0 ? "is-right" : "is-left"}
             basePath={basePath}
             linkLabel={linkLabel}
