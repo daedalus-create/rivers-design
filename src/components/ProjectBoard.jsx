@@ -2,32 +2,36 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Letters from "./Letters";
 import ExpandingCard from "./ExpandingCard";
 
-// The Projects page as a board: cards laid on the same pitch the circuit
-// ground behind them is drawn on, so filtering moves them from one set of
-// pads to another rather than sliding them off the traces.
+// The Projects page as a board: cards on a fixed column pitch, so filtering
+// moves them from one set of cells to another rather than resizing the
+// layout. Columns are a whole number of pitches wide and the gaps are one
+// pitch, so every card edge lands on the grid by construction. Row heights
+// come from the cards in them.
 //
-// Alignment is structural rather than something measured and corrected.
-// Columns are a whole number of pitches wide, the gap is one pitch, and
-// rows are one pitch tall with every cell the same whole number of them,
-// so every card edge lands on the grid by construction.
+// There used to be a generated circuit-board texture behind all this, and
+// the pitch existed to register the cards against it. The texture is gone
+// for being noise, and the pitch stayed, because keeping fourteen cards of
+// differing content on one grid is worth a unit of its own.
 //
-// Opening lifts a card out of the flow rather than growing its cell. The
-// first attempt grew the cell, and it was wrong three ways at once: the
-// span was derived from the card's scrollHeight while the card's height
-// came from the span, and since scrollHeight never reports less than
-// clientHeight that loop could only ratchet upward — which is why a card
-// never shrank again once opened. Growing the cell also reflowed every
-// card after it on each frame of the transition, and grid-row cannot be
-// transitioned, so the cell snapped while its contents eased. Out of
-// flow, the grid never changes: nothing below moves, nothing is measured,
-// and the only thing animating is the card itself.
-
-// How many condensed cards build a real model, on top of whichever one is
-// open. Every viewer is its own WebGLRenderer and browsers start
-// discarding contexts past a dozen or so; the cards past this show the
-// drawn footprint in .model-frame:empty instead, which is meant to look
-// like an unpopulated pad rather than a hole.
-const LIVE_CARDS = 6;
+// Opening a card grows it and moves the cards after it along. Two earlier
+// versions of that are worth recording, because the safe way to do it is
+// not the obvious one:
+//
+//   1. The first grew the cell, with the row span derived from the card's
+//      scrollHeight while the card's height came from the span. Since
+//      scrollHeight never reports less than clientHeight, that loop could
+//      only ratchet upward, which is why a card never shrank again once
+//      opened.
+//   2. The second avoided the loop by lifting the open card out of the grid
+//      altogether, absolutely positioned above its neighbours. The grid did
+//      then hold still — but an expanded card covered the cards around it
+//      and cut their titles off, which is the complaint that got us here.
+//
+// What makes growing the cell safe now is that nothing derives a number
+// from the card. The open cell spans the full width of the grid, and the
+// grid's rows are auto-sized, so its row is as tall as the card in it
+// because that is what an auto row means, not because anything measured it.
+// Nothing to feed back, and nothing to get wrong at an edge.
 
 const STATUS_LABEL = {
   completed: "Completed",
@@ -94,20 +98,63 @@ export default function ProjectBoard({ projects }) {
   // this question already has an answer in what is on screen.
   const activeSlug = openSlug && shown.some((p) => p.slug === openSlug) ? openSlug : null;
 
-  // An open card grows to the right, so one near the right edge has to
-  // grow the other way instead. Measured, but not the way the span was:
-  // this reads the cell's place in a grid that opening does not change,
-  // so there is no loop back into the thing being measured.
+  // The cards slide to their new places rather than snapping there.
+  //
+  // Nothing about a grid reflow is animatable: grid-column is not a
+  // transitionable property, an auto row's height is not either, and a grid
+  // item's position is decided by the grid rather than by anything a
+  // transition can reach. So the movement is animated after the fact, the
+  // way this has to be done — the FLIP idea. Read where every card was,
+  // let the reflow happen, read where every card is now, then translate
+  // each one back to where it started and animate that offset away. What
+  // you see is the card travelling; what the browser laid out is only ever
+  // the final position.
+  //
+  // This measures, but it is not the measuring loop the two earlier versions
+  // of this component fell into. A transform has no effect on layout, so
+  // nothing read here can change what is read next time. That is the whole
+  // reason it is a transform and not a top/left.
+  //
+  // Positions are keyed by slug and taken from offsetTop/offsetLeft.
+  // Slug, because filtering changes which cards exist and an index would
+  // silently compare one card against a different one. Offsets rather than
+  // getBoundingClientRect, because those are relative to the field and so
+  // cannot turn a page scroll into a phantom delta.
+  const spotsRef = useRef(new Map());
+
   useLayoutEffect(() => {
     const field = fieldRef.current;
     if (!field) return;
-    const open = field.querySelector(".board__cell.is-open");
-    field.querySelectorAll(".is-flipped").forEach((el) => el.classList.remove("is-flipped"));
-    if (!open) return;
-    const cell = open.getBoundingClientRect();
-    const bounds = field.getBoundingClientRect();
-    const grown = cell.width * 2 + (parseFloat(getComputedStyle(field.querySelector(".board")?.parentElement || field).columnGap) || 0);
-    if (cell.left + Math.max(grown, cell.width * 2) > bounds.right + 1) open.classList.add("is-flipped");
+
+    const cells = [...field.querySelectorAll(".board__cell")];
+    const before = spotsRef.current;
+    const after = new Map();
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    for (const cell of cells) {
+      const slug = cell.dataset.slug;
+      const spot = { x: cell.offsetLeft, y: cell.offsetTop };
+      after.set(slug, spot);
+
+      const was = before.get(slug);
+      // No previous position means the card has just been filtered in, and
+      // there is nowhere to travel from.
+      if (!was || still) continue;
+
+      const dx = was.x - spot.x;
+      const dy = was.y - spot.y;
+      if (!dx && !dy) continue;
+
+      // Mouse across a board is a stream of these, so an animation still
+      // running is replaced rather than fought with.
+      for (const running of cell.getAnimations()) running.cancel();
+      cell.animate(
+        [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }],
+        { duration: 320, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+      );
+    }
+
+    spotsRef.current = after;
   }, [activeSlug, shown]);
 
   return (
@@ -132,14 +179,13 @@ export default function ProjectBoard({ projects }) {
       </p>
 
       <div className="board__field" ref={fieldRef} onMouseLeave={() => canHover && setOpenSlug(null)}>
-        <div className="board__pcb" aria-hidden="true" />
-
         <ul className="board__grid">
-          {shown.map((p, i) => {
+          {shown.map((p) => {
             const open = p.slug === activeSlug;
             return (
               <li
                 key={p.slug}
+                data-slug={p.slug}
                 className={`board__cell${open ? " is-open" : ""}`}
                 onMouseEnter={() => canHover && setOpenSlug(p.slug)}
                 onFocus={() => setOpenSlug(p.slug)}
@@ -148,7 +194,13 @@ export default function ProjectBoard({ projects }) {
                   entry={p}
                   to={`/projects/${p.slug}`}
                   open={open}
-                  live={open || i < LIVE_CARDS}
+                  /* Every card builds its real model, not just the first
+                     handful. A board where six thumbnails move and the rest
+                     are empty frames reads as broken rather than as
+                     restraint, and each viewer already parks its render
+                     loop when it scrolls out of view, so the cost of the
+                     ones you cannot see is a context, not a frame. */
+                  live
                   side="is-right"
                   linkLabel="Full write-up"
                   kindLabel={STATUS_LABEL[p.status]}
