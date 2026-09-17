@@ -6,6 +6,13 @@
     <title>Rivers Design: Engineer for function, design for form</title>
     <meta name="description" content="Rivers Design: engineering and design portfolio. DFM-focused hardware projects: Pyro MK:7, G.A.S. [Core XY System], SunThru, Dreki Systems.">
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <!-- The heading face and the body face both render above the fold on
+         first paint (the hero name and its lede), so both are preloaded:
+         otherwise the browser doesn't discover them until it parses the
+         bundled CSS, well after the HTML, costing a visible flash/reflow
+         from the fallback font to the real one. -->
+    <link rel="preload" as="font" type="font/otf" href="/fonts/Ideation-Regular.otf" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/BeVietnamPro-300.woff2" crossorigin />
   </head>
   <body>
     <div id="root"></div>

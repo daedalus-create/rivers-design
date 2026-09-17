@@ -1,20 +1,21 @@
+import { lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Experience from "./pages/Experience";
-import WorkExcerpts from "./pages/WorkExcerpts";
-import ExperienceDetail from "./pages/ExperienceDetail";
-import Resume from "./pages/Resume";
-import Education from "./pages/Education";
-import Classes from "./pages/Classes";
-import Projects from "./pages/Projects";
-import ProjectsCompleted from "./pages/ProjectsCompleted";
-import ProjectsInProgress from "./pages/ProjectsInProgress";
-import ProjectsPlanned from "./pages/ProjectsPlanned";
-import ProjectDetail from "./pages/ProjectDetail";
-import NotFound from "./pages/NotFound";
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Experience = lazy(() => import("./pages/Experience"));
+const WorkExcerpts = lazy(() => import("./pages/WorkExcerpts"));
+const ExperienceDetail = lazy(() => import("./pages/ExperienceDetail"));
+const Resume = lazy(() => import("./pages/Resume"));
+const Education = lazy(() => import("./pages/Education"));
+const Classes = lazy(() => import("./pages/Classes"));
+const Projects = lazy(() => import("./pages/Projects"));
+const ProjectsCompleted = lazy(() => import("./pages/ProjectsCompleted"));
+const ProjectsInProgress = lazy(() => import("./pages/ProjectsInProgress"));
+const ProjectsPlanned = lazy(() => import("./pages/ProjectsPlanned"));
+const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 export default function App() {
   return (

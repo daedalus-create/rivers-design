@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -24,7 +24,14 @@ export default function Layout() {
       <div className="page-backdrop" aria-hidden="true" />
       <Header />
       <main>
-        <Outlet />
+        {/* Suspense sits here, inside Layout, rather than around the whole
+            route tree: every page but Home is a separate lazy chunk now
+            (see App.jsx), and this way a chunk still loading only blanks
+            the page content - the header and its nav stay put instead of
+            the whole screen flashing to the fallback on every navigation. */}
+        <Suspense fallback={null}>
+          <Outlet />
+        </Suspense>
       </main>
       <Footer />
     </>

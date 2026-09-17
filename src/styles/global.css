@@ -165,10 +165,21 @@ h1, h2, h3, h4, strong, b { font-weight: 400; }
 
 ::selection { background: var(--accent); color: var(--bg); }
 
-/* Grain overlay, as on the reference site */
-body::after {
+/* Grain overlay, as on the reference site.
+   This used to be `body::after`, `position: fixed`. A fixed layer that
+   blends (mix-blend-mode) with content scrolling underneath it can't be
+   handled as a cheap, independently-translated compositor layer: the
+   browser has to re-flatten the blend against whatever is now underneath
+   on every scroll frame, which is exactly the kind of per-frame repaint
+   that shows up as choppy scrolling. Anchoring it to #root instead (and
+   switching fixed -> absolute) makes it scroll together with the page as
+   one already-composited layer, so it costs nothing extra while
+   scrolling. Same look: still tiled, still above everything at z-index
+   200, still covers the full page. */
+#root { position: relative; }
+#root::after {
   content: '';
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 200;
