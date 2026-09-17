@@ -1131,6 +1131,14 @@ a.pill:hover .pill__inner { color: var(--accent); }
   align-items: start;
   padding-bottom: clamp(var(--space-7), 5vh, var(--space-9));
 }
+/* The homepage's board/experience previews (see Timeline's `roomy` prop):
+   full-width cards that open into a large panel need more air between
+   them than the narrower, text-led Experience page does, or the next
+   entry's collapsed head sits close enough to the open card above it
+   to read as one continuous block instead of separate entries. */
+.timeline--roomy .tl {
+  padding-bottom: clamp(var(--space-8), 9vh, var(--space-10));
+}
 .tl.is-left  > .tl__body { grid-column: 1; text-align: right; }
 .tl.is-right > .tl__body { grid-column: 3; }
 

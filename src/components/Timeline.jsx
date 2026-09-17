@@ -166,6 +166,20 @@ export default function Timeline({
   linkLabel = "Full details",
   stacked: forceStacked = false,
   variant,
+  // Whether resting the pointer on a card can open it, independent of
+  // scroll position. The homepage passes false: those cards are meant to
+  // enlarge as they cross the focus line and shrink again once scrolled
+  // past, the same way on a trackpad/touch as with a mouse, rather than
+  // popping open just because the cursor happens to be sitting on one.
+  hoverOpens = true,
+  // Extra breathing room between entries. The homepage passes this: its
+  // cards run the full page width and open to a large, image-heavy
+  // panel, so the default rhythm (tuned for the narrower, text-led
+  // Experience page) reads as cramped there - the next entry's collapsed
+  // head sits close enough to the open card above it that scrolling
+  // between them feels like one continuous block rather than distinct
+  // entries.
+  roomy = false,
 }) {
   const wrapRef = useRef(null);
   const svgRef = useRef(null);
@@ -188,8 +202,10 @@ export default function Timeline({
   const isStacked = forceStacked || narrow;
 
   // Hover wins while the pointer is on an entry; scroll decides the rest
-  // of the time, and all of the time on a touch screen.
-  const active = canHover && hovered !== null ? hovered : scrolled;
+  // of the time, on a touch screen always, and on the homepage always
+  // (hoverOpens: false) since there the open card is meant to track
+  // scroll position, not the cursor.
+  const active = hoverOpens && canHover && hovered !== null ? hovered : scrolled;
 
   useLayoutEffect(() => {
     const draw = () => {
@@ -236,7 +252,7 @@ export default function Timeline({
 
   return (
     <div
-      className={`timeline${isStacked ? " is-stacked" : ""}${variant ? ` timeline--${variant}` : ""}`}
+      className={`timeline${isStacked ? " is-stacked" : ""}${variant ? ` timeline--${variant}` : ""}${roomy ? " timeline--roomy" : ""}`}
       ref={wrapRef}
       onMouseLeave={() => setHovered(null)}
     >

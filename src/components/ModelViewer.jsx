@@ -13,7 +13,7 @@ import { claimContext } from "./modelBudget";
 // said the same two things twenty-four times over. The forge keeps its
 // own label because that one names what is actually playing.
 
-export default function ModelViewer({ kind = "concept", height }) {
+export default function ModelViewer({ kind = "concept", height, open = false }) {
   const frameRef = useRef(null);
   const hostRef = useRef(null);
 
@@ -117,14 +117,33 @@ export default function ModelViewer({ kind = "concept", height }) {
   }, [kind, hasContext]);
 
   if (kind === "forge") {
+    // The forge is a full animation loop running inside its own document,
+    // not a WebGL context this component can budget the way it does the
+    // others below - so nothing was ever stopping it from running
+    // permanently the moment this component mounted, regardless of
+    // whether its card was open, collapsed, or scrolled off screen
+    // entirely. That's real, continuous main-thread work competing with
+    // everything else on the page for the same thread - it showed up as
+    // every other transition on the page going choppy (even plain
+    // scrolling) while it played, because the cost is paid in the
+    // browser's rendering pipeline, not in this component's own render
+    // time, so it never showed up where you'd think to look for it.
+    // Gating it on `open` - mounting the iframe only while this card is
+    // the one actually expanded - means it only runs while it's the
+    // thing being looked at. Collapsed, the box is empty and picks up
+    // the same hatched .model-frame:empty placeholder every other
+    // waiting viewer uses; a 126px-tall preview of it looping forever
+    // was never worth what it cost the rest of the page.
     return (
       <div className="model-frame" style={height ? { height } : undefined}>
         <span className="model-frame__tag meta meta--accent">Assembly animation</span>
-        <iframe
-          src="/assets/hephaestus-forge-animation.html"
-          title="G.A.S. [Core XY System] assembly animation"
-          loading="lazy"
-        />
+        {open && (
+          <iframe
+            src="/assets/hephaestus-forge-animation.html"
+            title="G.A.S. [Core XY System] assembly animation"
+            loading="lazy"
+          />
+        )}
       </div>
     );
   }
