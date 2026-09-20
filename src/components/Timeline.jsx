@@ -112,25 +112,37 @@ export default function Timeline({
       const svg = svgRef.current;
       if (!wrap || !svg) return;
 
+      // Every getBoundingClientRect below is read first and every
+      // setAttribute write happens after, in two separate passes. They
+      // used to alternate one dot at a time - measure, write the <path>,
+      // measure the next dot, write again - and each write invalidates
+      // layout, so every measurement after the first was forcing the
+      // browser to redo it synchronously rather than reading back
+      // something already known. On a long timeline (the homepage runs
+      // two of these, one for projects and one for experience) that was
+      // a forced synchronous layout per entry, on every mount, resize,
+      // and dot-size change - real main-thread cost for a figure that
+      // does not need to be recomputed one entry at a time.
       const { rect: base, px } = unscale(wrap);
       const w = px(base.width);
       const h = px(base.height);
-      svg.setAttribute("width", String(w));
-      svg.setAttribute("height", String(h));
-      svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
 
       const first = dotRefs.current[0];
       if (!first) return;
       const firstRect = first.getBoundingClientRect();
-
       const x0 = isStacked ? px(firstRect.left + firstRect.width / 2 - base.left) : w / 2;
       const y0 = px(firstRect.top + firstRect.height / 2 - base.top);
 
+      const dotRects = entries.map((_, i) => dotRefs.current[i]?.getBoundingClientRect());
+
+      svg.setAttribute("width", String(w));
+      svg.setAttribute("height", String(h));
+      svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+
       entries.forEach((_, i) => {
-        const dot = dotRefs.current[i];
         const path = pathRefs.current[i];
-        if (!dot || !path) return;
-        const r = dot.getBoundingClientRect();
+        const r = dotRects[i];
+        if (!path || !r) return;
         path.setAttribute(
           "d",
           elbow(x0, y0, px(r.left + r.width / 2 - base.left), px(r.top + r.height / 2 - base.top)),

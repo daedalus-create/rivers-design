@@ -57,23 +57,25 @@ function TreeNode({ node, expandedPath, depth, onToggle, onNavigate, currentNode
       const svg = svgRef.current;
       if (!wrap || !label || !svg) return;
 
+      // Reads batched before writes - see the identical note on
+      // Timeline.jsx's draw(), which had the same one-child-at-a-time
+      // measure/write alternation forcing a synchronous layout per kid.
       const { rect: base, px } = unscale(wrap);
-
       const from = label.getBoundingClientRect();
       const x0 = px(from.left - base.left) + TRUNK_INSET;
       const y0 = px(from.bottom - base.top);
       const w = px(base.width);
       const h = px(base.height);
+      const kidRects = kids.map((_, i) => childRefs.current[i]?.getBoundingClientRect());
 
       svg.setAttribute("width", String(w));
       svg.setAttribute("height", String(h));
       svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
 
       kids.forEach((_, i) => {
-        const el = childRefs.current[i];
         const path = pathRefs.current[i];
-        if (!el || !path) return;
-        const to = el.getBoundingClientRect();
+        const to = kidRects[i];
+        if (!path || !to) return;
         path.setAttribute(
           "d",
           elbow(x0, y0, px(to.left - base.left), px(to.top + to.height / 2 - base.top)),
