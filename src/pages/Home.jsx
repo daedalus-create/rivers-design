@@ -94,6 +94,8 @@ export default function Home() {
           linkLabel="Full write-up"
           stacked
           variant="board"
+          hoverOpens={false}
+          roomy
         />
       </section>
 
@@ -108,6 +110,8 @@ export default function Home() {
           basePath="/experience"
           linkLabel="Full details"
           stacked
+          hoverOpens={false}
+          roomy
         />
       </section>
     </>

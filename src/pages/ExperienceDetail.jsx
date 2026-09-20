@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import Reveal from "../components/Reveal";
 import Letters from "../components/Letters";
+import Breadcrumbs from "../components/Breadcrumbs";
 import ModelViewer from "../components/LazyModelViewer";
 import { getRole } from "../data/roles";
 import { getEducationEntry } from "../data/education";
@@ -24,10 +25,7 @@ export default function ExperienceDetail() {
     <>
       <section className="page-hero wrap">
         <Reveal as="p" className="meta meta--wide">
-          Rivers Design / Experience /{" "}
-          <Link to={backHref} style={{ color: "inherit" }}>
-            {backLabel}
-          </Link>
+          <Breadcrumbs node={slug} />
         </Reveal>
         <Reveal as="h1" className="display" stagger={1}>
           {item.title}

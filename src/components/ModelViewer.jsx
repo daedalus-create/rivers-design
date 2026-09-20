@@ -13,9 +13,11 @@ import { claimContext } from "./modelBudget";
 // said the same two things twenty-four times over. The forge keeps its
 // own label because that one names what is actually playing.
 
-export default function ModelViewer({ kind = "concept", height }) {
+export default function ModelViewer({ kind = "concept", height, open = false }) {
   const frameRef = useRef(null);
   const hostRef = useRef(null);
+  const forgeFrameRef = useRef(null);
+  const forgeHostRef = useRef(null);
 
   // Whether this viewer currently holds one of the page's WebGL contexts.
   // See modelBudget.js: there are more viewers on the Projects board than a
@@ -28,6 +30,84 @@ export default function ModelViewer({ kind = "concept", height }) {
     if (kind === "forge" || !host) return undefined;
     return claimContext(host, setHasContext);
   }, [kind]);
+
+  // The forge iframe renders a full WebGL scene every frame for as long
+  // as it's mounted, which is real main-thread work competing with the
+  // parent page's own - including whatever it's doing to keep scrolling
+  // smooth. Every card is shown open all the time now (see Timeline.jsx),
+  // so this iframe mounts once, on page load, and stays mounted for as
+  // long as its section is on the page - there's no more "closed" state
+  // to fall back to. Two things gate whether it actually renders a
+  // frame: whether the page is scrolling right now, and whether the
+  // viewer is anywhere near the viewport at all. Either one true is
+  // enough to pause it.
+  useEffect(() => {
+    if (kind !== "forge" || !open) return undefined;
+
+    let idleTimer = 0;
+    // Starts true, not false: on a page long enough to have this card
+    // off-screen at load, the visitor got here by scrolling, and by the
+    // time this effect's own listener is registered that scroll is
+    // already in the past - treating it as "not scrolling" until a new
+    // scroll event happens to land would let the ready-handshake below
+    // wave the iframe through to render while that same gesture is
+    // still in flight.
+    let scrolling = true;
+    let visible = false;
+
+    const post = () => {
+      const win = forgeFrameRef.current?.contentWindow;
+      if (win) win.postMessage({ type: "forge-scroll", scrolling: scrolling || !visible }, "*");
+    };
+
+    const onScroll = () => {
+      scrolling = true;
+      // Posted on every tick, not just the first of a scroll gesture:
+      // this effect's own mount can race the first scroll event, so a
+      // postMessage that only fired on the leading edge could miss it. A
+      // postMessage is cheap next to the render it's saving.
+      post();
+      window.clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(() => {
+        scrolling = false;
+        post();
+      }, 220);
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+        post();
+      },
+      { rootMargin: "200px 0px" },
+    );
+    if (forgeHostRef.current) io.observe(forgeHostRef.current);
+
+    // The iframe starts paused on its own (see hephaestus-forge-
+    // animation.html) rather than waiting on a message that would race
+    // its own load. It announces itself once its listener is actually
+    // registered, which is when it's safe to tell it the real state
+    // instead of the two of them silently disagreeing until the next
+    // scroll or visibility change happens to fire.
+    const onMessage = (e) => {
+      if (e.data?.type === "forge-ready" && e.source === forgeFrameRef.current?.contentWindow) {
+        post();
+      }
+    };
+    window.addEventListener("message", onMessage);
+    idleTimer = window.setTimeout(() => {
+      scrolling = false;
+      post();
+    }, 220);
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("message", onMessage);
+      io.disconnect();
+      window.clearTimeout(idleTimer);
+    };
+  }, [kind, open]);
 
   useEffect(() => {
     if (kind === "forge" || !hasContext) return undefined;
@@ -117,14 +197,24 @@ export default function ModelViewer({ kind = "concept", height }) {
   }, [kind, hasContext]);
 
   if (kind === "forge") {
+    // The forge is a full animation loop running inside its own document,
+    // not a WebGL context this component can budget the way it does the
+    // others below - nothing here stops it running for as long as it's
+    // mounted. Every card is shown open all the time (see Timeline.jsx),
+    // so this mounts once on page load rather than toggling with a card,
+    // and the effect above is what keeps it from costing anything while
+    // it's scrolled out of view or the page itself is mid-scroll.
     return (
-      <div className="model-frame" style={height ? { height } : undefined}>
+      <div className="model-frame" ref={forgeHostRef} style={height ? { height } : undefined}>
         <span className="model-frame__tag meta meta--accent">Assembly animation</span>
-        <iframe
-          src="/assets/hephaestus-forge-animation.html"
-          title="G.A.S. [Core XY System] assembly animation"
-          loading="lazy"
-        />
+        {open && (
+          <iframe
+            ref={forgeFrameRef}
+            src="/assets/hephaestus-forge-animation.html"
+            title="G.A.S. [Core XY System] assembly animation"
+            loading="lazy"
+          />
+        )}
       </div>
     );
   }

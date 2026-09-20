@@ -108,7 +108,7 @@ export default function ExpandingCard({
       <div className="xcard__top">
         <div className="xcard__thumb">
           {live && entry.model ? (
-            <ModelViewer kind={entry.model} />
+            <ModelViewer kind={entry.model} open={open} />
           ) : (
             <div className="model-frame" />
           )}
