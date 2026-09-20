@@ -93,7 +93,7 @@
 </div>
 
 <div id="part-label"></div>
-<div id="hint">Drag to orbit · Scroll to zoom</div>
+<div id="hint">Drag to orbit · Click, then scroll to zoom</div>
 
 <div id="controls">
   <div id="controls-inner">
@@ -182,9 +182,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     scene.fog = new THREE.Fog(0x0b0e14, 2000, 6000);
 
     const camera = new THREE.PerspectiveCamera(38, window.innerWidth/window.innerHeight, 1, 20000);
-    const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+    // antialias:false and a lower pixel-ratio cap: this canvas has to be
+    // composited into the parent page on every scroll frame whether or
+    // not it's actively re-rendering a new one, and a full-DPR
+    // antialiased backing store is a lot of pixels for a card-sized
+    // viewer where the extra sharpness barely registers.
+    const renderer = new THREE.WebGLRenderer({antialias:false, alpha:true, powerPreference:'low-power'});
     renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 1.5));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.NoToneMapping;
@@ -307,9 +312,21 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     let zoomFactor = 1.0;
     const dom = renderer.domElement;
     dom.style.cursor = 'grab';
+    // Whether this viewer is allowed to eat the wheel event for zoom.
+    // This sits in an iframe embedded in a card on a page the visitor is
+    // scrolling through, and the card can be tall enough that the pointer
+    // is resting over the model when they reach for the scroll wheel. If
+    // wheel always zoomed, that scroll gesture would silently zoom the
+    // model instead of moving the page - it would look like scrolling had
+    // stopped working. Requiring one click first (which also starts a
+    // drag, so orbiting still needs no extra step) means a passing wheel
+    // event scrolls the page right up until the visitor deliberately
+    // reaches for the model.
+    let engaged = false;
     dom.addEventListener('pointerdown', function(e){
       lastPointer = {x:e.clientX, y:e.clientY};
       manualControl = true;
+      engaged = true;
       dom.style.cursor = 'grabbing';
       showHint(false);
       clearTimeout(manualTimeout);
@@ -322,7 +339,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       userAzOffset -= dx * 0.005;
       userElOffset = THREE.MathUtils.clamp(userElOffset + dy*0.004, -1.3, 1.4);
     });
+    dom.addEventListener('pointerleave', function(){
+      // Re-arm: returning later (after scrolling elsewhere and coming
+      // back without meaning to touch the model) should not still have
+      // last visit's click silently capturing the page's scroll.
+      engaged = false;
+    });
     dom.addEventListener('wheel', function(e){
+      if (!engaged) return; // let the page scroll normally
       e.preventDefault();
       zoomFactor = THREE.MathUtils.clamp(zoomFactor + e.deltaY*0.0008, 0.45, 2.2);
       manualControl = true;
@@ -439,9 +463,40 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
+    // ---------- Scroll-aware pause ----------
+    // The parent page posts this while the visitor is actively scrolling
+    // it (see ModelViewer.jsx). Rendering a frame here is the expensive
+    // part of this loop by far, and it runs on this document's own
+    // thread but still contends with the parent page's for the same
+    // core, so scrolling past this card while it renders every frame is
+    // exactly when the rest of the page is most likely to stutter.
+    // Freezing the visual for the scroll's duration - a few hundred ms -
+    // isn't something a visitor moving past it will register, and it
+    // resumes the instant they stop.
+    // Starts paused rather than waiting for the parent's first message:
+    // a message sent the instant this mounts is racing this same
+    // iframe's own load - it almost always loses, since the parent has
+    // no way to know when the listener below is actually registered.
+    // Starting paused means that race costs nothing; the parent tells it
+    // the real state (in view and not mid-scroll, or not) once its
+    // 'forge-ready' handshake gets an answer.
+    let scrollPaused = true;
+    window.addEventListener('message', function(e){
+      if (e && e.data && e.data.type === 'forge-scroll') {
+        scrollPaused = !!e.data.scrolling;
+        if (!scrollPaused) lastFrameAt = performance.now(); // drop the paused gap from dt
+      }
+    });
+    // Tell the parent the listener above is live, so it can hand back
+    // whatever the real scroll state is right now instead of the two of
+    // them silently disagreeing until the next scroll event happens to
+    // fire.
+    if (window.parent !== window) window.parent.postMessage({ type: 'forge-ready' }, '*');
+
     // ---------- Render loop ----------
     function animate(now){
       requestAnimationFrame(animate);
+      if (scrollPaused) { lastFrameAt = now; return; }
       const dt = now - lastFrameAt;
       lastFrameAt = now;
       if (playing){

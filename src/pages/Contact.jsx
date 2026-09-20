@@ -1,11 +1,12 @@
 import Reveal from "../components/Reveal";
+import Breadcrumbs from "../components/Breadcrumbs";
 
 export default function Contact() {
   return (
     <>
       <section className="page-hero wrap">
         <Reveal as="p" className="meta meta--wide">
-          Rivers Design / About
+          <Breadcrumbs node="contact" />
         </Reveal>
         <Reveal as="h1" className="display" stagger={1}>
           Contact

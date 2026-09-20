@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import ExpandingCard from "./ExpandingCard";
 import { elbow, unscale } from "./connectors";
+import { useReveal } from "../hooks/useReveal";
 
 // The work history as a timeline: one trunk down the middle, a curved
 // elbow out to each entry, alternating sides, newest first.
@@ -11,95 +12,23 @@ import { elbow, unscale } from "./connectors";
 // path redraws it, and the strokes are opaque with the fade on a wrapping
 // <g>, so overlapping runs do not stack into a darker line.
 //
-// An entry condensed is its model beside its name, with the dates under
-// the name. Opened, the name goes over the top and the model grows to
-// fill the width beneath it, and the detail unpacks below that, hung off
-// a branch of the same line.
-
-// Where "being read" is, as a fraction of viewport height. Entries rank
-// by distance from this line and the closest opens. Above centre because
-// an entry grows downward, and anchoring at the middle would push its own
-// body off the bottom of the screen.
-const FOCUS = 0.38;
-
-// A newly opened entry changes the page height, which moves everything
-// below it. Re-ranking on that reflow is what makes two neighbours trade
-// the open state back and forth, so an entry has to beat the open one by
-// this much (in pixels) to take it.
-const HYSTERESIS = 140;
-
-// And for this long after a change, nothing may take over at all. The
-// margin above stops two entries swapping when they are near each other;
-// this stops the swap that the growth itself causes. An entry opening
-// moves every row under it by hundreds of pixels while the transition
-// runs, and a pick taken mid-flight is ranking rows against positions
-// they are still travelling through. Roughly the length of the growth,
-// so the ranking resumes once the page has stopped moving. Tied to
-// --dur-size in the stylesheet: if the growth is made slower, this has to
-// follow it, or picks resume while the page is still travelling.
-const SETTLE_MS = 660;
-
-function useActiveIndex(count, containerRef) {
-  const [active, setActive] = useState(0);
-  const activeRef = useRef(0);
-
-  useEffect(() => {
-    if (!count) return undefined;
-    const container = containerRef.current;
-    if (!container) return undefined;
-
-    let queued = 0;
-    let changedAt = 0;
-
-    const pick = () => {
-      queued = 0;
-      if (performance.now() - changedAt < SETTLE_MS) return;
-      const rows = container.querySelectorAll("[data-tl-row]");
-      if (!rows.length) return;
-
-      const line = window.innerHeight * FOCUS;
-      let best = activeRef.current;
-      let bestDist = Infinity;
-
-      rows.forEach((row, i) => {
-        // Measure to the head, not the row's centre: the head is the name
-        // and dates, the part that stays put while the body opens beneath
-        // it. Using the centre would let an entry drift as it grows, and
-        // unseat itself just by opening.
-        const head = row.querySelector("[data-xc-head]");
-        const y = (head || row).getBoundingClientRect().top;
-        const dist = Math.abs(y - line);
-        const penalty = i === activeRef.current ? -HYSTERESIS : 0;
-        if (dist + penalty < bestDist) {
-          bestDist = dist + penalty;
-          best = i;
-        }
-      });
-
-      if (best !== activeRef.current) {
-        activeRef.current = best;
-        changedAt = performance.now();
-        setActive(best);
-      }
-    };
-
-    const onScroll = () => {
-      if (queued) return;
-      queued = requestAnimationFrame(pick);
-    };
-
-    pick();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (queued) cancelAnimationFrame(queued);
-    };
-  }, [count, containerRef]);
-
-  return active;
-}
+// Every entry is open all the time now - it used to be one entry at a
+// time, picked by scroll position or by hovering over a card, but both of
+// those turned ordinary scrolling into a performance and correctness
+// problem: a browser fires mouseenter/mouseleave whenever the element
+// under the pointer changes, including when the page scrolls a row under
+// a pointer that never moved, so a page where hovering opened a card had
+// cards popping open and shut - each one potentially mounting a heavy
+// model viewer - purely because it scrolled past wherever the mouse
+// happened to be resting. The scroll-position version had its own cost:
+// a rank-all-entries measurement on every scroll frame, plus a snap-to-
+// top nudge that fought the visitor's own scrolling. Showing every card
+// at once removes both: nothing decides what is "open" any more, so
+// there is nothing left to recompute as the page scrolls. What replaces
+// the old pop-open is a plain one-shot reveal as each entry first
+// scrolls into view (see useReveal) - a CSS opacity/transform transition
+// that costs nothing once it has played, rather than a per-frame scroll
+// listener that runs for as long as the page is open.
 
 function useMediaQuery(query) {
   const [matches, setMatches] = useState(false);
@@ -113,43 +42,30 @@ function useMediaQuery(query) {
   return matches;
 }
 
-// A pointer that cannot hover must not be able to latch an entry open: a
-// tap on a touch screen fires mouseenter and then never fires the
-// matching leave, so the entry would stay open until another was tapped.
-function useCanHover() {
-  const [canHover, setCanHover] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(hover: hover)");
-    const sync = () => setCanHover(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
-  return canHover;
-}
-
 // One row. Owns the branch running from its dot down to each block of
-// detail, which only exists while the row is open.
-// One row: the dot the trunk lands on, and the card. `registerDot` hands
-// the dot element up to the parent, because the trunk is measured across
-// all the rows at once and so the element has to live in the parent's
-// array rather than in a ref this row keeps to itself.
-function Row({ entry, index, open, live, side, basePath, linkLabel, onHover, registerDot }) {
+// detail. `registerDot` hands the dot element up to the parent, because
+// the trunk is measured across all the rows at once and so the element
+// has to live in the parent's array rather than in a ref this row keeps
+// to itself.
+function Row({ entry, index, live, side, basePath, linkLabel, registerDot }) {
+  // The reveal goes on the card body, not this <li>: the dot above sits
+  // on the trunk wire, whose path is measured (in the effect below) from
+  // the dot's own on-screen position. Sliding the dot along with the
+  // card would leave the wire pointing at the spot the dot started from
+  // for the length of the transition, since the path isn't re-measured
+  // frame by frame - it would visibly detach from its own dot while the
+  // card animated in. Only the body needs to move.
+  const [ref, visible] = useReveal();
+
   return (
-    <li
-      className={`tl ${side}${open ? " is-open" : ""}`}
-      data-tl-row
-      aria-current={open ? "true" : undefined}
-      onMouseEnter={() => onHover(index)}
-      onMouseLeave={() => onHover(null)}
-    >
+    <li className={`tl ${side} is-open`} style={{ "--stagger-i": index % 4 }}>
       <span className="tl__dot" aria-hidden="true" ref={registerDot} />
 
-      <div className="tl__body">
+      <div ref={ref} className={`tl__body card-reveal${visible ? " in" : ""}`}>
         <ExpandingCard
           entry={entry}
           to={`${basePath}/${entry.slug}`}
-          open={open}
+          open
           live={live}
           side={side}
           linkLabel={linkLabel}
@@ -166,29 +82,18 @@ export default function Timeline({
   linkLabel = "Full details",
   stacked: forceStacked = false,
   variant,
-  // Whether resting the pointer on a card can open it, independent of
-  // scroll position. The homepage passes false: those cards are meant to
-  // enlarge as they cross the focus line and shrink again once scrolled
-  // past, the same way on a trackpad/touch as with a mouse, rather than
-  // popping open just because the cursor happens to be sitting on one.
-  hoverOpens = true,
   // Extra breathing room between entries. The homepage passes this: its
   // cards run the full page width and open to a large, image-heavy
   // panel, so the default rhythm (tuned for the narrower, text-led
-  // Experience page) reads as cramped there - the next entry's collapsed
-  // head sits close enough to the open card above it that scrolling
-  // between them feels like one continuous block rather than distinct
-  // entries.
+  // Experience page) reads as cramped there - the next entry's head sits
+  // close enough to the one above it that scrolling between them feels
+  // like one continuous block rather than distinct entries.
   roomy = false,
 }) {
   const wrapRef = useRef(null);
   const svgRef = useRef(null);
   const pathRefs = useRef([]);
   const dotRefs = useRef([]);
-
-  const scrolled = useActiveIndex(entries.length, wrapRef);
-  const canHover = useCanHover();
-  const [hovered, setHovered] = useState(null);
 
   // Which arrangement is on screen is decided here rather than in CSS,
   // and this is a reversal of how the trunk position used to be settled.
@@ -200,12 +105,6 @@ export default function Timeline({
   // markup read cannot disagree with itself.
   const narrow = useMediaQuery("(max-width: 860px)");
   const isStacked = forceStacked || narrow;
-
-  // Hover wins while the pointer is on an entry; scroll decides the rest
-  // of the time, on a touch screen always, and on the homepage always
-  // (hoverOpens: false) since there the open card is meant to track
-  // scroll position, not the cursor.
-  const active = hoverOpens && canHover && hovered !== null ? hovered : scrolled;
 
   useLayoutEffect(() => {
     const draw = () => {
@@ -248,13 +147,12 @@ export default function Timeline({
       ro.disconnect();
       cancelAnimationFrame(raf);
     };
-  }, [entries, active, isStacked]);
+  }, [entries, isStacked]);
 
   return (
     <div
       className={`timeline${isStacked ? " is-stacked" : ""}${variant ? ` timeline--${variant}` : ""}${roomy ? " timeline--roomy" : ""}`}
       ref={wrapRef}
-      onMouseLeave={() => setHovered(null)}
     >
       <svg className="timeline__wires" ref={svgRef} aria-hidden="true">
         <g>
@@ -270,7 +168,6 @@ export default function Timeline({
             key={entry.slug}
             entry={entry}
             index={i}
-            open={i === active}
             /* Every entry builds its model. This was gated to one either
                side of the open entry to stay under the browser's ceiling on
                WebGL contexts, but that gate was local to this component, so
@@ -283,7 +180,6 @@ export default function Timeline({
             side={isStacked || i % 2 !== 0 ? "is-right" : "is-left"}
             basePath={basePath}
             linkLabel={linkLabel}
-            onHover={setHovered}
             registerDot={(el) => (dotRefs.current[i] = el)}
           />
         ))}

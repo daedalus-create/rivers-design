@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
 import PageHero from "../components/PageHero";
+import Breadcrumbs from "../components/Breadcrumbs";
 import EntryList from "../components/EntryList";
 import { classes } from "../data/classes";
 
@@ -7,14 +7,7 @@ export default function Classes() {
   return (
     <>
       <PageHero
-        eyebrow={
-          <>
-            Rivers Design / Experience /{" "}
-            <Link to="/experience/education" style={{ color: "inherit" }}>
-              Education
-            </Link>
-          </>
-        }
+        eyebrow={<Breadcrumbs node="classes" />}
         title="Classes"
         lede="Every class taken at RPI toward the Mechanical and Aerospace Engineering degree."
       />

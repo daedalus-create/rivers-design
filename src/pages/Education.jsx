@@ -1,4 +1,5 @@
 import PageHero from "../components/PageHero";
+import Breadcrumbs from "../components/Breadcrumbs";
 import EntryList from "../components/EntryList";
 import Divider from "../components/Divider";
 import { education } from "../data/education";
@@ -7,7 +8,7 @@ export default function Education() {
   return (
     <>
       <PageHero
-        eyebrow="Rivers Design / Experience"
+        eyebrow={<Breadcrumbs node="education" />}
         title="Education"
         lede="A B.S. in Mechanical and Aerospace Engineering from Rensselaer Polytechnic Institute, completed May 2026, and secondary school at Waynflete before it."
       />

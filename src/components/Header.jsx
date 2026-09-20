@@ -23,7 +23,7 @@ export default function Header() {
       {/* Moving group — fixed to the viewport, stays put while the page scrolls beneath it */}
       <div className="site-header__fixed">
         <Link className="logo" to="/" aria-label="Rivers Design, home">
-          <img src="/assets/logo.svg" alt="Rivers Design" />
+          <img src="/assets/logo.svg" alt="Rivers Design" width="108" height="128" />
         </Link>
 
         <button

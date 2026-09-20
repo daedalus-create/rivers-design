@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import Reveal from "../components/Reveal";
 import Letters from "../components/Letters";
+import Breadcrumbs from "../components/Breadcrumbs";
 import ModelViewer from "../components/LazyModelViewer";
 import { getProject } from "../data/projects";
 import NotFound from "./NotFound";
@@ -22,10 +23,7 @@ export default function ProjectDetail() {
     <>
       <section className="page-hero wrap">
         <Reveal as="p" className="meta meta--wide">
-          Rivers Design / Projects /{" "}
-          <Link to={backHref} style={{ color: "inherit" }}>
-            {backLabel}
-          </Link>
+          <Breadcrumbs node={slug} />
         </Reveal>
         <Reveal as="h1" className="display" stagger={1}>
           {project.title}

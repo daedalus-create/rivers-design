@@ -16,13 +16,13 @@ export default function Divider({
     <div className={`divider wrap${flip ? " divider--flip" : ""}`}>
       <div className="divider__row">
         <div className="divider__brand">
-          <img src={iconLeft} alt="" />
+          <img src={iconLeft} alt="" width="175" height="175" />
           <span className="divider__wordmark">
             Rivers
             <br />
             Design
           </span>
-          <img src={iconRight} alt="" />
+          <img src={iconRight} alt="" width="175" height="175" />
         </div>
         <Link className="pill" to={to} style={{ textDecoration: "none" }}>
           <span className="pill__inner"><Letters text={label} /></span>

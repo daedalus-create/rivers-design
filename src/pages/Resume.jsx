@@ -1,5 +1,6 @@
 import Reveal from "../components/Reveal";
 import Letters from "../components/Letters";
+import Breadcrumbs from "../components/Breadcrumbs";
 
 // The summary sheet, kept in step with the PDF in public/assets. The rows
 // below are transcribed from it and have to move with it whenever it
@@ -31,7 +32,7 @@ export default function Resume() {
     <>
       <section className="page-hero wrap">
         <Reveal as="p" className="meta meta--wide">
-          Rivers Design / Experience
+          <Breadcrumbs node="resume" />
         </Reveal>
         <Reveal as="h1" className="display" stagger={1}>
           Resume
