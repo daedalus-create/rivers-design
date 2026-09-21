@@ -263,6 +263,14 @@ h1, h2, h3, h4, strong, b { font-weight: 400; }
   background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 45%, transparent 100%);
   z-index: 5;
   pointer-events: none;
+  /* iOS Safari only promotes a fixed element to its own compositor
+     layer once something asks for one; without it, a fixed element can
+     visibly lag a frame or two behind a fast scroll and show whatever
+     was underneath it a moment ago - the "ghosted" overlapping text
+     this and the two rules below were reported showing at the very top
+     of the page on a phone. translateZ(0) is a no-op transform that
+     exists purely to ask for that layer. */
+  transform: translateZ(0);
 }
 /* Moving group — the RD corner logo and hamburger, both fixed to the
    viewport so they stay on screen while the page scrolls beneath them. */
@@ -283,7 +291,10 @@ h1, h2, h3, h4, strong, b { font-weight: 400; }
   position: fixed;
   top: calc(var(--header-h) / 2);
   left: var(--page-margin);
-  transform: translateY(-50%);
+  /* translateZ(0) alongside the centring translateY - see the note on
+     .site-header::before above; the corner logo is the other fixed
+     piece a fast scroll was ghosting. */
+  transform: translateY(-50%) translateZ(0);
   z-index: 310;
   width: var(--logo-box);
   height: var(--logo-box);
@@ -303,7 +314,9 @@ h1, h2, h3, h4, strong, b { font-weight: 400; }
   position: fixed;
   top: calc(var(--header-h) / 2);
   right: var(--page-margin);
-  transform: translateY(-50%);
+  /* Same compositor-layer hint as .logo above - the hamburger is fixed
+     the same way and was ghosting the same way. */
+  transform: translateY(-50%) translateZ(0);
   z-index: 310;
   width: clamp(52px, 5vw, 68px);
   height: clamp(52px, 5vw, 68px);
